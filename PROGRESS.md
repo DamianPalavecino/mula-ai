@@ -61,8 +61,8 @@ Marcá `[x]` con hora y quién.
 - [x] 12:5x Damian / 12:55 deploy — Supabase prod: `schema.sql` + `functions.sql` aplicados y sembrado
 - [x] 12:55 deploy — `npm run check prod` 6/6 contra Supabase prod (juli 24/5, grafo 306/281, anon no escribe)
 - [x] 13:0x deploy — `WEB_URL=https://mula-ai.vercel.app npm run check prod` 9/9; bundle con la URL de Supabase prod; `/simulador` y `/me-estafaron` dan 200
-- [ ] Realtime activo en `alertas` (un INSERT aparece en el feed de `/red`)
-- [ ] Web en Vercel: `/`, `/verificar?valor=juli.martinez.mp` (23 reportes, en rojo) y `/red` en incógnito
+- [x] Realtime activo en `alertas` — 13:2x agente vercel-web: `/red` de mula-ai.vercel.app abierta en Playwright, `POST /analizar` en el VPS (riesgo 95) → la alerta entra "recién" al feed sin recargar
+- [x] Web en Vercel — 13:2x agente vercel-web: Playwright headless (contexto limpio) 1440 y 375: `/`, `/verificar` juli (rojo, 27) y maria.gomez.gym (sin reportes), `/red` (grafo + En vivo), `/me-estafaron`; todas 200 y sin scroll horizontal. `mula-ai.vercel.app` pública (200); `mula-ai-damianpalavecinos-projects.vercel.app` da 302 SSO. Vercel deploya solo cada push a main
 - [x] 12:45 worker — en el VPS. systemd `mula-worker` en `contabo-vps`, `[wa] conectado como 549343xxxxxxx`; tras `restart` reconecta en 1 s sin QR, `/health` → `{"ok":true,"whatsapp":"conectado"}`. Sesión en `~/mula-data/auth_info`, vars en `~/.config/mula-ai/worker.conf`. Operar con `worker/scripts/vps.sh deploy|qr|logs|status`
 
 **Worker / WhatsApp**
@@ -87,9 +87,9 @@ Marcá `[x]` con hora y quién.
 - [ ] `/red`: el nodo de la alerta nueva se destaca (feed resaltado ✓ 12:58; el pulso del canvas no lo pude capturar, mirarlo a ojo)
 - [x] 12:35 me-estafaron — local, `POST /api/extraer` con `chat.png` + `comprobante.png` → 200 en 27 s vía OpenRouter (`anthropic/claude-sonnet-5.5`): alias, CVU y teléfono bien extraídos, $180.000, denuncia + pedido de bloqueo + pasos. Sin body → 400. Cruce con la red da `null` (falta schema en prod)
 - [x] 12:54 me-estafaron — local contra Supabase prod: capturas de demo → teléfono 11 reportes/6 prov, `juli.martinez.mp` 24/5, CVU 7/3; la denuncia trae "Antecedentes" antes del pedido (23 s)
-- [ ] `/me-estafaron` en Vercel (necesita `OPENROUTER_API_KEY` server-only en Vercel)
+- [x] `/me-estafaron` en Vercel — 13:2x agente vercel-web: `POST /api/extraer` con chat.png + comprobante.png → 200 en 22 s, alias/CVU/teléfono + cruce con la red; `puede_registrar: true` y el botón "Sumar mi caso a la red" habilitado (no lo clickeé)
 - [ ] `/me-estafaron` → "Sumar mi caso a la red" suma 1 reporte a `juli.martinez.mp` (necesita `SUPABASE_SERVICE_ROLE_KEY` server-only en Vercel; sin ella el botón queda deshabilitado)
-- [ ] Link "Me estafaron" en `Header.tsx` (lo suma el dueño del header)
+- [ ] ~~Link "Me estafaron" en `Header.tsx`~~ descartado por el cambio de plan (`docs/agentes/06-landing-dashboards.md`)
 
 **Entrega**
 - [ ] URL probada desde otro celular
