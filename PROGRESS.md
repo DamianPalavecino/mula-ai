@@ -2,6 +2,24 @@
 
 Entrega 16:00 · submit 15:45 · freeze 14:30.
 
+## Traspaso (si se corta Claude y sigue Codex u otro agente)
+Este archivo es la fuente de verdad. Para retomar:
+1. `git pull --rebase` y leé `CLAUDE.md` (reglas + contrato; en Windows `AGENTS.md` es un symlink que queda como texto "CLAUDE.md"), este archivo y `docs/deploy.md`.
+2. Tomá el primer ítem de "Próximo paso" y el primer `[ ]` de "Qué falta probar" de tu área. Cada área tiene el brief completo en `docs/agentes/0X-*.md`.
+3. Reglas: TDD, `npm run check` en verde, push directo a `main` (`git pull --rebase` antes), sin agentes revisores. Nunca leer ni commitear `.env*`. Ya están cargados en la raíz (`.env`) y en `web/.env.local` de cada checkout.
+4. Al terminar algo: marcá `[x]` con hora y quién, y actualizá "Próximo paso".
+
+Quién hace qué (worktrees de Orca en `C:\Users\dami_\orca\workspaces\mula-ai\<nombre>`, agentes Claude en terminal; si se cortó el usage, esos agentes también se frenaron):
+| Área | Brief | Estado |
+|---|---|---|
+| deploy (Supabase, Vercel, VPS) | `docs/agentes/01-deploy.md` | Supabase y worker en el VPS ✓; falta Vercel con todas las variables y la URL pública del worker |
+| worker | `docs/agentes/02-worker-http.md` | `POST /analizar` ✓; falta latencia < 5 s (Tarea 2) |
+| web simulador + `/red` | `docs/agentes/03-web-simulador.md` | ✓ local; falta contra el worker del VPS por HTTPS |
+| `/me-estafaron` | `docs/agentes/04-web-me-estafaron.md` | ✓ local; falta en Vercel (variables) y el link en el header |
+| demo y entrega | `docs/agentes/05-demo.md` | kit en `docs/demo/`; falta grabar, subir y hacer el submit |
+
+Herramientas: Supabase CLI en `C:\Users\dami_\AppData\Local\Programs\Supabase\supabase.exe` (no está en el PATH, logueado, proyecto MulaAI; `link` antes de comandos contra prod). Worker en el VPS: `worker/scripts/vps.sh deploy|qr|logs|status`. Lanzar un agente: `orca worktree create --repo id:93434532-72b0-464c-a48c-b83211d7840b --name <tarea> --no-parent --agent codex --prompt "<brief>" --json`.
+
 ## Cómo se usa
 - `npm run check` (en la raíz) corre solo los chequeos de las features que tocaste y pone el resultado en la tabla de abajo. `npm run check worker web` corre esas; `npm run check all` corre todas menos las manuales.
 - `⏭️ omitido` = no se pudo probar de verdad (ej. `classify` sin `OPENROUTER_API_KEY` en `worker/.env`). No cuenta como verde.
