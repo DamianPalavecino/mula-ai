@@ -116,11 +116,18 @@ export function demoLanding(id = "familiar") {
   const guion = GUIONES_DEMO.find((g) => g.id === id) ?? GUIONES_DEMO[0];
   const avisar = guion.resultado.es_sospechoso;
   const aviso = AVISOS_LANDING[guion.id];
+  const avisoPersona = avisar ? aviso?.persona ?? guion.resultado.alerta_persona : null;
   return {
     guion,
     avisar,
     nombreChat: aviso?.nombre ?? "Carla, vecina",
-    avisoPersona: avisar ? aviso?.persona ?? guion.resultado.alerta_persona : null,
+    avisoPersona,
     avisoFamilia: avisar ? aviso?.familia ?? guion.resultado.alerta_familia : null,
+    chatAviso: avisoPersona ? {
+      destino: "propio" as const,
+      nombre: "Marta (vos)",
+      texto: avisoPersona,
+      saliente: true,
+    } : null,
   };
 }

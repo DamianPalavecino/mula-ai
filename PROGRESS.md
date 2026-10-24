@@ -50,8 +50,8 @@ Herramientas: Supabase CLI en `C:\Users\dami_\AppData\Local\Programs\Supabase\su
 | `pre-demo` | `node --test scripts/pre-demo.test.mjs` | ✅ | 0s | 24/10/2026, 13:16:24 | 823cd2b |
 | `prod` | `node --env-file-if-exists=.env scripts/smoke-prod.mjs` | ✅ | 4s | 24/10/2026, 14:50:03 | 5a380ba |
 | `prod` | `node scripts/smoke-prod.mjs` | ⏭️ omitido | 0s | 24/10/2026, 12:28:39 | c6d5a8f |
-| `web` | `npm run build` | ✅ | 3s | 24/10/2026, 15:06:45 | e85f79f |
-| `web` | `npm test` | ✅ | 0s | 24/10/2026, 15:06:45 | e85f79f |
+| `web` | `npm run build` | ✅ | 7s | 24/10/2026, 15:11:51 | 951977e |
+| `web` | `npm test` | ✅ | 0s | 24/10/2026, 15:11:51 | 951977e |
 | `worker` | `npm run selftest` | ✅ | 1s | 24/10/2026, 13:48:44 | 893e19e |
 | `worker` | `npm run typecheck` | ✅ | 0s | 24/10/2026, 13:48:44 | 893e19e |
 <!-- check:end -->
@@ -59,7 +59,7 @@ Herramientas: Supabase CLI en `C:\Users\dami_\AppData\Local\Programs\Supabase\su
 ## Qué falta probar (manual / e2e)
 
 **Diseños**
-- [x] Landing real integrada en `/` con verde/lima, tres guiones y chat familiar; navbar responsive y diagrama de red mejorados. Verificada en desktop/mobile, `npm run check web` verde (61 tests + build).
+- [x] Landing real integrada en `/` con verde/lima, tres guiones y chat familiar; navbar responsive y diagrama de red mejorados. Verificada en desktop/mobile, `npm run check web` verde (62 tests + build). El ejemplo separa el mensaje sospechoso del aviso de Mula al chat propio y muestra el aviso recibido por el familiar, según el envío real del worker.
 - [ ] Completar la adaptación de las demás vistas del prototipo en `web/` y comprobar sus datos autenticados.
 Marcá `[x]` con hora y quién.
 
@@ -125,7 +125,7 @@ Marcá `[x]` con hora y quién.
 - [ ] Submit hecho
 
 ## Próximo paso
-- **Landing real:** `/` ya usa el diseño verde/lima y chats de WhatsApp, navbar responsive y red de casos ilustrativa. Verificar el deploy automático tras el push; los ejemplos públicos no llaman a DB ni LLM.
+- **Landing real:** `/` ya usa el diseño verde/lima y chats de WhatsApp, navbar responsive y red de casos ilustrativa. Demo corregida: mensaje sospechoso → aviso separado al chat propio → aviso al familiar. Verificar el deploy automático tras el push; los ejemplos públicos no llaman a DB ni LLM.
 - **Diseños:** prototipo responsive de landing, familiar y administrador en `docs/design/`, con chats de WhatsApp, verde/lima y los guiones actuales. `npm run check design` verde (7 pruebas + sintaxis). Landing integrada en `web/`; seguir con las vistas autenticadas según el sistema actual.
 - /admin: probar con login admin que un caso sin alerta (me-estafaron → sumar a la red) aparece en el grafo en ≤15 s sin recargar, pulsando (refresco propio del grafo, 14:15).
 - **Base cerrada a anon ✓ (14:0x, Damian vía MCP):** `supabase/cierre-anon.sql` aplicado en prod (ya estaba casi todo cerrado; el script idempotente dejó los grants limpios). anon → 401 en tablas y RPC; a anon solo le queda `rls_auto_enable` (event trigger de la plataforma). `npm run check prod` sin `MODO` 17/17 verde. juli en 28: `npm run reset-demo` antes de grabar.

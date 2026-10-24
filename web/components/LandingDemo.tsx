@@ -5,7 +5,7 @@ import Link from "next/link";
 import { GUIONES_DEMO } from "@/lib/demo";
 import { demoLanding } from "@/lib/demo";
 import { IconoChat, IconoEscudo, IconoFlecha, IconoOk } from "@/components/iconos";
-import LandingChat from "./LandingChat";
+import LandingChat, { LandingOwnChat } from "./LandingChat";
 import styles from "./Landing.styles";
 
 export default function LandingDemo() {
@@ -23,13 +23,10 @@ export default function LandingDemo() {
           </div>
         </div>
         <div className={styles.chatStage} id="demo" data-slot="landing-demo">
-          <div className={styles.stageHeading}><span><IconoEscudo /> Así te cuida Mula</span><span>Demo</span></div>
+          <div className={styles.stageHeading}><span><IconoChat /> Te llega un mensaje</span><span>Demo</span></div>
           <LandingChat vista={vista} />
-          <div className={styles.notification} role="status">
-            {vista.avisar ? <IconoChat /> : <IconoOk />}
-            <div><strong>{vista.avisar ? "Tu familia también se entera." : "Una charla normal sigue su curso."}</strong><span>{vista.avisar ? "El mismo aviso, en su WhatsApp." : "En este ejemplo no se manda ninguna alerta."}</span></div>
-            <IconoOk />
-          </div>
+          {vista.chatAviso && <><div className={styles.deliveryStep}><IconoEscudo /><span>Mula te manda un mensaje aparte</span></div><LandingOwnChat vista={vista} /></>}
+          <p className={styles.deliveryNote} role="status">{vista.avisar ? <IconoChat /> : <IconoOk />}{vista.avisar ? "También le manda un aviso a tu familia." : "Sin señales de estafa. En este ejemplo no se avisa a nadie."}</p>
         </div>
       </div>
       <div className={`${styles.container} ${styles.demoControls}`}>

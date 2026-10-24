@@ -158,3 +158,16 @@
 }
 
 .mula-scenario:disabled { opacity: .55; cursor: not-allowed; }
+
+/* El worker escribe al chat propio: el aviso nunca se mezcla con el remitente. */
+.mula-chatStage > .mula-chat .mula-messages { min-height: 0; }
+.mula-ownChat .mula-chatHeader { background: var(--color-bosque); color: var(--color-bosque-tinta); }
+.mula-ownChat .mula-chatHeader strong { font-size: 13px; }
+.mula-ownChat .mula-chatAvatar { width: 28px; height: 28px; font-size: 13px; }
+.mula-ownChat .mula-messages { min-height: 0; padding: 12px; }
+.mula-ownChat .mula-bubble { max-width: 94%; }
+.mula-ownChat .mula-bubble p + p { margin-top: 8px; }
+.mula-deliveryStep { display: flex; align-items: center; justify-content: center; gap: 8px; padding-block: 12px; font-size: 12px; font-weight: 600; }
+.mula-deliveryStep svg { width: 16px; height: 16px; }
+.mula-deliveryNote { display: flex; align-items: center; gap: 8px; margin-top: 12px; font-size: 12px; line-height: 1.5; }
+.mula-deliveryNote svg { width: 16px; height: 16px; }

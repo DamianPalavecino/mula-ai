@@ -29,3 +29,15 @@ test("landing: una conversación normal no muestra avisos de riesgo ni a la fami
 test("landing: una selección desconocida vuelve a un guion válido", () => {
   assert.equal(demoLanding("inexistente").guion.id, "familiar");
 });
+
+test("landing: la advertencia es un mensaje aparte al chat propio, nunca al remitente", () => {
+  for (const id of ["familiar", "anses"]) {
+    const vista = demoLanding(id);
+    assert.equal(vista.chatAviso?.destino, "propio");
+    assert.equal(vista.chatAviso?.nombre, "Marta (vos)");
+    assert.equal(vista.chatAviso?.texto, vista.avisoPersona);
+    assert.equal(vista.chatAviso?.saliente, true);
+    assert.notEqual(vista.chatAviso?.nombre, vista.nombreChat);
+  }
+  assert.equal(demoLanding("normal").chatAviso, null);
+});

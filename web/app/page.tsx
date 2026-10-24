@@ -26,7 +26,7 @@ export default function Inicio() {
           </ol>
         </div>
         <div className={styles.familyExample} data-slot="family-example">
-          <div className={styles.chatCaption}><IconoChat /> El grupo familiar</div>
+          <div className={styles.chatCaption}><IconoChat /> En el WhatsApp de tu familiar</div>
           <LandingChat vista={demoLanding()} familia />
         </div>
       </section>
