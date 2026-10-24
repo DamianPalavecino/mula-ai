@@ -1,7 +1,9 @@
-/* Panel "Me estafaron": autocontenido para montarlo en el dashboard de /app.
+/* Clases globales con prefijo me- (no CSS module: la regla de turbopack de next.config.ts procesa
+   todo *.css con Tailwind y los módulos pierden el hash). Se importan desde MeEstafaronClases.ts.
+   Panel "Me estafaron": autocontenido para montarlo en el dashboard de /app.
    Colores: los tokens de web/app/globals.css (tinta, alerta, seguro, bosque, lima, papel...) con la
    semántica del prototipo (docs/design/tokens.css); si falta un token, usa el valor del prototipo. */
-.panel {
+.me-panel {
   --me-paper: var(--color-papel, #fbfcf8);
   --me-paper-2: var(--color-panel, #f0f3ea);
   --me-paper-3: #e7ecdf;
@@ -26,7 +28,7 @@
 }
 
 /* Elevación con sombra, no con borde (el borde transparente queda para forced-colors). */
-.card {
+.me-card {
   border: 1px solid transparent;
   box-shadow:
     0 0 0 1px rgb(23 59 40 / 0.07),
@@ -35,76 +37,76 @@
 }
 
 /* Botones: se hunden a 0.96 al presionar; deshabilitados no. */
-.press {
+.me-press {
   transition-property: scale, background-color, color, opacity;
   transition-duration: 150ms;
   transition-timing-function: var(--me-ease-out);
 }
-.press:not(:disabled):active {
+.me-press:not(:disabled):active {
   scale: 0.96;
 }
 
 /* Entradas poco frecuentes (cambio de paso, resultado): escalonadas de a 100 ms. */
-.entra {
-  animation: fundido 300ms var(--me-ease-out) both;
+.me-entra {
+  animation: me-k-fundido 300ms var(--me-ease-out) both;
   animation-delay: calc(var(--i, 0) * 100ms);
 }
 @media (prefers-reduced-motion: no-preference) {
-  .entra {
-    animation-name: entra;
+  .me-entra {
+    animation-name: me-k-entra;
   }
 }
-@keyframes entra {
+@keyframes me-k-entra {
   from {
     opacity: 0;
     filter: blur(4px);
     translate: 0 12px;
   }
 }
-@keyframes fundido {
+@keyframes me-k-fundido {
   from {
     opacity: 0;
   }
 }
 
 /* Ícono que cambia (copiar → copiado): los dos en el DOM, fundido cruzado. */
-.swap {
+.me-swap {
   display: inline-grid;
 }
-.swap > * {
+.me-swap > * {
   grid-area: 1 / 1;
   transition-property: opacity, scale, filter;
   transition-duration: 300ms;
   transition-timing-function: var(--me-ease-icon);
 }
-.swap > [data-visible="false"] {
+.me-swap > [data-visible="false"] {
   opacity: 0;
   scale: 0.25;
   filter: blur(4px);
 }
 @media (prefers-reduced-motion: reduce) {
-  .swap > * {
+  .me-swap > * {
     transition-property: opacity;
   }
-  .swap > [data-visible="false"] {
+  .me-swap > [data-visible="false"] {
     scale: 1;
     filter: none;
   }
 }
 
 /* Barra de progreso: escala en X (transform), no ancho. */
-.progreso {
+.me-progreso {
   transform-origin: left;
   transition: scale 1000ms linear;
 }
 
 /* Línea de escaneo sobre las capturas mientras analiza. */
 @media (prefers-reduced-motion: no-preference) {
-  .escaneo {
-    animation: escaneo 1.4s var(--me-ease-out) infinite;
+  .me-escaneo {
+    animation: me-k-escaneo 1.4s var(--me-ease-out) infinite;
   }
 }
-@keyframes escaneo {
+@keyframes me-k-escaneo {
   from {
     translate: 0 -100%;
   }

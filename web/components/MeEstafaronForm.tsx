@@ -17,8 +17,9 @@ import {
   IconoSubir,
   IconoX,
 } from "@/components/MeEstafaronIconos";
+import s from "@/components/MeEstafaronClases";
 
-// Un paso a la vez: 1) subir capturas, 2) analizando (~25 s), 3) resultado.
+// Un paso a la vez: 1) subir capturas, 2) analizando (~5 s), 3) resultado.
 type Paso =
   | { tipo: "subir"; error?: string }
   | { tipo: "analizando" }
@@ -32,17 +33,19 @@ interface Captura {
 
 const MAX_CAPTURAS = 4;
 const LADO_MAX = 1600; // px: alcanza para leer un chat y entra holgado en el límite de Vercel (4,5 MB)
-const DURACION_ESTIMADA = 25; // segundos
+const DURACION_ESTIMADA = 5; // segundos (extracción con flash-lite + red)
 const EJEMPLOS = ["/demo/chat.png", "/demo/comprobante.png"];
 const PROVINCIA_EJEMPLO = "Santa Fe";
 
-// Lo que se ve mientras analiza: ícono + frase corta, cambia cada ~5 s.
+// Lo que se ve mientras analiza: ícono + frase corta.
 const ETAPAS = [
   { icono: IconoImagen, texto: "Leyendo capturas" },
-  { icono: IconoBanco, texto: "Buscando cuentas y montos" },
+  { icono: IconoBanco, texto: "Buscando cuentas" },
   { icono: IconoRed, texto: "Cruzando con la red" },
   { icono: IconoLey, texto: "Armando la denuncia" },
 ];
+
+const pill = `${s.press} inline-flex cursor-pointer items-center justify-center gap-2 rounded-full font-semibold`;
 
 // Achica la captura a JPEG antes de subirla (las de celular pesan varios MB).
 async function comprimir(archivo: File): Promise<Blob> {
@@ -69,25 +72,32 @@ function nuevaCaptura(archivo: File): Captura {
   };
 }
 
+const NOMBRES_PASOS = ["Capturas", "Análisis", "Tu caso"];
+
 function Pasos({ actual }: { actual: number }) {
-  const pasos = [IconoSubir, IconoMagia, IconoCheck];
+  const iconos = [IconoSubir, IconoMagia, IconoCheck];
   return (
-    <ol className="flex items-center" aria-label={`Paso ${actual + 1} de 3`}>
-      {pasos.map((Icono, i) => (
+    <ol className="flex items-center" aria-label={`Paso ${actual + 1} de 3: ${NOMBRES_PASOS[actual]}`}>
+      {iconos.map((Icono, i) => (
         <li key={i} className="flex flex-1 items-center last:flex-none">
           <span
-            className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-colors ${
+            title={NOMBRES_PASOS[i]}
+            className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-[background-color,color] duration-200 ${
               i < actual
-                ? "bg-[var(--me-forest)] text-white"
+                ? "bg-[var(--me-accent-soft)] text-[var(--me-accent)]"
                 : i === actual
-                  ? "bg-[var(--me-danger)] text-white ring-4 ring-[var(--me-danger-soft)]"
-                  : "bg-[var(--me-paper-2)] text-[var(--me-muted)]"
+                  ? "bg-[var(--me-forest)] text-[var(--me-forest-ink)]"
+                  : "bg-[var(--me-paper-3)] text-[var(--me-muted)]"
             }`}
           >
-            <Icono className="h-4 w-4" />
+            {i < actual ? <IconoCheck className="h-4 w-4" /> : <Icono className="h-4 w-4" />}
           </span>
-          {i < pasos.length - 1 && (
-            <span className={`mx-2 h-0.5 flex-1 rounded ${i < actual ? "bg-[var(--me-forest)]" : "bg-[var(--me-rule)]"}`} />
+          {i < iconos.length - 1 && (
+            <span
+              className={`mx-2 h-0.5 flex-1 rounded-full transition-[background-color] duration-200 ${
+                i < actual ? "bg-[var(--me-accent)]" : "bg-[var(--me-rule)]"
+              }`}
+            />
           )}
         </li>
       ))}
@@ -96,56 +106,55 @@ function Pasos({ actual }: { actual: number }) {
 }
 
 function Analizando({ capturas }: { capturas: Captura[] }) {
-  const [segundos, setSegundos] = useState(0);
+  const [decimas, setDecimas] = useState(0);
   useEffect(() => {
-    const t = setInterval(() => setSegundos((s) => s + 1), 1000);
+    const t = setInterval(() => setDecimas((d) => d + 1), 100);
     return () => clearInterval(t);
   }, []);
-  const etapa = Math.min(Math.floor(segundos / 6), ETAPAS.length - 1);
+  const segundos = decimas / 10;
+  const etapa = Math.min(Math.floor(segundos / (DURACION_ESTIMADA / ETAPAS.length)), ETAPAS.length - 1);
   // Rápido al principio, se frena cerca del final y nunca llega al 100 %.
-  const progreso = Math.min(95, (1 - Math.exp(-segundos / (DURACION_ESTIMADA * 0.6))) * 100);
+  const progreso = Math.min(0.95, 1 - Math.exp(-segundos / (DURACION_ESTIMADA * 0.5)));
 
   return (
     <div
-      className="flex flex-col items-center gap-6 rounded-2xl bg-[var(--me-forest)] px-5 py-10 text-center text-white sm:py-14"
+      className={`${s.entra} flex flex-col items-center gap-6 rounded-[20px] bg-[var(--me-forest)] px-5 py-10 text-center text-[var(--me-forest-ink)] sm:py-12`}
       role="status"
       aria-live="polite"
     >
       {capturas.length > 0 && (
         <div className="flex justify-center gap-2">
           {capturas.map((c, i) => (
-            <div key={c.id} className="relative h-28 w-16 overflow-hidden rounded-lg sm:h-36 sm:w-20">
+            <div key={c.id} className="relative h-28 w-16 overflow-hidden rounded-xl sm:h-32 sm:w-[4.5rem]">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={c.url} alt={`Captura ${i + 1}`} className="h-full w-full object-cover object-top opacity-50" />
               <span
-                className="absolute inset-x-0 h-1 bg-[var(--me-danger)] shadow-[0_0_12px_4px] shadow-[var(--me-danger)]"
-                style={{ top: `${(segundos * 23 + i * 30) % 100}%`, transition: "top 1s linear" }}
+                className={`${s.escaneo} absolute inset-x-0 top-0 h-1/6 bg-gradient-to-b from-transparent to-[var(--me-field)]/70`}
+                style={{ animationDelay: `${i * 180}ms` }}
               />
             </div>
           ))}
         </div>
       )}
-      <ul className="flex gap-3">
+      <ul className="flex gap-3" aria-hidden>
         {ETAPAS.map((e, i) => (
           <li
             key={e.texto}
-            className={`flex h-11 w-11 items-center justify-center rounded-full transition-all ${
-              i < etapa ? "bg-white/20 text-white" : i === etapa ? "scale-110 bg-[var(--me-danger)] text-white" : "bg-white/5 text-white/30"
+            className={`flex h-11 w-11 items-center justify-center rounded-full transition-[background-color,color,scale] duration-200 ${
+              i < etapa
+                ? "bg-white/15 text-[var(--me-field)]"
+                : i === etapa
+                  ? "scale-110 bg-[var(--me-field)] text-[var(--me-forest)]"
+                  : "bg-white/5 text-white/30"
             }`}
           >
             {i < etapa ? <IconoCheck className="h-5 w-5" /> : <e.icono className="h-5 w-5" />}
           </li>
         ))}
       </ul>
-      <div className="flex flex-col gap-1">
-        <p className="text-xl font-semibold">{ETAPAS[etapa].texto}…</p>
-        <p className="text-sm text-white/60">~{DURACION_ESTIMADA} s · no cierres la página</p>
-      </div>
+      <p className="text-xl font-semibold">{ETAPAS[etapa].texto}…</p>
       <div className="h-1.5 w-full max-w-xs overflow-hidden rounded-full bg-white/15">
-        <div
-          className="h-full rounded-full bg-[var(--me-danger)] transition-[width] duration-1000 ease-linear"
-          style={{ width: `${progreso}%` }}
-        />
+        <div className={`${s.progreso} h-full w-full rounded-full bg-[var(--me-field)]`} style={{ scale: `${progreso} 1` }} />
       </div>
     </div>
   );
@@ -170,13 +179,14 @@ export default function MeEstafaronForm() {
   }, [capturas]);
   useEffect(() => () => capturasRef.current.forEach((c) => URL.revokeObjectURL(c.url)), []);
 
-  // Cada cambio de paso vuelve arriba (en el celu el resultado arranca fuera de pantalla).
+  // Cada cambio de paso vuelve arriba del panel si quedó fuera de pantalla (en el celu).
   useEffect(() => {
     if (primerRender.current) {
       primerRender.current = false;
       return;
     }
-    arribaRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    const el = arribaRef.current;
+    if (el && el.getBoundingClientRect().top < 0) el.scrollIntoView({ block: "start" });
   }, [paso.tipo]);
 
   function agregar(archivos: FileList | File[]) {
@@ -273,7 +283,7 @@ export default function MeEstafaronForm() {
           <button
             type="button"
             onClick={reiniciar}
-            className="inline-flex h-12 cursor-pointer items-center justify-center gap-2 rounded-xl border border-[var(--me-rule)] px-6 text-base font-medium text-[var(--me-ink)] hover:bg-[var(--me-paper-2)]"
+            className={`${pill} h-12 px-6 text-base text-[var(--me-ink)] hover:bg-[var(--me-paper-3)]`}
           >
             <IconoReiniciar className="h-4 w-4" />
             Otro caso
@@ -283,7 +293,7 @@ export default function MeEstafaronForm() {
 
       {paso.tipo === "subir" && (
         <form
-          className="flex flex-col gap-4"
+          className={`${s.entra} flex flex-col gap-4`}
           onSubmit={(e) => {
             e.preventDefault();
             if (valido) analizar(capturas, relato, provincia);
@@ -301,35 +311,39 @@ export default function MeEstafaronForm() {
               setArrastrando(false);
               agregar(e.dataTransfer.files);
             }}
-            className={`rounded-2xl border-2 border-dashed transition-colors ${
-              arrastrando ? "border-[var(--me-danger)] bg-[var(--me-danger-soft)]" : "border-[var(--me-rule)] bg-[var(--me-paper-2)]"
+            className={`rounded-[20px] border-2 border-dashed transition-[background-color,border-color] duration-150 ${
+              arrastrando
+                ? "border-[var(--me-forest)] bg-[var(--me-field)]"
+                : "border-[var(--me-accent)]/35 bg-[var(--me-accent-soft)]"
             }`}
           >
             {capturas.length === 0 ? (
               <button
                 type="button"
                 onClick={() => inputRef.current?.click()}
-                className="group flex min-h-60 w-full cursor-pointer flex-col items-center justify-center gap-4 rounded-2xl px-6 py-10 text-center"
+                className="group flex min-h-60 w-full cursor-pointer flex-col items-center justify-center gap-4 rounded-[18px] px-6 py-10 text-center"
               >
-                <span className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[var(--me-forest)] text-white transition-transform group-hover:scale-105">
+                <span
+                  className={`${s.press} flex h-16 w-16 items-center justify-center rounded-[20px] bg-[var(--me-forest)] text-[var(--me-forest-ink)] group-active:scale-[0.96]`}
+                >
                   <IconoSubir className="h-8 w-8" />
                 </span>
-                <span className="text-xl font-semibold text-[var(--me-ink)]">Subí las capturas</span>
-                <span className="flex items-center gap-3 text-sm text-[var(--me-muted)]">
+                <span className="text-xl font-bold tracking-tight">Subí las capturas</span>
+                <span className="flex items-center gap-2 text-sm text-[var(--me-ink-2)]">
                   <span className="rounded-full bg-[var(--me-paper)] px-3 py-1">Chat</span>
                   <span className="rounded-full bg-[var(--me-paper)] px-3 py-1">Comprobante</span>
-                  <span>PNG · JPG</span>
+                  <span className="text-[var(--me-muted)]">PNG · JPG</span>
                 </span>
               </button>
             ) : (
-              <ul className="grid grid-cols-2 gap-3 p-3 sm:grid-cols-4 sm:p-4">
+              <ul className="grid grid-cols-2 gap-3 p-3 sm:grid-cols-4">
                 {capturas.map((c, i) => (
                   <li key={c.id} className="relative">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={c.url}
                       alt={`Captura ${i + 1}`}
-                      className="aspect-[3/5] w-full rounded-xl border border-[var(--me-rule)] bg-[var(--me-paper)] object-cover object-top"
+                      className="aspect-[3/5] w-full rounded-xl bg-[var(--me-paper)] object-cover object-top outline outline-1 -outline-offset-1 outline-black/10"
                     />
                     <span className="absolute bottom-2 left-2 flex h-6 w-6 items-center justify-center rounded-full bg-[var(--me-accent)] text-white">
                       <IconoCheck className="h-3.5 w-3.5" />
@@ -338,7 +352,7 @@ export default function MeEstafaronForm() {
                       type="button"
                       onClick={() => quitar(c.id)}
                       aria-label={`Quitar captura ${i + 1}`}
-                      className="absolute top-1.5 right-1.5 flex h-9 w-9 cursor-pointer items-center justify-center rounded-full bg-[var(--me-paper)]/95 text-[var(--me-ink)] shadow hover:bg-[var(--me-danger)] hover:text-white"
+                      className={`${s.press} absolute top-1.5 right-1.5 flex h-9 w-9 cursor-pointer items-center justify-center rounded-full bg-[var(--me-paper)]/95 text-[var(--me-ink)] shadow hover:bg-[var(--me-danger)] hover:text-white`}
                     >
                       <IconoX className="h-4 w-4" />
                     </button>
@@ -350,7 +364,7 @@ export default function MeEstafaronForm() {
                       type="button"
                       onClick={() => inputRef.current?.click()}
                       aria-label="Agregar captura"
-                      className="flex aspect-[3/5] w-full cursor-pointer items-center justify-center rounded-xl border-2 border-dashed border-[var(--me-rule)] bg-[var(--me-paper)] text-[var(--me-muted)] hover:border-[var(--me-forest)] hover:text-[var(--me-ink)]"
+                      className={`${s.press} flex aspect-[3/5] w-full cursor-pointer items-center justify-center rounded-xl border-2 border-dashed border-[var(--me-accent)]/35 bg-[var(--me-paper)] text-[var(--me-accent)] hover:border-[var(--me-accent)]`}
                     >
                       <IconoMas className="h-8 w-8" />
                     </button>
@@ -374,9 +388,11 @@ export default function MeEstafaronForm() {
           {rechazos.length > 0 && (
             <ul className="flex flex-col gap-1" role="alert">
               {rechazos.map((r) => (
-                <li key={r} className="flex items-center gap-2 text-sm text-[var(--me-danger)]">
+                <li key={r} className="flex items-center gap-2 text-sm font-medium text-[var(--me-danger)]">
                   <IconoAlerta className="h-4 w-4 shrink-0" />
-                  <span className="truncate">{r}</span>
+                  <span className="truncate" title={r}>
+                    {r}
+                  </span>
                 </li>
               ))}
             </ul>
@@ -386,7 +402,7 @@ export default function MeEstafaronForm() {
             <button
               type="button"
               onClick={usarEjemplo}
-              className="inline-flex h-12 cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-[var(--me-danger-line)] bg-[var(--me-danger-soft)] px-5 text-base font-semibold text-[var(--me-danger)] hover:border-[var(--me-danger)]"
+              className={`${pill} h-12 bg-[var(--me-field)] px-5 text-base text-[var(--me-forest)] hover:brightness-95`}
             >
               <IconoMagia className="h-5 w-5" />
               Usar capturas de ejemplo
@@ -395,7 +411,6 @@ export default function MeEstafaronForm() {
 
           <div className="flex flex-col gap-3 sm:flex-row">
             <select
-              id="provincia"
               aria-label="Provincia"
               value={provincia}
               onChange={(e) => setProvincia(e.target.value)}
@@ -412,7 +427,7 @@ export default function MeEstafaronForm() {
               <button
                 type="button"
                 onClick={() => setVerRelato(true)}
-                className="inline-flex h-12 cursor-pointer items-center justify-center gap-2 rounded-xl border border-[var(--me-rule)] px-4 text-sm font-medium text-[var(--me-ink-2)] hover:bg-[var(--me-paper-2)]"
+                className={`${pill} h-12 border border-[var(--me-rule)] px-4 text-sm font-medium text-[var(--me-ink-2)] hover:bg-[var(--me-paper-3)]`}
               >
                 <IconoMas className="h-4 w-4" />
                 Sin capturas: contalo
@@ -434,7 +449,10 @@ export default function MeEstafaronForm() {
           )}
 
           {paso.error && (
-            <p className="flex items-center gap-2 rounded-xl bg-[var(--me-danger-soft)] p-3 text-sm font-medium text-[var(--me-danger)]" role="alert">
+            <p
+              className="flex items-center gap-2 rounded-xl bg-[var(--me-danger-soft)] p-3 text-sm font-medium text-[var(--me-danger)]"
+              role="alert"
+            >
               <IconoAlerta className="h-4 w-4 shrink-0" />
               {paso.error}
             </p>
@@ -443,7 +461,7 @@ export default function MeEstafaronForm() {
           <button
             type="submit"
             disabled={!valido}
-            className="inline-flex h-14 w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-[var(--me-danger)] px-6 text-lg font-semibold text-white shadow-sm hover:brightness-110 disabled:cursor-not-allowed disabled:bg-[var(--me-rule)] disabled:text-[var(--me-muted)] disabled:shadow-none"
+            className={`${pill} h-14 w-full bg-[var(--me-forest)] px-6 text-lg text-[var(--me-forest-ink)] hover:bg-[var(--me-ink)] disabled:cursor-not-allowed disabled:bg-[var(--me-paper-3)] disabled:text-[var(--me-muted)]`}
           >
             <IconoMagia className="h-5 w-5" />
             Analizar

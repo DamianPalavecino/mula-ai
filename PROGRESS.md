@@ -50,10 +50,10 @@ Herramientas: Supabase CLI en `C:\Users\dami_\AppData\Local\Programs\Supabase\su
 | `pre-demo` | `node --test scripts/pre-demo.test.mjs` | ✅ | 0s | 24/10/2026, 13:16:24 | 823cd2b |
 | `prod` | `node --env-file-if-exists=.env scripts/smoke-prod.mjs` | ✅ | 8s | 24/10/2026, 14:03:56 | 05d08a8 |
 | `prod` | `node scripts/smoke-prod.mjs` | ⏭️ omitido | 0s | 24/10/2026, 12:28:39 | c6d5a8f |
-| `web` | `npm run build` | ✅ | 3s | 24/10/2026, 14:30:20 | bb0bf62 |
-| `web` | `npm test` | ✅ | 0s | 24/10/2026, 14:30:20 | bb0bf62 |
-| `worker` | `npm run selftest` | ✅ | 1s | 24/10/2026, 14:29:13 | 5c00c12 |
-| `worker` | `npm run typecheck` | ✅ | 0s | 24/10/2026, 14:29:13 | 5c00c12 |
+| `web` | `npm run build` | ✅ | 33s | 24/10/2026, 14:39:29 | 464ac66 |
+| `web` | `npm test` | ✅ | 2s | 24/10/2026, 14:39:29 | 464ac66 |
+| `worker` | `npm run selftest` | ✅ | 1s | 24/10/2026, 13:48:44 | 893e19e |
+| `worker` | `npm run typecheck` | ✅ | 0s | 24/10/2026, 13:48:44 | 893e19e |
 <!-- check:end -->
 
 ## Qué falta probar (manual / e2e)

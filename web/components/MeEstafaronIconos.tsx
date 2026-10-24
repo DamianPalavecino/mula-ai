@@ -1,7 +1,7 @@
 // Íconos SVG inline de /me-estafaron (trazo estilo lucide, sin dependencias).
-type P = { className?: string };
+type P = React.SVGProps<SVGSVGElement>;
 
-function Svg({ className = "h-5 w-5", children }: P & { children: React.ReactNode }) {
+function Svg({ className = "h-5 w-5", children, ...rest }: P & { children: React.ReactNode }) {
   return (
     <svg
       viewBox="0 0 24 24"
@@ -12,6 +12,7 @@ function Svg({ className = "h-5 w-5", children }: P & { children: React.ReactNod
       strokeLinejoin="round"
       className={className}
       aria-hidden
+      {...rest}
     >
       {children}
     </svg>

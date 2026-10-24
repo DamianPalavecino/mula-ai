@@ -2,7 +2,7 @@
 
 import MeEstafaronForm from "@/components/MeEstafaronForm";
 import { IconoAlerta, IconoX } from "@/components/MeEstafaronIconos";
-import s from "@/components/MeEstafaronPanel.module.css";
+import s from "@/components/MeEstafaronClases";
 
 // Sección "Me estafaron" del dashboard: autocontenida (flujo, validaciones, ejemplo de un clic y
 // resultado). Se monta en una página, un panel o un drawer; usa /app/api/extraer y /app/api/registrar.

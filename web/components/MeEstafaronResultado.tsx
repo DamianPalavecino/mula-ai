@@ -19,8 +19,8 @@ import {
   IconoLey,
   IconoTelefono,
 } from "@/components/MeEstafaronIconos";
+import st from "@/components/MeEstafaronClases";
 
-const VERDE = "bg-[var(--me-accent)]";
 
 const ROLES: Record<RolEntidad, string> = {
   destino_plata: "Destino de la plata",
@@ -76,6 +76,15 @@ function useCopiar() {
 
 type Icono = (p: { className?: string }) => React.ReactNode;
 
+function IconoCopiado({ copiado, className }: { copiado: boolean; className: string }) {
+  return (
+    <span className={st.swap} aria-hidden>
+      <IconoCopiar className={className} data-visible={!copiado} />
+      <IconoCheck className={className} data-visible={copiado} />
+    </span>
+  );
+}
+
 function Documento({
   id,
   icono: Icono,
@@ -97,9 +106,9 @@ function Documento({
 }) {
   const [abierto, setAbierto] = useState(false);
   const secundario =
-    "inline-flex h-10 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-[var(--me-rule)] px-3 text-sm font-medium text-[var(--me-ink)] hover:bg-[var(--me-paper-2)] sm:flex-none";
+    `${st.press} inline-flex h-10 shrink-0 cursor-pointer items-center justify-center gap-1.5 rounded-full bg-[var(--me-paper-2)] px-4 text-sm font-medium whitespace-nowrap text-[var(--me-ink)] hover:bg-[var(--me-paper-3)]`;
   return (
-    <section id={id} className="scroll-mt-20 rounded-2xl border border-[var(--me-rule)] bg-[var(--me-paper)] p-4 sm:p-5">
+    <section id={id} className={`${st.card} scroll-mt-20 rounded-[20px] bg-[var(--me-paper)] p-4 sm:p-5`}>
       <div className="flex flex-col gap-4">
         <div className="flex items-center gap-3">
           <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--me-danger-soft)] text-[var(--me-danger)]">
@@ -113,11 +122,11 @@ function Documento({
         <button
           type="button"
           onClick={onCopiar}
-          className={`inline-flex h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-xl text-base font-semibold text-white transition-colors ${
-            copiado ? VERDE : "bg-[var(--me-forest)] hover:bg-[var(--me-ink)]"
+          className={`${st.press} inline-flex h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-full text-base font-semibold text-[var(--me-forest-ink)] ${
+            copiado ? "bg-[var(--me-accent)]" : "bg-[var(--me-forest)] hover:bg-[var(--me-ink)]"
           }`}
         >
-          {copiado ? <IconoCheck className="h-5 w-5" /> : <IconoCopiar className="h-5 w-5" />}
+          <IconoCopiado copiado={copiado} className="h-5 w-5" />
           {copiado ? "Copiado" : "Copiar"}
         </button>
         <div className="relative">
@@ -133,8 +142,8 @@ function Documento({
           )}
         </div>
         <div className="flex gap-2">
-          <button type="button" className={secundario} onClick={() => setAbierto((a) => !a)}>
-            <IconoExpandir className={`h-4 w-4 transition-transform ${abierto ? "rotate-180" : ""}`} />
+          <button type="button" className={`${secundario} flex-1 sm:flex-none`} onClick={() => setAbierto((a) => !a)}>
+            <IconoExpandir className={`h-4 w-4 transition-[rotate] duration-200 ${abierto ? "rotate-180" : ""}`} />
             {abierto ? "Menos" : "Ver todo"}
           </button>
           <button type="button" className={secundario} onClick={() => descargar(archivo, texto)} aria-label="Descargar">
@@ -157,14 +166,14 @@ function Cuenta({ item }: { item: EntidadEnRed }) {
   const rojo = reportes > 0;
   return (
     <li
-      className={`flex flex-col gap-3 rounded-2xl border-2 p-4 sm:p-5 ${
-        rojo ? "border-[var(--me-danger)] bg-[var(--me-danger-soft)]" : "border-[var(--me-rule)] bg-[var(--me-paper-2)]"
+      className={`flex flex-col gap-3 rounded-[20px] p-4 sm:p-5 ${
+        rojo ? "bg-[var(--me-danger-soft)]" : `${st.card} bg-[var(--me-paper)]`
       }`}
     >
       <div className="flex min-w-0 items-start gap-3">
         <span
           className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${
-            rojo ? "bg-[var(--me-danger)] text-white" : "bg-[var(--me-paper)] text-[var(--me-muted)]"
+            rojo ? "bg-[var(--me-danger)] text-white" : "bg-[var(--me-accent-soft)] text-[var(--me-accent)]"
           }`}
         >
           {entidad.tipo === "telefono" ? <IconoTelefono className="h-5 w-5" /> : <IconoBilletera className="h-5 w-5" />}
@@ -206,7 +215,7 @@ function Cuenta({ item }: { item: EntidadEnRed }) {
           )}
         </>
       ) : (
-        <p className="flex items-center gap-1.5 text-sm text-[var(--me-muted)]">
+        <p className="flex items-center gap-1.5 text-sm font-medium text-[var(--me-accent)]">
           <IconoCheck className="h-4 w-4" />
           Sin reportes previos
         </p>
@@ -265,18 +274,22 @@ export default function MeEstafaronResultado({
   }
 
   return (
-    <div className="flex animate-entrada flex-col gap-8">
+    <div className="flex flex-col gap-8">
       {/* 1. Lo que pasó, en una mirada */}
-      <div className={`overflow-hidden rounded-2xl text-white ${peor ? "bg-[var(--me-danger)]" : "bg-[var(--me-forest)]"}`}>
+      <div
+        className={`${st.entra} overflow-hidden rounded-[20px] ${
+          peor ? "bg-[var(--me-danger-soft)] text-[var(--me-danger-ink)]" : "bg-[var(--me-accent-soft)] text-[var(--me-ink)]"
+        }`}
+      >
         <div className="flex flex-col gap-3 p-5 sm:p-7">
           <div className="flex flex-wrap gap-2 text-sm font-medium">
-            <span className="rounded-full bg-white/15 px-3 py-1">{labelModalidad(x.modalidad)}</span>
-            {x.monto_total ? <span className="rounded-full bg-white/15 px-3 py-1">{monto(x.monto_total)}</span> : null}
+            <span className="rounded-full bg-[var(--me-paper)]/70 px-3 py-1">{labelModalidad(x.modalidad)}</span>
+            {x.monto_total ? <span className="rounded-full bg-[var(--me-paper)]/70 px-3 py-1">{monto(x.monto_total)}</span> : null}
           </div>
           {peor ? (
             <>
               <p className="flex items-center gap-2 text-3xl leading-tight font-bold tracking-tight sm:text-4xl">
-                <IconoAlerta className="h-8 w-8 shrink-0" />
+                <IconoAlerta className="h-8 w-8 shrink-0 text-[var(--me-danger)]" />
                 No sos la única víctima
               </p>
               <p className="text-lg leading-snug font-medium">
@@ -289,10 +302,10 @@ export default function MeEstafaronResultado({
           ) : (
             <p className="text-3xl leading-tight font-bold tracking-tight sm:text-4xl">Tu caso</p>
           )}
-          <p className="text-base leading-relaxed text-white/90">{x.resumen}</p>
+          <p className="text-base leading-relaxed opacity-90">{x.resumen}</p>
         </div>
         {!x.legible && (
-          <p className="flex items-center gap-2 bg-black/20 px-5 py-3 text-sm sm:px-7">
+          <p className="flex items-center gap-2 bg-black/5 px-5 py-3 text-sm sm:px-7">
             <IconoAlerta className="h-4 w-4 shrink-0" />
             Algunas capturas no se leían bien. Revisá los datos.
           </p>
@@ -300,10 +313,10 @@ export default function MeEstafaronResultado({
       </div>
 
       {/* 2. Las cuentas y sus reportes */}
-      <section className="flex flex-col gap-3">
+      <section className={`${st.entra} flex flex-col gap-3`} style={{ "--i": 1 } as React.CSSProperties}>
         <h2 className="text-xl font-semibold tracking-tight text-[var(--me-ink)]">Cuentas del caso</h2>
         {cuentas.length === 0 ? (
-          <p className="rounded-2xl border border-[var(--me-rule)] bg-[var(--me-paper-2)] p-4 text-base text-[var(--me-ink-2)]">
+          <p className="rounded-[20px] bg-[var(--me-paper-2)] p-4 text-base text-[var(--me-ink-2)]">
             No encontramos alias, CBU, teléfonos, CUIT ni links legibles.
           </p>
         ) : (
@@ -316,7 +329,7 @@ export default function MeEstafaronResultado({
       </section>
 
       {/* 3. Los dos textos, listos para copiar */}
-      <section className="flex flex-col gap-3">
+      <section className={`${st.entra} flex flex-col gap-3`} style={{ "--i": 2 } as React.CSSProperties}>
         <h2 className="text-xl font-semibold tracking-tight text-[var(--me-ink)]">Hacé esto ahora</h2>
         <Documento
           id="pedido-bloqueo"
@@ -345,7 +358,7 @@ export default function MeEstafaronResultado({
       {x.pasos.length > 0 && (
         <section className="flex flex-col gap-3">
           <h2 className="text-xl font-semibold tracking-tight text-[var(--me-ink)]">Próximas horas</h2>
-          <ol className="flex flex-col divide-y divide-[var(--me-rule)] rounded-2xl border border-[var(--me-rule)]">
+          <ol className={`${st.card} flex flex-col divide-y divide-[var(--me-rule)] rounded-[20px] bg-[var(--me-paper)]`}>
             {x.pasos.map((p, i) => (
               <li key={i} className="flex gap-3 p-4">
                 <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[var(--me-forest)] text-xs font-semibold text-white">
@@ -360,7 +373,7 @@ export default function MeEstafaronResultado({
 
       {/* 5. Sumar a la red */}
       {red.length > 0 && (
-        <section className="rounded-2xl border border-[var(--me-rule)] bg-[var(--me-paper-2)] p-5 sm:p-6">
+        <section className={`${st.entra} rounded-[20px] bg-[var(--me-paper-2)] p-5 sm:p-6`} style={{ "--i": 3 } as React.CSSProperties}>
           {registro.tipo === "listo" ? (
             <div className="flex flex-col gap-3">
               <p className="flex items-center gap-2 text-lg font-semibold text-[var(--me-ink)]">
@@ -403,7 +416,7 @@ export default function MeEstafaronResultado({
                 type="button"
                 onClick={sumarALaRed}
                 disabled={!puede_registrar || registro.tipo === "enviando"}
-                className="h-12 w-full shrink-0 cursor-pointer rounded-xl bg-[var(--me-forest)] px-6 text-base font-semibold text-white hover:bg-[var(--me-ink)] disabled:cursor-not-allowed disabled:opacity-40 sm:w-auto"
+                className={`${st.press} h-12 w-full shrink-0 cursor-pointer rounded-full bg-[var(--me-forest)] px-6 text-base font-semibold text-[var(--me-forest-ink)] hover:bg-[var(--me-ink)] disabled:cursor-not-allowed disabled:opacity-40 sm:w-auto`}
               >
                 {registro.tipo === "enviando" ? "Sumando…" : "Sumar a la red"}
               </button>
@@ -423,7 +436,7 @@ export default function MeEstafaronResultado({
 
       {/* 6. Detalle, plegado */}
       {(x.transferencias.length > 0 || x.cronologia.length > 0) && (
-        <details className="group rounded-2xl border border-[var(--me-rule)]">
+        <details className={`${st.card} group rounded-[20px] bg-[var(--me-paper)]`}>
           <summary className="flex cursor-pointer list-none items-center justify-between p-4 text-base font-medium text-[var(--me-ink)]">
             Detalle
             <IconoExpandir className="h-4 w-4 text-[var(--me-muted)] transition-transform group-open:rotate-180" />
@@ -463,25 +476,25 @@ export default function MeEstafaronResultado({
       )}
 
       {/* Barra fija en el celu: los dos textos siempre a mano */}
-      <div className="sticky bottom-0 z-10 -mx-4 flex gap-2 border-t border-[var(--me-rule)] bg-[var(--me-paper)]/95 px-4 py-3 backdrop-blur sm:hidden">
+      <div className="sticky bottom-0 z-10 -mx-4 flex gap-2 border-t border-[var(--me-rule)] bg-[var(--color-papel,#fbfcf8)]/95 px-4 py-3 backdrop-blur sm:hidden">
         <button
           type="button"
           onClick={() => copiar("bloqueo", x.pedido_bloqueo)}
-          className={`inline-flex h-11 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-xl text-sm font-semibold text-white ${
-            copiado === "bloqueo" ? VERDE : "bg-[var(--me-forest)]"
+          className={`${st.press} inline-flex h-11 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-full text-sm font-semibold text-[var(--me-forest-ink)] ${
+            copiado === "bloqueo" ? "bg-[var(--me-accent)]" : "bg-[var(--me-forest)]"
           }`}
         >
-          {copiado === "bloqueo" ? <IconoCheck className="h-4 w-4" /> : <IconoCopiar className="h-4 w-4" />}
+          <IconoCopiado copiado={copiado === "bloqueo"} className="h-4 w-4" />
           {copiado === "bloqueo" ? "Copiado" : "Bloqueo"}
         </button>
         <button
           type="button"
           onClick={() => copiar("denuncia", x.denuncia)}
-          className={`inline-flex h-11 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-xl text-sm font-semibold ${
-            copiado === "denuncia" ? `${VERDE} text-white` : "border border-[var(--me-forest)] text-[var(--me-ink)]"
+          className={`${st.press} inline-flex h-11 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-full text-sm font-semibold ${
+            copiado === "denuncia" ? "bg-[var(--me-accent)] text-[var(--me-forest-ink)]" : "bg-[var(--me-paper-3)] text-[var(--me-ink)]"
           }`}
         >
-          {copiado === "denuncia" ? <IconoCheck className="h-4 w-4" /> : <IconoCopiar className="h-4 w-4" />}
+          <IconoCopiado copiado={copiado === "denuncia"} className="h-4 w-4" />
           {copiado === "denuncia" ? "Copiado" : "Denuncia"}
         </button>
       </div>
