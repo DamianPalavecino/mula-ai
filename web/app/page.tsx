@@ -1,151 +1,60 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import DemoGuiada from "@/components/DemoGuiada";
+import LandingDemo from "@/components/LandingDemo";
+import LandingChat from "@/components/LandingChat";
+import { IconoChat, IconoEscudo, IconoFlecha, IconoRed } from "@/components/iconos";
+import { demoLanding } from "@/lib/demo";
+import styles from "@/components/Landing.styles";
 
 export const metadata: Metadata = {
   title: { absolute: "Mula AI — Guardián de WhatsApp contra estafas" },
 };
 
-const QUE_HACE = [
-  {
-    titulo: "Detecta en vivo",
-    texto:
-      "Cada mensaje o audio de un desconocido se analiza: guion de estafa, suplantación de un familiar, pedido de plata, alias o CBU.",
-  },
-  {
-    titulo: "Avisa a la familia",
-    texto:
-      "La alerta llega al WhatsApp de la persona y al grupo familiar. Alguien asustado decide mal; la familia puede verificar.",
-  },
-  {
-    titulo: "Alimenta la red",
-    texto:
-      "Cada número y cada cuenta mula detectados quedan en una red compartida y protegen a todos los demás.",
-  },
-  {
-    titulo: "Le da datos al Estado",
-    texto:
-      "El gobierno consulta la red: qué cuentas mula se repiten, en qué provincias y con qué guion.",
-  },
-];
-
-const PASOS = [
-  {
-    titulo: "Vinculá el WhatsApp de la persona",
-    texto:
-      "Escaneás un código QR desde su teléfono, igual que cuando abrís WhatsApp Web. No hay que instalarle nada.",
-  },
-  {
-    titulo: "Cargá los contactos de confianza y el grupo familiar",
-    texto:
-      "Los mensajes de la familia no se analizan. Las alertas llegan al grupo que elijas.",
-  },
-  {
-    titulo: "Listo",
-    texto:
-      "Desde ahí, cada mensaje de un desconocido se analiza en segundos. Si es una estafa, avisa antes de que salga la plata.",
-  },
-];
-
-const botonPrimario =
-  "inline-flex h-11 items-center justify-center rounded-md bg-tinta px-5 text-sm font-medium text-white hover:bg-black";
-const botonSecundario =
-  "inline-flex h-11 items-center justify-center rounded-md border border-linea px-5 text-sm font-medium text-tinta hover:bg-panel";
-
 export default function Inicio() {
   return (
-    <main className="flex-1">
-      <section className="mx-auto max-w-6xl px-4 pt-16 pb-16 sm:px-6 sm:pt-24">
-        <p className="text-sm font-medium text-suave">Guardián de WhatsApp contra estafas</p>
-        <h1 className="mt-3 max-w-3xl text-4xl font-semibold tracking-tight text-tinta sm:text-5xl">
-          Las estafas funcionan porque cada víctima está sola.
-        </h1>
-        <p className="mt-5 max-w-2xl text-lg leading-relaxed text-texto">
-          Mula AI vigila el WhatsApp de la persona, reconoce el guion de estafa y la cuenta
-          mula en el momento en que llegan, y le avisa a ella y a su familia antes de que
-          salga la plata. Cada caso se suma a una red compartida que consulta el gobierno.
-        </p>
-        <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-          <Link href="/entrar" className={botonPrimario}>
-            Entrar
-          </Link>
-          <Link href="/registro" className={botonSecundario}>
-            Crear cuenta
-          </Link>
-        </div>
-      </section>
+    <main className={styles.landing} id="contenido">
+      <LandingDemo />
 
-      <section className="border-t border-linea bg-panel">
-        <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
-          <h2 className="text-center text-2xl font-semibold tracking-tight text-tinta">
-            Mirá qué le llega a la abuela
-          </h2>
-          <p className="mx-auto mt-2 mb-8 max-w-xl text-center text-base leading-relaxed text-texto">
-            Elegí un mensaje y fijate qué hace Mula AI con cada uno.
-          </p>
-          <DemoGuiada />
-        </div>
-      </section>
-
-      <section className="border-t border-linea">
-        <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
-          <h2 className="text-2xl font-semibold tracking-tight text-tinta">Qué hace</h2>
-          <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {QUE_HACE.map((item) => (
-              <div key={item.titulo} className="rounded-lg border border-linea p-5">
-                <h3 className="text-base font-semibold text-tinta">{item.titulo}</h3>
-                <p className="mt-2 text-base leading-relaxed text-texto">{item.texto}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="border-t border-linea bg-panel">
-        <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
-          <h2 className="text-2xl font-semibold tracking-tight text-tinta">
-            Cómo se configura
-          </h2>
-          <ol className="mt-8 grid gap-4 lg:grid-cols-3">
-            {PASOS.map((paso, i) => (
-              <li key={paso.titulo} className="rounded-lg border border-linea bg-fondo p-5">
-                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-tinta text-sm font-semibold text-white">
-                  {i + 1}
-                </span>
-                <h3 className="mt-4 text-base font-semibold text-tinta">{paso.titulo}</h3>
-                <p className="mt-2 text-base leading-relaxed text-texto">{paso.texto}</p>
-              </li>
-            ))}
+      <section className={`${styles.container} ${styles.familySection}`} id="como-funciona" aria-labelledby="family-title">
+        <div className={styles.familyCopy}>
+          <h2 id="family-title">El mensaje le llega a una persona.<br />El aviso, a su familia.</h2>
+          <p>Mula reconoce el guion de estafa y avisa antes de que salga la plata.</p>
+          <ol className={styles.setup}>
+            <li><span>1</span><div><strong>Vinculá su WhatsApp</strong><p>Con un QR, como WhatsApp Web. Sin instalar otra app.</p></div></li>
+            <li><span>2</span><div><strong>Elegí a quién avisar</strong><p>Sumá familiares y contactos de confianza.</p></div></li>
+            <li><span>3</span><div><strong>Mula se queda atento</strong><p>Si aparece una estafa, reciben el aviso.</p></div></li>
           </ol>
         </div>
-      </section>
-
-      <section className="border-t border-linea">
-        <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-16 sm:px-6 lg:flex-row lg:items-center lg:justify-between">
-          <div>
-            <h2 className="text-2xl font-semibold tracking-tight text-tinta">
-              Protegé a alguien de tu familia
-            </h2>
-            <p className="mt-2 text-base leading-relaxed text-texto">
-              Creá tu cuenta, vinculá su WhatsApp y cargá a quién avisar.
-            </p>
-          </div>
-          <div className="flex flex-col gap-3 sm:flex-row">
-            <Link href="/registro" className={botonPrimario}>
-              Crear cuenta
-            </Link>
-            <Link href="/entrar" className={botonSecundario}>
-              Entrar
-            </Link>
-          </div>
+        <div className={styles.familyExample} data-slot="family-example">
+          <div className={styles.chatCaption}><IconoChat /> El grupo familiar</div>
+          <LandingChat vista={demoLanding()} familia />
         </div>
       </section>
 
-      <footer className="border-t border-linea">
-        <p className="mx-auto max-w-6xl px-4 py-6 text-sm text-suave sm:px-6">
-          Prototipo para la hackatón shippe.ar. Los reportes previos de la red son
-          sintéticos, generados para la demo.
-        </p>
+      <section className={styles.networkSection} id="la-red" aria-labelledby="network-title">
+        <div className={`${styles.container} ${styles.networkGrid}`}>
+          <div><h2 id="network-title">La cuenta se repite.<br />La red se acuerda.</h2><p>Distintas personas. El mismo destino para la plata.</p><Link className={styles.outline} href="/entrar">Explorar la red <IconoFlecha /></Link></div>
+          <figure className={styles.networkFigure}>
+            <div className={styles.networkVisual} role="img" aria-label="Ejemplo ilustrativo: reportes de Santa Fe, Buenos Aires, Córdoba, Mendoza y Entre Ríos conectados al alias juli.martinez.mp">
+              <svg className={styles.networkLines} viewBox="0 0 600 420" fill="none" preserveAspectRatio="none" aria-hidden="true">
+                <path d="M114 55C114 150 240 100 300 185M468 63C468 150 350 100 300 185M114 294C114 230 230 260 300 185M486 294C486 230 370 260 300 185M300 374V185" />
+                <circle cx="114" cy="55" r="5" /><circle cx="468" cy="63" r="5" /><circle cx="114" cy="294" r="5" /><circle cx="486" cy="294" r="5" /><circle cx="300" cy="374" r="5" />
+              </svg>
+              {[
+                ["Santa Fe", "santaFe"], ["Buenos Aires", "buenosAires"], ["Córdoba", "cordoba"], ["Mendoza", "mendoza"], ["Entre Ríos", "entreRios"],
+              ].map(([provincia, posicion]) => <div key={provincia} className={`${styles.networkCase} mula-case-${posicion}`}><IconoChat /><span>{provincia}</span></div>)}
+              <div className={styles.networkAlias}><span className={styles.networkFlag}>Alias reportado</span><strong>juli.martinez.mp</strong><span className={styles.networkConnection}><IconoRed /> Una cuenta conecta los casos</span></div>
+            </div>
+            <figcaption>Así se conectan los casos. Ejemplo con datos sintéticos.</figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <footer className={styles.footer}>
+        <div className={styles.container}>
+          <div className={styles.footerTop}><h2>Que no te agarren<br />en soledad.</h2><Link className={styles.primary} href="/registro">Empezar a cuidar <IconoFlecha /></Link></div>
+          <div className={styles.footerBottom}><Link className={styles.footerBrand} href="/"><IconoEscudo /> Mula AI</Link><Link href="/entrar">Ya tengo cuenta</Link><p>Prototipo para la hackatón shippe.ar. Los reportes previos de la red son sintéticos, generados para la demo.</p></div>
+        </div>
       </footer>
     </main>
   );

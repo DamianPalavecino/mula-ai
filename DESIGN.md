@@ -88,5 +88,7 @@ Contraste medido (AA texto normal ≥ 4.5): `alerta` sobre `fondo` 5.9, `seguro`
 | Stat | `Panel` (`Stat`) | normal, destacado (`lima`) |
 | Conversación WhatsApp | `AppProbarMensaje` | vacío, analizando, resultado riesgo / sin señales, error |
 | Grafo | `Graph`, `AdminRed`, `colores.ts` | nodo por tipo, destacado (pulso), seleccionado |
+| Navbar pública | `PublicNav`, `PublicNav.css` | marca, enlaces a secciones, entrar/registro; menú mobile con cierre por enlace o Escape |
+| Landing pública | `LandingDemo`, `LandingChat`, `Landing.css` | hero lima, tres guiones precalculados, aviso a persona/familia, conversación normal sin alerta; estilos locales |
 
 Todos los componentes y tokens se ven juntos en **`/styleguide`** (fuera de la navegación, sin datos reales).

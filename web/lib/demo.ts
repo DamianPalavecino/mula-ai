@@ -96,3 +96,31 @@ export const GUIONES_DEMO: GuionDemo[] = [
     },
   },
 ];
+
+
+const AVISOS_LANDING: Record<string, { persona: string; familia: string; nombre: string }> = {
+  familiar: {
+    nombre: "Juli",
+    persona: "No transfieras. Llamá a Juli a su número de siempre.",
+    familia: "Alguien le pidió plata a Marta haciéndose pasar por Juli. Llamala antes de que transfiera.",
+  },
+  anses: {
+    nombre: "ANSES",
+    persona: "No transfieras. ANSES no pide plata para cobrar un beneficio.",
+    familia: "Un falso ANSES le pidió plata a Marta para cobrar un beneficio. Avisale que no transfiera.",
+  },
+};
+
+// Vista de la demo pública: datos fijos, sin requests al worker, LLM o base.
+export function demoLanding(id = "familiar") {
+  const guion = GUIONES_DEMO.find((g) => g.id === id) ?? GUIONES_DEMO[0];
+  const avisar = guion.resultado.es_sospechoso;
+  const aviso = AVISOS_LANDING[guion.id];
+  return {
+    guion,
+    avisar,
+    nombreChat: aviso?.nombre ?? "Carla, vecina",
+    avisoPersona: avisar ? aviso?.persona ?? guion.resultado.alerta_persona : null,
+    avisoFamilia: avisar ? aviso?.familia ?? guion.resultado.alerta_familia : null,
+  };
+}

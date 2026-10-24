@@ -1,0 +1,36 @@
+.mula-publicHeader { position: relative; z-index: 30; background: var(--color-lima); color: var(--color-bosque); }
+.mula-publicHeader * { box-sizing: border-box; }
+.mula-publicBar { display: flex; align-items: center; gap: 32px; max-width: 1200px; min-height: 80px; padding: 12px 24px; margin-inline: auto; }
+.mula-publicBrand { display: inline-flex; align-items: baseline; gap: 4px; min-height: 44px; padding-top: 2px; font-size: 32px; line-height: 1.25; font-weight: 800; letter-spacing: -.07em; white-space: nowrap; }
+.mula-publicBrand > span { font-size: 14px; font-weight: 600; letter-spacing: -.03em; }
+.mula-publicBrand > svg { align-self: center; width: 22px; height: 22px; margin-left: 4px; }
+.mula-publicLinks { display: flex; align-items: center; justify-content: center; gap: 32px; flex: 1; }
+.mula-publicLinks a, .mula-publicLogin { min-height: 44px; display: inline-flex; align-items: center; font-size: 14px; white-space: nowrap; }
+.mula-publicLinks a:hover { text-decoration: underline; text-underline-offset: 5px; }
+.mula-publicActions { display: flex; align-items: center; gap: 24px; }
+.mula-publicLogin { font-weight: 600; }
+.mula-publicLogin:hover { text-decoration: underline; text-underline-offset: 5px; }
+.mula-publicSignup { min-height: 44px; display: inline-flex; align-items: center; justify-content: center; gap: 12px; padding: 8px 20px; border-radius: var(--radius-pastilla); background: var(--color-bosque); color: var(--color-bosque-tinta); font-size: 13px; font-weight: 600; white-space: nowrap; transition: transform 150ms var(--ease-salida); }
+.mula-publicSignup:hover { transform: translateY(-1px); }
+.mula-publicSignup:active { transform: translateY(1px); }
+.mula-publicSignup svg { width: 18px; height: 18px; }
+.mula-menuToggle { display: none; align-items: center; justify-content: center; width: 44px; height: 44px; border: 1px solid var(--color-bosque); border-radius: var(--radius-control); background: transparent; color: var(--color-bosque); cursor: pointer; }
+.mula-menuToggle:hover { background: var(--color-seguro-fondo); }
+.mula-menuToggle:disabled { opacity: .55; cursor: not-allowed; }
+.mula-publicHeader :focus-visible { outline: 3px solid var(--color-seguro); outline-offset: 3px; }
+.mula-mobileNav { display: none; }
+.mula-mobileNav[hidden] { display: none !important; }
+@media (max-width: 700px) {
+  .mula-publicBar { min-height: 72px; padding: 12px 20px; gap: 16px; }
+  .mula-publicBrand { margin-right: auto; font-size: 30px; }
+  .mula-publicLinks, .mula-publicSignup { display: none; }
+  .mula-publicActions { gap: 0; }
+  .mula-publicLogin { font-size: 13px; }
+  .mula-menuToggle { display: inline-flex; }
+  .mula-mobileNav { position: absolute; top: 100%; left: 20px; right: 20px; display: flex; flex-direction: column; gap: 4px; padding: 12px; border: 1px solid var(--color-seguro-linea); border-radius: var(--radius-tarjeta); background: var(--color-papel); color: var(--color-bosque); box-shadow: var(--shadow-flotante); }
+  .mula-mobileNav a { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 48px; padding: 12px; border-radius: var(--radius-control); font-size: 14px; }
+  .mula-mobileNav a:hover { background: var(--color-seguro-fondo); }
+  .mula-mobileNav svg { width: 18px; height: 18px; }
+  .mula-mobileNav .mula-mobileSignup { background: var(--color-bosque); color: var(--color-bosque-tinta); margin-top: 4px; }
+}
+@media (prefers-reduced-motion: reduce) { .mula-publicSignup { transition: none; } .mula-publicSignup:hover, .mula-publicSignup:active { transform: none; } }

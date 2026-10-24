@@ -1,0 +1,160 @@
+/* Hallmark · theme: locked DESIGN.mula-md · hero: custom · shape: product conversation · job: sign up · posture: committed · v2.0.0 */
+/* Hallmark · pre-emit critique: prototype transferred to real Next.mula-js route; existing tokens, session flow and precalculated demo preserved */
+.mula-landing { background: var(--color-papel); color: var(--color-bosque); min-width: 0; }
+.mula-landing *, .mula-landing *::before, .mula-landing *::after { box-sizing: border-box; }
+.mula-container { width: 100%; max-width: 1200px; margin-inline: auto; padding-inline: 24px; }
+.mula-landing h1, .mula-landing h2 { min-width: 0; overflow-wrap: break-word; text-wrap: balance; font-weight: 700; letter-spacing: -.055em; line-height: 1.06; }
+.mula-landing p { text-wrap: pretty; }
+.mula-landing svg { flex-shrink: 0; width: 20px; height: 20px; }
+.mula-landing a, .mula-landing button { touch-action: manipulation; }
+.mula-landing :focus-visible { outline: 3px solid var(--color-seguro); outline-offset: 4px; }
+.mula-landing button { cursor: pointer; }
+.mula-hero { background: var(--color-lima); color: var(--color-bosque); }
+.mula-heroGrid { min-height: 680px; padding-block: 40px; display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, .9fr); align-items: center; gap: 64px; }
+.mula-heroCopy h1 { max-width: 13ch; font-size: clamp(48px, 5.7vw, 80px); }
+.mula-heroCopy > p { max-width: 29ch; margin-block: 28px 36px; font-size: 20px; line-height: 1.55; }
+.mula-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 24px; }
+.mula-primary, .mula-outline { display: inline-flex; align-items: center; justify-content: center; gap: 16px; min-height: 48px; padding: 12px 24px; border: 1px solid var(--color-bosque); border-radius: var(--radius-pastilla); font-size: 14px; font-weight: 600; white-space: nowrap; text-decoration: none; }
+.mula-primary { background: var(--color-bosque); color: var(--color-bosque-tinta); transition: transform 150ms var(--ease-salida); }
+.mula-primary:hover { transform: translateY(-2px); }
+.mula-primary:active { transform: translateY(1px); }
+.mula-outline { color: var(--color-bosque); background: transparent; }
+.mula-outline:hover { background: var(--color-seguro-fondo); }
+.mula-textLink { display: inline-flex; align-items: center; gap: 12px; min-height: 44px; font-size: 14px; font-weight: 600; white-space: nowrap; }
+.mula-textLink:hover { text-decoration: underline; text-underline-offset: 4px; }
+.mula-chatStage { width: 100%; max-width: 440px; justify-self: end; }
+.mula-stageHeading { display: flex; align-items: center; justify-content: space-between; gap: 16px; font-size: 12px; margin-bottom: 12px; }
+.mula-stageHeading > span:first-child { display: flex; align-items: center; gap: 8px; }
+.mula-stageHeading > span:last-child { border: 1px solid var(--color-bosque); border-radius: var(--radius-pastilla); padding: 4px 12px; }
+.mula-chat { min-width: 0; background: var(--color-wa-fondo); color: var(--color-tinta); border-radius: var(--radius-tarjeta); overflow: clip; text-align: left; }
+.mula-chatHeader { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: var(--color-wa-barra); color: var(--color-bosque-tinta); }
+.mula-chatAvatar { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; flex-shrink: 0; background: var(--color-seguro-fondo); color: var(--color-wa-barra); border-radius: var(--radius-pastilla); font-size: 16px; font-weight: 600; }
+.mula-chatHeader > div { min-width: 0; }
+.mula-chatHeader strong { display: block; font-size: 14px; font-weight: 600; }
+.mula-chatHeader > div > span { display: block; font-size: 11px; margin-top: 2px; }
+.mula-chatHeaderIcon { margin-left: auto; }
+.mula-messages { min-height: 340px; display: flex; flex-direction: column; align-items: flex-start; gap: 8px; padding: 12px; }
+.mula-day { align-self: center; background: var(--color-fondo); color: var(--color-texto); border-radius: 8px; padding: 4px 12px; font-size: 11px; }
+.mula-bubble { position: relative; flex-shrink: 0; background: var(--color-fondo); color: var(--color-tinta); border-radius: 0 12px 12px 12px; padding: 8px 12px; max-width: 94%; font-size: 13px; line-height: 1.4; }
+.mula-bubble::before { content: ''; position: absolute; top: 0; left: -6px; width: 8px; height: 10px; background: var(--color-fondo); clip-path: polygon(0 0, 100% 0, 100% 100%); }
+.mula-bubble strong { font-weight: 600; }
+.mula-bubble time { display: block; margin-top: 4px; color: var(--color-texto); text-align: right; font-size: 11px; }
+.mula-sender { display: flex; align-items: center; gap: 4px; color: var(--color-wa-barra); font-size: 11px; font-weight: 600; margin-bottom: 4px; }
+.mula-sender svg { width: 14px; height: 14px; }
+.mula-mulaMessage { max-width: 100%; background: var(--color-wa-propio); border-radius: var(--radius-control); }
+.mula-mulaMessage::before { display: none; }
+.mula-mulaMessage > strong { display: block; margin-bottom: 4px; }
+.mula-risk { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--color-seguro-linea); font-size: 11px; color: var(--color-alerta); }
+.mula-risk > span { display: inline-flex; align-items: center; gap: 4px; }
+.mula-risk svg { width: 14px; height: 14px; }
+.mula-risk b { font-weight: 600; font-variant-numeric: tabular-nums; }
+.mula-outgoing { align-self: flex-end; background: var(--color-wa-propio); border-radius: 12px 0 12px 12px; }
+.mula-outgoing::before { background: var(--color-wa-propio); left: auto; right: -6px; transform: scaleX(-1); }
+.mula-safeMessage { display: flex; align-items: center; gap: 8px; background: var(--color-seguro-fondo); color: var(--color-seguro); border-radius: var(--radius-control); padding: 12px; margin-top: 16px; font-size: 12px; }
+.mula-composer { display: flex; align-items: center; gap: 12px; padding: 8px 12px; background: var(--color-wa-composer); color: var(--color-texto); }
+.mula-composer > span:first-child { font-size: 24px; }
+.mula-composer > span:nth-child(2) { flex: 1; min-width: 0; background: var(--color-fondo); color: var(--color-texto); border-radius: var(--radius-pastilla); padding: 8px 12px; font-size: 12px; }
+.mula-notification { display: flex; align-items: center; gap: 12px; margin-top: 12px; padding: 16px; background: var(--color-bosque); color: var(--color-bosque-tinta); border-radius: var(--radius-control); }
+.mula-notification > div { flex: 1; min-width: 0; }
+.mula-notification strong { display: block; font-size: 12px; font-weight: 600; }
+.mula-notification div > span { display: block; font-size: 11px; margin-top: 4px; }
+.mula-demoControls { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding-block: 16px 24px; }
+.mula-scenarios { display: flex; gap: 8px; flex-wrap: wrap; }
+.mula-scenario { min-height: 44px; padding: 8px 16px; border: 1px solid var(--color-bosque); border-radius: var(--radius-pastilla); background: transparent; color: var(--color-bosque); font-size: 12px; white-space: nowrap; }
+.mula-scenario[aria-pressed='true'] { background: var(--color-bosque); color: var(--color-bosque-tinta); }
+.mula-scenario:hover { outline: 1px solid var(--color-bosque); outline-offset: 2px; }
+.mula-demoControls > p { max-width: 45ch; font-size: 12px; line-height: 1.5; }
+.mula-familySection { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, .9fr); gap: 64px; align-items: center; padding-block: 96px; }
+.mula-familyCopy h2 { font-size: 42px; max-width: 21ch; }
+.mula-familyCopy > p { max-width: 40ch; font-size: 16px; line-height: 1.6; margin-top: 20px; }
+.mula-setup { counter-reset: none; list-style: none; margin: 32px 0 0; padding: 0; }
+.mula-setup li { display: flex; align-items: flex-start; gap: 16px; padding-block: 16px; border-top: 1px solid var(--color-seguro-linea); }
+.mula-setup li > span { display: flex; align-items: center; justify-content: center; min-width: 28px; height: 28px; background: var(--color-lima); color: var(--color-bosque); border-radius: var(--radius-pastilla); font-size: 12px; font-weight: 600; }
+.mula-setup strong { font-size: 14px; font-weight: 600; }
+.mula-setup p { color: var(--color-texto); font-size: 13px; line-height: 1.5; margin-top: 4px; }
+.mula-chatCaption { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; margin-bottom: 16px; }
+.mula-familyChat .mula-messages { min-height: 300px; padding: 20px 16px; gap: 16px; }
+.mula-familyChat .mula-bubble { font-size: 15px; }
+.mula-familyChat .mula-bubble > strong { display: block; margin-bottom: 8px; }
+.mula-networkSection { background: var(--color-seguro-fondo); color: var(--color-bosque); }
+.mula-networkGrid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 64px; align-items: center; padding-block: 80px; }
+.mula-networkGrid h2 { font-size: 46px; }
+.mula-networkGrid > div > p { max-width: 36ch; margin-block: 24px; font-size: 16px; line-height: 1.6; }
+.mula-networkFigure { min-width: 0; margin: 0; }
+.mula-networkFigure figcaption { margin-top: 16px; color: var(--color-texto); text-align: center; font-size: 12px; }
+.mula-networkVisual { position: relative; width: 100%; height: 420px; background-image: radial-gradient(var(--color-seguro-linea) 1px, transparent 1px); background-size: 20px 20px; }
+.mula-networkLines { position: absolute; inset: 0; width: 100% !important; height: 100% !important; overflow: visible; }
+.mula-networkLines path { stroke: var(--color-seguro); stroke-width: 1.5; vector-effect: non-scaling-stroke; }
+.mula-networkLines circle { fill: var(--color-lima); stroke: var(--color-seguro); stroke-width: 1.5; }
+.mula-networkCase { position: absolute; transform: translate(-50%, -50%); display: flex; align-items: center; gap: 8px; padding: 12px 16px; border-radius: var(--radius-pastilla); background: var(--color-papel); color: var(--color-bosque); box-shadow: var(--shadow-flotante); font-size: 12px; white-space: nowrap; }
+.mula-networkCase svg { width: 18px; height: 18px; color: var(--color-seguro); }
+.mula-case-santaFe { left: 19%; top: 13%; }
+.mula-case-buenosAires { left: 78%; top: 15%; }
+.mula-case-cordoba { left: 19%; top: 70%; }
+.mula-case-mendoza { left: 81%; top: 70%; }
+.mula-case-entreRios { left: 50%; top: 89%; }
+.mula-networkAlias { position: absolute; left: 50%; top: 44%; transform: translate(-50%, -50%); width: min(280px, 75%); display: flex; align-items: center; flex-direction: column; gap: 12px; padding: 24px 16px; border: 1px solid var(--color-seguro-linea); border-radius: var(--radius-tarjeta); background: var(--color-bosque); color: var(--color-bosque-tinta); box-shadow: var(--shadow-flotante); }
+.mula-networkFlag { padding: 4px 12px; border-radius: var(--radius-pastilla); background: var(--color-alerta-fondo); color: var(--color-alerta); font-size: 11px; }
+.mula-networkAlias strong { font-size: 22px; letter-spacing: -.035em; font-weight: 600; }
+.mula-networkConnection { display: inline-flex; align-items: center; gap: 8px; font-size: 11px; }
+.mula-networkConnection svg { width: 16px; height: 16px; color: var(--color-lima); }
+.mula-footer { background: var(--color-bosque); color: var(--color-bosque-tinta); padding-block: 64px 32px; }
+.mula-footerTop { display: flex; align-items: center; justify-content: space-between; gap: 32px; padding-bottom: 48px; }
+.mula-footerTop h2 { font-size: 48px; }
+.mula-footer .mula-primary { background: var(--color-lima); color: var(--color-bosque); }
+.mula-footer :focus-visible { outline-color: var(--color-lima); }
+.mula-footerBottom { display: flex; align-items: center; flex-wrap: wrap; gap: 24px; padding-top: 24px; border-top: 1px solid var(--color-seguro-linea); }
+.mula-footerBrand { display: inline-flex; align-items: center; gap: 8px; font-size: 20px; font-weight: 700; }
+.mula-footerBottom > a:nth-child(2) { margin-left: auto; min-height: 44px; display: inline-flex; align-items: center; font-size: 13px; }
+.mula-footerBottom > p { flex-basis: 100%; max-width: 72ch; font-size: 12px; line-height: 1.6; }
+@media (max-width: 1000px) {
+  .mula-heroGrid { gap: 32px; }
+  .mula-heroCopy h1 { font-size: 60px; }
+  .mula-heroCopy > p { font-size: 18px; }
+  .mula-familySection, .mula-networkGrid { gap: 40px; }
+  .mula-demoControls { flex-wrap: wrap; gap: 16px; }
+  .mula-demoControls > p { max-width: none; }
+  .mula-familyCopy h2, .mula-networkGrid h2 { font-size: 36px; }
+}
+@media (max-width: 700px) {
+  .mula-container { padding-inline: 20px; }
+  .mula-heroGrid { grid-template-columns: minmax(0, 1fr); gap: 36px; min-height: 0; padding-block: 40px 24px; }
+  .mula-heroCopy h1 { font-size: clamp(48px, 12vw, 68px); }
+  .mula-heroCopy > p { font-size: 18px; margin-block: 24px; max-width: 30ch; }
+  .mula-actions { gap: 12px; }
+  .mula-primary, .mula-outline { padding-inline: 20px; font-size: 13px; }
+  .mula-textLink { font-size: 13px; }
+  .mula-chatStage { max-width: none; }
+  .mula-messages { min-height: 350px; }
+  .mula-bubble { font-size: 14px; }
+  .mula-notification { padding: 16px 12px; gap: 8px; }
+  .mula-notification > svg:last-child { display: none; }
+  .mula-notification strong { font-size: 12px; }
+  .mula-demoControls { padding-bottom: 32px; gap: 16px; }
+  .mula-scenarios { width: 100%; gap: 8px; }
+  .mula-scenario { font-size: 11px; padding-inline: 12px; }
+  .mula-demoControls > p { font-size: 12px; }
+  .mula-familySection { grid-template-columns: minmax(0, 1fr); padding-block: 56px; gap: 32px; }
+  .mula-familyCopy h2, .mula-networkGrid h2 { font-size: 36px; }
+  .mula-familyCopy > p { font-size: 16px; }
+  .mula-setup { margin-top: 24px; }
+  .mula-setup strong { font-size: 15px; }
+  .mula-setup p { font-size: 14px; }
+  .mula-familyChat .mula-messages { min-height: 320px; }
+  .mula-networkGrid { grid-template-columns: minmax(0, 1fr); gap: 32px; padding-block: 56px; }
+  .mula-networkVisual { height: 360px; }
+  .mula-networkCase { padding: 12px; gap: 8px; font-size: 11px; }
+  .mula-networkAlias strong { font-size: 20px; overflow-wrap: anywhere; }
+  .mula-networkAlias { gap: 8px; padding: 20px 12px; }
+  .mula-networkConnection { font-size: 11px; }
+  .mula-footer { padding-block: 48px 24px; }
+  .mula-footerTop { align-items: flex-start; flex-direction: column; gap: 24px; padding-bottom: 32px; }
+  .mula-footerTop h2 { font-size: 38px; }
+  .mula-footerBottom { gap: 16px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mula-primary { transition: none; }
+  .mula-primary:hover, .mula-primary:active { transform: none; }
+}
+
+.mula-scenario:disabled { opacity: .55; cursor: not-allowed; }

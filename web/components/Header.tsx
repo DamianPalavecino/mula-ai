@@ -4,6 +4,7 @@ import HeaderNav, { type LinkNav } from "@/components/HeaderNav";
 import { getSesion } from "@/lib/auth";
 import { clerkActivo } from "@/lib/clerk";
 import { IconoEscudo } from "@/components/iconos";
+import PublicNav from "@/components/PublicNav";
 
 // Con sesión todo vive en el panel de /app (pestañas propias): el header no repite la navegación.
 const LINKS_USUARIO: LinkNav[] = [{ href: "/app", label: "Mi panel", corto: "Panel" }];
@@ -24,30 +25,18 @@ function Marco({ inicio, children }: { inicio: string; children?: React.ReactNod
 
 // Fallback mientras se resuelve la sesión (Suspense en el layout).
 export function HeaderBase() {
-  return <Marco inicio="/" />;
+  return <PublicNav />;
 }
 
 // Server component: arma los links según sesión y rol. El resaltado del link activo
 // (usePathname) vive en HeaderNav (client).
 export default async function Header() {
   const sesion = await getSesion();
-  const links: LinkNav[] = sesion
-    ? LINKS_USUARIO
-    : [{ href: "/", label: "Inicio" }];
-
+  if (!sesion) return <PublicNav />;
   return (
-    <Marco inicio={sesion ? "/app" : "/"}>
-      <HeaderNav links={links} />
-      {sesion ? (
-        clerkActivo && <UserButton />
-      ) : (
-        <Link
-          href="/entrar"
-          className="inline-flex h-9 shrink-0 items-center rounded-md bg-tinta px-3.5 text-sm font-medium text-white hover:bg-black"
-        >
-          Entrar
-        </Link>
-      )}
+    <Marco inicio="/app">
+      <HeaderNav links={LINKS_USUARIO} />
+      {clerkActivo && <UserButton />}
     </Marco>
   );
 }
