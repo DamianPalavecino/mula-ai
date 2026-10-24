@@ -3,11 +3,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
-import type { Alerta, Grafo, Nodo, ResumenEntidad, TipoNodo } from "@/lib/tipos";
+import type { Alerta, Grafo, Nodo, ResumenEntidad } from "@/lib/tipos";
 import { TIPOS_ENTIDAD } from "@/lib/tipos";
 import AdminFeed from "@/components/AdminFeed";
 import ResumenCard from "@/components/ResumenCard";
-import { COLORES } from "@/components/colores";
 import { fusionar } from "@/lib/red";
 
 // react-force-graph-2d usa canvas/window: solo en el cliente.
@@ -34,7 +33,6 @@ function Aviso({ texto }: { texto: string }) {
 const nodos0 = new Map<string, Nodo>();
 
 
-const LEYENDA: TipoNodo[] = ["alias", "cbu", "cvu", "telefono", "cuit", "link", "reporte"];
 
 export default function AdminRed({
   grafoInicial,
@@ -197,18 +195,6 @@ export default function AdminRed({
           )}
         </div>
 
-        <ul className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-suave">
-          {LEYENDA.map((tipo) => (
-            <li key={tipo} className="flex items-center gap-1.5">
-              <span
-                className="h-2.5 w-2.5 rounded-full"
-                style={{ background: COLORES[tipo] }}
-                aria-hidden
-              />
-              {tipo === "reporte" ? "Reporte" : TIPOS_ENTIDAD[tipo]}
-            </li>
-          ))}
-        </ul>
 
         {seleccionado && (
           <div
