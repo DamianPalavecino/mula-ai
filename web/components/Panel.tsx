@@ -6,7 +6,6 @@ import type { Alerta, Grafo } from "@/lib/tipos";
 import type { Conteo } from "@/lib/adminStats";
 import type { Tab } from "@/lib/panel";
 import type { ValoresSetup } from "@/components/AppSetupForm";
-import AppAlertas from "@/components/AppAlertas";
 import AppProbarMensaje from "@/components/AppProbarMensaje";
 import AppSetupForm from "@/components/AppSetupForm";
 import MeEstafaronForm from "@/components/MeEstafaronForm";
@@ -96,7 +95,7 @@ export default function Panel(d: DatosPanel) {
     ) : null;
 
   return (
-    <AppShell activa={tab} onIr={ir} protegido={d.protegido} alertas={d.misAlertas.length} conUsuario={d.conUsuario}>
+    <AppShell activa={tab} onIr={ir} protegido={d.protegido} alertas={d.misAlertas} conUsuario={d.conUsuario}>
       {d.error && (
         <p className="rounded-tarjeta border border-linea bg-panel p-4 text-sm font-medium text-texto">
           Algunos datos no cargaron. Recargá en unos segundos.
@@ -116,24 +115,6 @@ export default function Panel(d: DatosPanel) {
           <div className="min-h-0 flex-1">
             <InicioChat protegido={d.protegido?.nombre ?? null} onIr={ir} />
           </div>
-        </div>,
-      )}
-
-      {seccion(
-        "alertas",
-        <div className="max-w-3xl">
-          {d.protegido ? (
-            <AppAlertas iniciales={d.misAlertas} nombre={d.protegido.nombre} />
-          ) : (
-            <button
-              type="button"
-              onClick={() => ir("ajustes")}
-              className="presionable flex min-h-11 w-full cursor-pointer flex-col items-center gap-2 rounded-tarjeta border border-dashed border-seguro-linea bg-seguro-fondo p-10 text-center text-bosque"
-            >
-              <BellIcon className="size-8 text-seguro" />
-              <span className="text-lg font-bold">Cargá a quién cuidás</span>
-            </button>
-          )}
         </div>,
       )}
 

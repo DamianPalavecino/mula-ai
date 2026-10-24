@@ -29,12 +29,26 @@ function Riesgo({ valor }: { valor: number | null }) {
 }
 
 // Alertas de mis protegidos. Polling a /app/api/alertas (el browser no habla con Supabase).
-export default function AppAlertas({ iniciales, nombre }: { iniciales: Alerta[]; nombre: string }) {
+export default function AppAlertas({
+  iniciales,
+  nombre,
+  onCambio,
+}: {
+  iniciales: Alerta[];
+  nombre: string;
+  onCambio?: (alertas: Alerta[]) => void; // p. ej. la campana del top bar cuenta las no vistas
+}) {
   const [alertas, setAlertas] = useState<Alerta[]>(iniciales);
   const [nuevas, setNuevas] = useState<number[]>([]);
   const [conectado, setConectado] = useState(true);
   const [, setTick] = useState(0);
   const maxId = useRef(iniciales.reduce((m, a) => Math.max(m, a.id), 0));
+  const onCambioRef = useRef(onCambio);
+  onCambioRef.current = onCambio;
+
+  useEffect(() => {
+    onCambioRef.current?.(alertas);
+  }, [alertas]);
 
   useEffect(() => {
     let vivo = true;

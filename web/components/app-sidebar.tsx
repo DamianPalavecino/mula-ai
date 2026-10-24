@@ -2,10 +2,7 @@
 
 // Adaptado de Efferd app-shell-4 (sidebar flotante, colapsable a íconos; drawer en mobile).
 import Link from "next/link";
-import { UserButton } from "@clerk/nextjs";
 import {
-  BellIcon,
-  HouseIcon,
   MessageCircleIcon,
   NetworkIcon,
   SearchIcon,
@@ -23,16 +20,14 @@ import {
   SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
-  SidebarMenuBadge,
   SidebarMenuButton,
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
 import type { Tab } from "@/lib/panel";
 
+// "inicio" (el chat) es la vista por defecto: no tiene ítem; se vuelve con el logo.
 export const SECCIONES: { id: Tab; titulo: string; Icono: LucideIcon }[] = [
-  { id: "inicio", titulo: "Inicio", Icono: HouseIcon },
-  { id: "alertas", titulo: "Alertas", Icono: BellIcon },
   { id: "probar", titulo: "Probar", Icono: MessageCircleIcon },
   { id: "verificar", titulo: "Verificar", Icono: SearchIcon },
   { id: "me-estafaron", titulo: "Me estafaron", Icono: TriangleAlertIcon },
@@ -45,14 +40,10 @@ export function AppSidebar({
   activa,
   onIr,
   protegido,
-  alertas,
-  conUsuario,
 }: {
   activa: Seccion;
   onIr: (s: Seccion) => void;
   protegido: { nombre: string; ubicacion: string } | null;
-  alertas: number;
-  conUsuario: boolean;
 }) {
   const { isMobile, setOpenMobile } = useSidebar();
   const ir = (s: Seccion) => {
@@ -63,8 +54,8 @@ export function AppSidebar({
   return (
     <Sidebar collapsible="icon" variant="floating">
       <SidebarHeader className="gap-3">
-        <SidebarMenuButton asChild size="lg" className="hover:bg-transparent">
-          <Link href="/app">
+        <SidebarMenuButton asChild size="lg" className="hover:bg-transparent" tooltip="Asistente">
+          <Link href="/app" onClick={(e) => { e.preventDefault(); ir("inicio"); }}>
             <ShieldCheckIcon className="text-seguro" />
             <span className="text-base font-bold tracking-tight text-bosque">Mula AI</span>
           </Link>
@@ -111,11 +102,6 @@ export function AppSidebar({
                   <Icono />
                   <span>{titulo}</span>
                 </SidebarMenuButton>
-                {id === "alertas" && alertas > 0 && (
-                  <SidebarMenuBadge className="rounded-full bg-alerta text-white peer-hover/menu-button:text-white">
-                    {alertas}
-                  </SidebarMenuBadge>
-                )}
               </SidebarMenuItem>
             ))}
           </SidebarMenu>
@@ -132,11 +118,6 @@ export function AppSidebar({
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
-          {conUsuario && (
-            <SidebarMenuItem className="flex items-center px-1.5 py-1">
-              <UserButton />
-            </SidebarMenuItem>
-          )}
         </SidebarMenu>
       </SidebarFooter>
     </Sidebar>

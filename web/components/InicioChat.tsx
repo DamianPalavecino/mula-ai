@@ -2,13 +2,12 @@
 
 // Lugar del chat con IA en Inicio (contrato en docs/agentes/estado/chat.md). Cuando chat-ia
 // pushee components/chat/Chat.tsx, se reemplaza este placeholder por <Chat {...props} />.
-import { BellIcon, MessageCircleIcon, NetworkIcon, SearchIcon, SettingsIcon, SparklesIcon, TriangleAlertIcon, type LucideIcon } from "lucide-react";
+import { MessageCircleIcon, NetworkIcon, SearchIcon, SettingsIcon, SparklesIcon, TriangleAlertIcon, type LucideIcon } from "lucide-react";
 import type { Tab } from "@/lib/panel";
 
 const SUGERENCIAS: { texto: string; seccion: Exclude<Tab, "inicio">; Icono: LucideIcon; riesgo?: boolean }[] = [
   { texto: "Verificar una cuenta", seccion: "verificar", Icono: SearchIcon },
   { texto: "Probar un mensaje", seccion: "probar", Icono: MessageCircleIcon },
-  { texto: "Ver mis alertas", seccion: "alertas", Icono: BellIcon },
   { texto: "Más denunciados", seccion: "red", Icono: NetworkIcon },
   { texto: "Me estafaron", seccion: "me-estafaron", Icono: TriangleAlertIcon, riesgo: true },
   { texto: "Configurar", seccion: "ajustes", Icono: SettingsIcon },
