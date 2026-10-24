@@ -70,7 +70,8 @@ Marcá `[x]` con hora y quién.
 - [x] Un mensaje de estafa desde un número desconocido → alerta al chat propio en menos de 5 s — 12:48 worker VPS: msg 48:46 → alerta #1 registrada 48:51 (~5 s, LLM 4.5 s, al límite); Damian la vio en el chat propio. 12:57 `/red` de Vercel muestra la alerta en el feed "En vivo" (desktop + mobile)
 - [ ] La misma alerta llega al grupo familiar
 - [ ] El mensaje de un contacto de confianza no se procesa (no aparece en los logs)
-- [ ] Un mensaje normal de un desconocido no alerta
+- [x] Un mensaje normal de un desconocido no alerta — 13:22 worker-latencia: `POST /analizar` en el VPS "hola, ¿tenés el número del plomero?" → `es_sospechoso:false`, riesgo 0, `reporte_id:null`, `alerta_id:null`
+- [x] Latencia < 5 s (deploy `e050908`) — 13:22 worker-latencia: 3 estafas por `/analizar` en el VPS → `[tiempo] llm=2693/3333/2589ms red=0ms total=3038/3531/2799ms` (total incluye `registrar_alerta`; antes ~5 s). Cambios: `resumen_entidad` en paralelo al LLM, la alerta sale antes de `registrar_reporte`, y si el LLM pasa `CLASSIFIER_BUDGET_MS` (3500) con la heurística ya ≥ umbral alerta con la heurística. `test:classify` 20/20 con rango (mediana 2.5 s, máx 5 s). Falta: 1 mensaje real de WhatsApp para ver `alerta_enviada=` en `vps.sh logs`
 - [x] La detección suma 1 reporte a `juli.martinez.mp` (12:48, e2e: r_181, juli 23→24; falta verlo en `/verificar` de Vercel)
 - [ ] Audio de estafa transcripto y alertado (si hay key de transcripción)
 
