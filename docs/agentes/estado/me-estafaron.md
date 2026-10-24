@@ -11,19 +11,14 @@ Lo actualiza el agente después de cada paso (commit + push). Si se corta, el si
 - Velocidad (commit `0b2352a`): el LLM solo extrae (esquema chico, `max_tokens` 1500, `sort: latency`, `reasoning: minimal`, timeout 20 s, default `google/gemini-3.5-flash-lite`); denuncia, pedido y pasos salen de `armarTextos()` en `web/lib/meEstafaron.ts` (con tests). Medido desde esta PC con las 2 capturas de demo (mismo request que la ruta, script en el scratchpad): LLM 3,0–4,2 s + red 0,3–0,9 s = 3,2–5,1 s. Lee bien alias, CVU, teléfono y $180.000. La cronología viene vacía y la UI ya la oculta.
 
 ## Cómo montar la sección en el dashboard (para el simulador)
-```tsx
-import MeEstafaronPanel from "@/components/MeEstafaronPanel"; // client component
-<MeEstafaronPanel />                              // en una columna o página
-<MeEstafaronPanel onCerrar={() => setAbierto(false)} />  // en un drawer: aparece la X
-<MeEstafaronPanel titulo={false} />               // si el contenedor ya pone su título
-```
-- Autocontenido: pasos, validaciones, "Usar capturas de ejemplo" (`/demo/*.png`), resultado, copiar y "Sumar a la red". Llama a `/app/api/extraer` y `/app/api/registrar` (sin cambios); la página que lo monte tiene que estar detrás de `requireUser()`.
-- Colores: variables `--me-*` en `MeEstafaronPanel.module.css` que apuntan a los tokens de `globals.css` (`tinta`, `texto`, `suave`, `linea`, `panel`, `papel`, `alerta*`, `seguro*`, `bosque*`, `lima`). Si cambian los tokens, el panel los sigue.
-- Ancho: anda de 320 px a ~760 px; la barra fija de copiar del resultado usa `sticky bottom-0` (el contenedor no tiene que cortar el overflow vertical). En un drawer, darle `overscroll-behavior: contain` al contenedor con scroll.
-- `/app/me-estafaron` sigue existiendo y solo monta el panel; se puede borrar cuando el dashboard lo tenga.
+- Ya está montada: `components/Panel.tsx` (pestaña `me-estafaron`) usa `<MeEstafaronForm />`; `/app/me-estafaron` redirige a `/app?tab=me-estafaron`. Anda así: el formulario trae su propio scope de colores (`me-panel`).
+- Alternativa con título e ícono propios: `<MeEstafaronPanel />` (o `titulo={false}`), y en un drawer `<MeEstafaronPanel onCerrar={…} />`.
+- Autocontenido: pasos, validaciones, "Usar capturas de ejemplo" (`/demo/*.png`), resultado, copiar y "Sumar a la red". Llama a `/app/api/extraer` y `/app/api/registrar`.
+- Estilos: `components/MeEstafaronPanel.css` (clases `me-*`, keyframes `me-k-*`), importado por `components/MeEstafaronClases.ts`. **No usar CSS modules en web/**: la regla de turbopack de `next.config.ts` pasa todo `*.css` por Tailwind y los módulos pierden el hash (la clase queda `undefined`). Variables `--me-*` → tokens de `globals.css` (`tinta`, `texto`, `suave`, `linea`, `panel`, `papel`, `alerta*`, `seguro*`, `bosque*`, `lima`).
+- La barra fija de copiar del resultado usa `sticky bottom-0`; en un contenedor con scroll propio, darle `overscroll-behavior: contain`.
 
 ## En curso (exactamente dónde quedó: archivo, comando, qué faltaba)
-- Pulido del panel según better-ui/Emil (press 0.96, entrada escalonada, ícono copiar→check cruzado, tarjetas con sombra, carga de ~5 s) y captura a 375 px.
+- Nada a medio hacer. Pulido según better-ui/Emil pusheado (`4ba0b1e`) y probado a 375 px con capturas (Chrome headless en Windows tiene 500 px de ancho mínimo: para simular el celu meter el contenido en un contenedor de 375 px).
 
 ## Próximo paso
 - Mirarlo en el navegador a 375 px logueado (Clerk) en `/app/me-estafaron`: tocar "Usar capturas de ejemplo" y revisar el resultado. No lo pude ver: requiere sesión de Clerk.

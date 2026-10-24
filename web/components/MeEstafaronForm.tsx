@@ -271,8 +271,9 @@ export default function MeEstafaronForm() {
   const lleno = capturas.length >= MAX_CAPTURAS;
   const valido = capturas.length > 0 || relato.trim().length >= 20;
 
+  // me-panel define los colores (--me-*): así el formulario anda montado solo o dentro de MeEstafaronPanel.
   return (
-    <div ref={arribaRef} className="flex scroll-mt-20 flex-col gap-6">
+    <div ref={arribaRef} className={`${s.panel} flex scroll-mt-20 flex-col gap-6`}>
       <Pasos actual={indice} />
 
       {paso.tipo === "analizando" && <Analizando capturas={capturas} />}
