@@ -20,6 +20,9 @@ begin
   if s is null or s = '' then
     return null;
   end if;
+  if s ~* '^\d{8,15}(:\d+)?@s\.whatsapp\.net$' then
+    return 'telefono';                                  -- JID de WhatsApp
+  end if;
   d := regexp_replace(s, '\D', '', 'g');
   if s ~ '^[0-9[:space:].-]+$' and length(d) = 22 then
     return case when d like '000%' then 'cvu' else 'cbu' end;

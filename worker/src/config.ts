@@ -20,7 +20,7 @@ export const config = {
   supabaseServiceRoleKey: env('SUPABASE_SERVICE_ROLE_KEY'),
   anthropicApiKey: env('ANTHROPIC_API_KEY'),
   classifierModel: env('CLASSIFIER_MODEL') ?? 'claude-haiku-5-5',
-  classifierTimeoutMs: Number(env('CLASSIFIER_TIMEOUT_MS') ?? 15000),
+  classifierTimeoutMs: Number(env('CLASSIFIER_TIMEOUT_MS') ?? 10000),
   protegidoNombre: env('PROTEGIDO_NOMBRE') ?? 'la persona protegida',
   familyGroupJid: env('FAMILY_GROUP_JID'),
   trustedContacts: new Set(

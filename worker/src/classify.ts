@@ -1,5 +1,4 @@
 import Anthropic from '@anthropic-ai/sdk';
-import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod';
 import { z } from 'zod';
 import { config } from './config.js';
 import { dedupe, detectarEntidades, entidadesDeRed, montoMaximo, type Entidad } from './entities.js';
@@ -33,6 +32,52 @@ export const ClasificacionSchema = z.object({
   alerta_familia: z.string(),
 });
 export type Clasificacion = z.infer<typeof ClasificacionSchema>;
+
+/**
+ * Validación de lo que devuelve el LLM: igual al esquema pero tolerante (una modalidad o tipo
+ * fuera del enum cae en 'otro' / se descarta en vez de tirar toda la clasificación).
+ */
+const RespuestaLlmSchema = ClasificacionSchema.extend({
+  modalidad: z.enum(MODALIDADES).catch('otro'),
+  entidades: z
+    .array(z.object({ tipo: z.string(), valor: z.string() }))
+    .transform((xs) =>
+      xs.filter((e): e is Entidad => ['alias', 'cbu', 'cvu', 'telefono'].includes(e.tipo)),
+    ),
+});
+
+/**
+ * JSON schema para `output_config.format`, escrito a mano: el helper zodOutputFormat del SDK
+ * (1.3.0) mueve los `enum` a `description` y dejaría la modalidad sin restringir.
+ */
+export const CLASIFICACION_JSON_SCHEMA = {
+  type: 'object',
+  properties: {
+    es_sospechoso: { type: 'boolean' },
+    riesgo: { type: 'integer', description: 'Riesgo de estafa de 0 a 100' },
+    modalidad: { type: 'string', enum: [...MODALIDADES] },
+    senales: { type: 'array', items: { type: 'string' } },
+    suplanta_a: { type: ['string', 'null'] },
+    entidades: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          tipo: { type: 'string', enum: ['alias', 'cbu', 'cvu', 'telefono'] },
+          valor: { type: 'string' },
+        },
+        required: ['tipo', 'valor'],
+        additionalProperties: false,
+      },
+    },
+    alerta_persona: { type: 'string' },
+    alerta_familia: { type: 'string' },
+  },
+  required: [
+    'es_sospechoso', 'riesgo', 'modalidad', 'senales', 'suplanta_a', 'entidades', 'alerta_persona', 'alerta_familia',
+  ],
+  additionalProperties: false,
+} as const;
 
 export interface ResultadoClasificacion extends Clasificacion {
   /** De dónde salió: el LLM o el fallback heurístico. */
@@ -137,20 +182,24 @@ export async function clasificar(texto: string, ctx: ContextoMensaje = {}): Prom
   if (!config.anthropicApiKey) return { ...clasificarHeuristico(texto, ctx), monto };
 
   try {
-    const resp = await getCliente().messages.parse({
+    const resp = await getCliente().messages.create({
       model: config.classifierModel,
       max_tokens: 2048,
       system: SYSTEM_PROMPT,
       messages: [{ role: 'user', content: armarPrompt(texto, ctx, regex) }],
       output_config: {
         effort: 'low',
-        format: zodOutputFormat(ClasificacionSchema),
+        format: { type: 'json_schema', schema: CLASIFICACION_JSON_SCHEMA },
       },
     });
     if (resp.stop_reason === 'refusal') throw new Error('el modelo rechazó la solicitud (refusal)');
     if (resp.stop_reason === 'max_tokens') throw new Error('respuesta cortada por max_tokens');
-    const out = resp.parsed_output;
-    if (!out) throw new Error('sin parsed_output');
+    // Puede venir un bloque `thinking` antes: leer por tipo, no por posición.
+    const json = resp.content.find((b) => b.type === 'text')?.text;
+    if (!json) throw new Error('respuesta sin bloque de texto');
+    const parsed = RespuestaLlmSchema.safeParse(JSON.parse(json));
+    if (!parsed.success) throw new Error(`salida fuera de esquema: ${parsed.error.message}`);
+    const out = parsed.data;
     return {
       ...out,
       riesgo: clamp(out.riesgo),
@@ -185,10 +234,10 @@ const PATRONES_MODALIDAD: Array<[Modalidad, RegExp]> = [
   ['inversion', /inversion|invertir|inverti|cripto|bitcoin|usdt|rendimiento|duplica|ganancia(s)? (diaria|semanal|garantizada)/],
 ];
 
-const PIDE_PLATA = /plata|transferi|transferime|transferencia|deposita|depositame|manda(me)?|pasame|prestame|necesito (\$|\d|plata|guita)|pesos|alias|cbu|cvu|lucas|mil\b/;
-const URGENCIA = /urgente|urgencia|ya mismo|rapido|ahora|hoy|no le digas|no le cuentes|por favor ayudame|ayuda/;
+const PIDE_PLATA = /plata|pagar|abona|fianza|transferi|transferime|transferencia|deposita|depositame|manda(me)?|pasame|prestame|necesito (\$|\d|plata|guita)|pesos|alias|cbu|cvu|lucas|mil\b/;
+const URGENCIA = /urgente|urgencia|ya mismo|rapido|ahora|hoy|no le digas|no le cuentes|no (le )?avise|no corte|ultimos cupos|por favor ayudame|ayuda/;
 const FAMILIAR = /\b(hola|holis)?\s*(ma|mami|mama|pa|papi|papa|abu|abuela|abuelo|abuelita|tia|tio|hijo|hija|nieto|nieta)\b/;
-const NORMAL_PLATA = /vaquita|asado|cumple|regalo|dividimos|lo que sale|la parte|expensas|cuota del club|entre todos/;
+const NORMAL_PLATA = /vaquita|asado|cumple|regalo|dividimos|lo que sale|la parte|expensas|cuota|recordatorio|secretaria|entre todos|te (los |lo |la )?devuelvo|de siempre|me prestas/;
 
 export function clasificarHeuristico(texto: string, ctx: ContextoMensaje = {}): Omit<ResultadoClasificacion, 'monto'> {
   const t = sinTildes([...(ctx.historial ?? []), texto].join('\n'));
