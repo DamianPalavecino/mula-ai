@@ -22,9 +22,10 @@ Entrega 16:00 · submit 15:45 · freeze 14:30.
 <!-- check:start -->
 | Feature | Comando | Resultado | Duración | Cuándo | Commit |
 |---|---|---|---|---|---|
-| `classify` | `npm run test:classify` | ⏭️ omitido | 1s | 24/10/2026, 12:22:00 | f1093ee |
+| `classify` | `npm run test:classify` | ✅ | 66s | 24/10/2026, 12:28:29 | c6d5a8f |
 | `e2e` | `npm run e2e` | ❌ | 3s | 24/10/2026, 12:26:00 | f9d0ffb |
-| `prod` | `node scripts/smoke-prod.mjs` | ⏭️ omitido | 0s | 24/10/2026, 12:25:00 | 9f011ae |
+| `prod` | `node --env-file-if-exists=.env scripts/smoke-prod.mjs` | ❌ | 4s | 24/10/2026, 12:28:56 | c6d5a8f |
+| `prod` | `node scripts/smoke-prod.mjs` | ⏭️ omitido | 0s | 24/10/2026, 12:28:39 | c6d5a8f |
 | `web` | `npm run build` | ✅ | 29s | 24/10/2026, 12:21:35 | f1093ee |
 | `worker` | `npm run selftest` | ✅ | 1s | 24/10/2026, 12:28:50 | c6d5a8f |
 | `worker` | `npm run typecheck` | ✅ | 0s | 24/10/2026, 12:28:50 | c6d5a8f |
