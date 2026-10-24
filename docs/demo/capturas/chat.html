@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Captura chat (ficticia)</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{width:420px;height:880px;font-family:"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:#efeae2;display:flex;flex-direction:column;font-size:15px;color:#111b21}
+.status{height:28px;background:#075e54;color:#fff;font-size:12px;display:flex;justify-content:space-between;align-items:center;padding:0 14px}
+.top{background:#075e54;color:#fff;display:flex;align-items:center;gap:10px;padding:8px 12px 10px}
+.back{font-size:22px}
+.av{width:38px;height:38px;border-radius:50%;background:#c4ccd1;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:600}
+.who b{display:block;font-size:16px;font-weight:600}.who span{font-size:12px;opacity:.85}
+.chat{flex:1;padding:12px 10px;display:flex;flex-direction:column;gap:6px;background-image:radial-gradient(#d9d2c5 1px,transparent 1px);background-size:18px 18px}
+.day{align-self:center;background:#e1f2fb;color:#54656f;font-size:12px;padding:4px 10px;border-radius:7px;margin:4px 0}
+.note{align-self:center;background:#fff6c4;color:#54656f;font-size:12px;padding:6px 10px;border-radius:7px;text-align:center;max-width:88%}
+.m{max-width:80%;padding:6px 8px 4px;border-radius:8px;line-height:1.35;position:relative;box-shadow:0 1px .5px rgba(0,0,0,.13)}
+.in{align-self:flex-start;background:#fff;border-top-left-radius:0}
+.out{align-self:flex-end;background:#d9fdd3;border-top-right-radius:0}
+.t{display:block;text-align:right;font-size:11px;color:#667781;margin-top:2px}
+.out .t::after{content:" ✓✓";color:#53bdeb}
+.alias{color:#027eb5}
+.bar{background:#f0f2f5;padding:8px;display:flex;gap:8px;align-items:center}
+.inp{flex:1;background:#fff;border-radius:20px;padding:9px 14px;color:#8696a0}
+.mic{width:40px;height:40px;border-radius:50%;background:#00a884}
+</style></head><body>
+<div class="status"><span>14:07</span><span>4G ▮▮▮ 62%</span></div>
+<div class="top"><span class="back">←</span><div class="av">?</div><div class="who"><b>+54 9 11 4444-5555</b><span>en línea</span></div></div>
+<div class="chat">
+<div class="day">HOY</div>
+<div class="note">Este número no está en tus contactos.</div>
+<div class="m in">hola ma, soy Juli 😥 cambié de número, el otro se me rompió. agendá este<span class="t">13:52</span></div>
+<div class="m out">Juli?? qué pasó, estás bien?<span class="t">13:54</span></div>
+<div class="m in">sí sí, tranqui. pero tengo un problema, tengo que pagar hoy una cuota del alquiler y no me entra la transferencia desde mi cuenta<span class="t">13:55</span></div>
+<div class="m in">me podés mandar 180 mil y mañana te los devuelvo? es urgente, me cobran recargo<span class="t">13:55</span></div>
+<div class="m out">bueno, pasame los datos<span class="t">13:58</span></div>
+<div class="m in">alias <span class="alias">juli.martinez.mp</span><br>CVU 0000003100123456789016<br>a nombre de un amigo que me presta la cuenta<span class="t">13:58</span></div>
+<div class="m out">listo, ya te mandé 180.000<span class="t">14:03</span></div>
+<div class="m in">gracias ma!! te amo ❤️<span class="t">14:03</span></div>
+<div class="m out">Juli? me podés llamar?<span class="t">14:06</span></div>
+</div>
+<div class="bar"><div class="inp">Mensaje</div><div class="mic"></div></div>
+</body></html>

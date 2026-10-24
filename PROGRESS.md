@@ -58,10 +58,15 @@ Marcá `[x]` con hora y quién.
 
 **Entrega**
 - [ ] URL probada desde otro celular
-- [ ] Sin secretos en el repo: `git log -p | grep -iE "sk-|service_role|eyJ"` vacío y `auth_info/` sin trackear
+- [x] Sin secretos en el repo: `git log -p | grep -iE "sk-|service_role|eyJ"` vacío y `auth_info/` sin trackear — 12:25, agente demo (volver a correr a las 15:30, comandos en `docs/demo/checklist.md`)
 - [ ] Video subido a YouTube (público), con la historia completa en los primeros 2 minutos
+- [ ] `npm run reset-demo` contra Supabase prod deja `juli.martinez.mp` en 23/5 (correrlo antes de cada toma)
+- [ ] Capturas de `docs/demo/capturas/` (chat + comprobante) probadas en `/me-estafaron`
+- [ ] Toma de respaldo grabada y subida como "no listada" (`docs/demo/guion.md`)
+- [ ] README: `TODO_URL` y `TODO_VIDEO` reemplazados; sacar `/simulador` o `/me-estafaron` si se cortaron
 - [ ] Submit hecho
 
 ## Próximo paso
+- Demo: kit listo en `docs/demo/` (guion, mensajes, jurado, checklist, capturas). Falta: conseguir celulares y número del estafador, `npm run reset-demo`, toma de respaldo apenas ande el worker en Railway.
 - Damian: crear Supabase prod y seguir `docs/deploy.md` §1 (no hay CLIs de supabase/vercel/railway en la PC: es por clics). Después `npm run check supabase` y `npm run check prod`.
 - Después Vercel (§2) y Railway (§3); completar las URLs arriba de `docs/deploy.md`.
