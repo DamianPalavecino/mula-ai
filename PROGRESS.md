@@ -14,10 +14,10 @@ Este archivo es la fuente de verdad. Para retomar a mano:
 Quién hace qué (worktrees de Orca en `C:\Users\dami_\orca\workspaces\mula-ai\<nombre>`, agentes Claude en terminal; si se cortó el usage, esos agentes también se frenaron):
 | Área | Brief | Estado |
 |---|---|---|
-| deploy (Supabase, Vercel, VPS) | `docs/agentes/01-deploy.md` | Supabase y worker en el VPS ✓; falta Vercel con todas las variables y la URL pública del worker |
+| deploy (Supabase, Vercel, VPS) | `docs/agentes/01-deploy.md` | Supabase, Vercel (https://mula-ai.vercel.app, `check prod` 9/9, `OPENROUTER_API_KEY` cargada) y worker en el VPS ✓; falta la URL pública del worker → `NEXT_PUBLIC_WORKER_URL` |
 | worker | `docs/agentes/02-worker-http.md` | `POST /analizar` ✓; falta latencia < 5 s (Tarea 2) |
 | web simulador + `/red` | `docs/agentes/03-web-simulador.md` | ✓ local; falta contra el worker del VPS por HTTPS |
-| `/me-estafaron` | `docs/agentes/04-web-me-estafaron.md` | ✓ local; falta en Vercel (variables) y el link en el header |
+| `/me-estafaron` | `docs/agentes/04-web-me-estafaron.md` | ✓ local; en Vercel `/api/extraer` ya tiene `OPENROUTER_API_KEY` (13:0x deploy); falta probar con captura real y el link en el header |
 | demo y entrega | `docs/agentes/05-demo.md` | kit en `docs/demo/`; falta grabar, subir y hacer el submit |
 
 Herramientas: Supabase CLI en `C:\Users\dami_\AppData\Local\Programs\Supabase\supabase.exe` (no está en el PATH, logueado, proyecto MulaAI; `link` antes de comandos contra prod). Worker en el VPS: `worker/scripts/vps.sh deploy|qr|logs|status`. Lanzar un agente: `orca worktree create --repo id:93434532-72b0-464c-a48c-b83211d7840b --name <tarea> --no-parent --agent codex --prompt "<brief>" --json`.

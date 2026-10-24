@@ -18,6 +18,8 @@ Lo actualiza el agente después de cada paso (commit + push). Si se corta, el si
 - Worker HTTP público (VPS `:8080`, hoy solo tailnet) → `NEXT_PUBLIC_WORKER_URL` en Vercel + redeploy (lo coordina con `worker-http`/`simulador`).
 - Smoke punta a punta (`docs/deploy.md` §4).
 
+- 13:0x `OPENROUTER_API_KEY` ya está en Vercel (`POST /api/extraer` con `{}` da 400, no 503).
+
 ## Bloqueos / qué necesita del humano
-- Cargar variables en Vercel (no hay CLI de vercel; no se leen `.env*`): `OPENROUTER_API_KEY` server-only para `/me-estafaron`; `NEXT_PUBLIC_WORKER_URL` cuando exista.
+- Vercel (no hay CLI; no se leen `.env*`): cargar `NEXT_PUBLIC_WORKER_URL` cuando el worker tenga URL pública, y redeploy.
 - Smoke de WhatsApp: mandar el mensaje de §4 desde otro número.
