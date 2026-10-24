@@ -148,7 +148,7 @@ entender, **Supabase** para la red y **Next.js en Vercel** para la web.
   **dispositivo vinculado** de la cuenta protegida (escaneo de QR, como
   WhatsApp Web). Funciona con Android y con iPhone.
 
-- Corre **siempre prendido**, así que va en Railway, Render o Fly.io, no
+- Corre **siempre prendido**, así que va en un servidor propio (VPS), no
   en Vercel (serverless no mantiene la conexión).
 
 - Persistir la sesión (useMultiFileAuthState en un volumen, o guardada
@@ -284,7 +284,7 @@ punta, aunque sea feo. Después se pule y se graba.
 |----|----|----|----|----|
 | 11:45–12:15 | Repo público, Next.js en Vercel, Supabase con las tablas | Prompt del clasificador y esquema JSON | Baileys conectado a un número secundario, logueando mensajes | Conseguir 2 celulares y un número secundario para la demo |
 | 12:15–13:00 | Script de datos sintéticos + normalización + /api/entidad | /api/analizar probado con 10 mensajes de estafa y 10 normales | Filtro de desconocidos + llamada a /api/analizar | Guion del estafador y textos de los mensajes de prueba |
-| 13:00–13:45 | /verificar | Transcripción de audios + /api/reportes | Envío de alertas al chat propio y al grupo familiar; worker deployado en Railway | Capturas falsas para "Me estafaron" |
+| 13:00–13:45 | /verificar | Transcripción de audios + /api/reportes | Envío de alertas al chat propio y al grupo familiar; worker deployado en el VPS | Capturas falsas para "Me estafaron" |
 | 13:45–14:15 | Integración y prueba del recorrido completo | Integración | Integración | Primer ensayo del pitch |
 | 14:15–14:45 | /panel con alertas en vivo | /me-estafaron (si sobra tiempo) | Estabilidad: reconexión y sesión persistida | Grabar una toma de respaldo de la demo |
 | 14:45–15:30 | README y limpieza del repo | Ajustes de prompts | Prueba en celulares reales | Grabar y editar el video final, subir a YouTube |
@@ -364,7 +364,7 @@ quemada para todos.
 | Privacidad: el servidor ve todo el WhatsApp | Filtrar en el worker y no guardar mensajes de contactos de confianza; en producción, pasar a app en el teléfono |
 | Datos personales de terceros | Guardar cuentas y teléfonos, nunca nombres de titulares; verificar límites de la ley de datos personales |
 | Red envenenada con reportes falsos | Cada reporte con fuente y nivel de confianza; las detecciones del worker y las denuncias con comprobante pesan más |
-| API keys filtradas en el repo público | Todo en variables de entorno de Vercel y Railway; .env en .gitignore |
+| API keys filtradas en el repo público | Todo en variables de entorno de Vercel y del VPS; .env en .gitignore |
 
 ## Hoja de ruta después de la hackatón
 

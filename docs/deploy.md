@@ -5,7 +5,7 @@ Sin valores secretos acá. Las claves se cargan en cada servicio, nunca en el re
 ## URLs
 - Supabase: _(completar: https://xxxx.supabase.co)_
 - Web (Vercel): _(completar)_
-- Worker: VPS Contabo (systemd `mula-worker`, `worker/scripts/vps.sh`). Railway quedó descartado (trial vencido). Dominio público: _(pendiente, Tailscale Funnel)_
+- Worker: VPS Contabo (`contabo-vps` por Tailscale), servicio systemd de usuario `mula-worker`. Dominio público: _(pendiente)_
 
 ## 1. Supabase
 1. supabase.com → New project (región São Paulo). Guardá la contraseña de la base.
@@ -31,36 +31,37 @@ Sin valores secretos acá. Las claves se cargan en cada servicio, nunca en el re
    |---|---|
    | `NEXT_PUBLIC_SUPABASE_URL` | Project URL |
    | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | anon (**nunca** la service_role) |
-   | `NEXT_PUBLIC_WORKER_URL` | _(cuando el worker exponga HTTP)_ dominio de Railway |
+   | `NEXT_PUBLIC_WORKER_URL` | _(cuando el worker tenga URL pública)_ URL del worker en el VPS |
    | `ANTHROPIC_API_KEY`, `SUPABASE_SERVICE_ROLE_KEY` | _(solo si `/me-estafaron` entra; sin `NEXT_PUBLIC_`)_ |
 4. Deploy. Cada vez que cambies una `NEXT_PUBLIC_*` → Redeploy (se embeben en el build).
 5. Smoke: `$env:WEB_URL="https://<proyecto>.vercel.app"; npm run check prod` (prueba `/`, `/verificar?valor=juli.martinez.mp` y `/red`). Después abrilos en incógnito.
 
-## 3. Railway (worker)
-1. railway.com → New Project → Deploy from GitHub repo → `mula-ai`.
-2. Service → Settings:
-   - **Root Directory:** `worker`
-   - **Config file path:** `/worker/railway.json` (start `npm start`, restart always, 1 réplica)
-3. Service → Add Volume → mount path **`/data`**.
-4. Variables:
-   | Variable | Valor |
-   |---|---|
-   | `SUPABASE_URL` | Project URL |
-   | `SUPABASE_SERVICE_ROLE_KEY` | service_role |
-   | `OPENROUTER_API_KEY` | key de OpenRouter (sin ella, solo heurística) |
-   | `AUTH_DIR` | `/data/auth_info` |
-   | `PROTEGIDO_NOMBRE` | ej. `la abuela Marta` |
-   | `TRUSTED_CONTACTS` | teléfonos de confianza separados por coma |
-   | `PROVINCIA_DEFAULT` | `Santa Fe` |
-   | `FAMILY_GROUP_JID` | después del primer arranque (ver abajo) |
-   | `OPENAI_API_KEY` | opcional, audios |
-5. Deploy → Logs → escanear el QR con el número **secundario** (WhatsApp → Dispositivos vinculados). Tiene que quedar `[wa] conectado como ...` (antes puede reiniciar con code 515, es normal).
-6. En los logs aparece `[grupos] ...` con los JID: copiar el `...@g.us` del grupo familiar a `FAMILY_GROUP_JID` → redeploy. Si no pide QR de nuevo, la sesión quedó en el volumen.
-7. Si expone HTTP: Settings → Networking → Generate Domain → pasarlo a `NEXT_PUBLIC_WORKER_URL` en Vercel.
+## 3. Worker (VPS)
+Corre en el VPS de Damian (Contabo, alias ssh `contabo-vps` por Tailscale) como servicio systemd de usuario `mula-worker` (`Restart=always`, arranca solo si reinicia el VPS). **Una sola instancia**: WhatsApp se vincula por QR en el VPS, nunca local (dos procesos con la misma sesión se patean, code 440).
+
+- Repo: `~/Spaces/personal/mula-ai` (clon de `main`). Start: `worker/node_modules/.bin/tsx src/index.ts`.
+- Variables: `~/.config/mula-ai/worker.conf` (chmod 600). `AUTH_DIR=/home/agente/mula-data/auth_info`, fuera del repo: un deploy no toca la sesión.
+- HTTP: `:8080` (`GET /health`, `POST /analizar`), hoy solo dentro de la tailnet.
+
+Comandos (desde la raíz del repo, en la Mac de Damian):
+
+| Para | Comando |
+|---|---|
+| Ver logs (últimas 60, sin el QR) | `worker/scripts/vps.sh logs` |
+| Logs en vivo | `ssh contabo-vps 'journalctl --user -u mula-worker -f -o cat'` |
+| Reiniciar | `worker/scripts/vps.sh restart` |
+| Estado / salud | `worker/scripts/vps.sh status` · `ssh contabo-vps 'curl -s localhost:8080/health'` |
+| Deployar `main` | `worker/scripts/vps.sh deploy` (pull + `npm ci` + restart) |
+| Cargar variable no secreta | `worker/scripts/vps.sh set FAMILY_GROUP_JID 1203...@g.us` (reinicia) |
+| Ver qué variables hay | `worker/scripts/vps.sh vars` (solo nombres) |
+| QR para vincular | `worker/scripts/vps.sh qr` (abre el último en el navegador; vence en ~20 s) |
+
+Variables cargadas: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `OPENROUTER_API_KEY`, `CLASSIFIER_MODEL`, `PROTEGIDO_NOMBRE`, `PROVINCIA_DEFAULT`, `AUTH_DIR`. Faltan (cerca de la demo): `FAMILY_GROUP_JID` (los JID salen en los logs como `[grupos] ...` al conectar), `TRUSTED_CONTACTS`, `ANALIZAR_SOLO`; `OPENAI_API_KEY` opcional (audios).
 
 ### Re-vincular el QR
-- `sesión cerrada (logged out)` en los logs → borrar `/data/auth_info` (o recrear el volumen) y redeploy.
-- code 440 = dos procesos con la misma sesión: dejar **una sola réplica** y apagar el worker local.
+- `sesión cerrada (logged out)` en los logs → `ssh contabo-vps 'rm -rf ~/mula-data/auth_info/*'`, `worker/scripts/vps.sh restart` y `worker/scripts/vps.sh qr`.
+- code 440 = dos procesos con la misma sesión: verificar que no haya un worker local corriendo (`pkill -f "tsx.*src/index.ts"`).
+- Después de escanear, un code 515 seguido de `[wa] conectado como ...` es normal.
 
 ## 4. Smoke de punta a punta
 Desde otro número, al número protegido:

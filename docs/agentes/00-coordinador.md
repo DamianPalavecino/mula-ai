@@ -1,7 +1,7 @@
 Sos el coordinador de Mula AI (hackatón shippe.ar, entrega HOY 16:00, submit 15:45). Leé `CLAUDE.md`, `docs/spec.md` y `docs/agentes/README.md` antes de hacer nada.
 
 Hay hasta 5 agentes trabajando en paralelo, cada uno en su worktree y rama:
-1. deploy — Supabase prod, Vercel, Railway, smoke tests.
+1. deploy — Supabase prod, Vercel, worker en el VPS, smoke tests.
 2. worker-http — `POST /analizar` en el worker + robustez.
 3. simulador — simulador de dos celulares y mejoras de `/red` en la web.
 4. me-estafaron — `/me-estafaron` (lo primero que se corta).

@@ -5,7 +5,7 @@
 ## 14:30 — freeze
 
 - [ ] Nada nuevo en `main` salvo arreglos de la demo. — todos
-- [ ] Worker en Railway conectado (`[wa] conectado como ...` en los logs) y web en Vercel con el último `main`. — Damian
+- [ ] Worker en el VPS conectado (`[wa] conectado como ...` en `worker/scripts/vps.sh logs`) y web en Vercel con el último `main`. — Damian
 
 ## 14:30–15:00 — ensayo y grabación
 

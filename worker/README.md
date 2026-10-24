@@ -62,13 +62,13 @@ Para volver a vincular: borrá la carpeta de `AUTH_DIR` y reiniciá.
 | `TRUSTED_CONTACTS` | no | teléfonos separados por coma; se normalizan a 10 dígitos (`+54 9 341 555-1234` → `3415551234`) |
 | `ANALIZAR_SOLO` | no | teléfonos separados por coma; si tiene alguno, **solo** se analizan esos remitentes y el resto se ignora sin loguear (para vincular un número personal en la demo) |
 | `PROVINCIA_DEFAULT` | no | provincia que se guarda en los reportes (default `Santa Fe`) |
-| `AUTH_DIR` | no | carpeta de la sesión (default `./auth_info`; en Railway `/data/auth_info`) |
+| `AUTH_DIR` | no | carpeta de la sesión (default `./auth_info`; en el VPS `/home/agente/mula-data/auth_info`) |
 | `OPENAI_API_KEY` | no | para transcribir audios (`gpt-4o-mini-transcribe`) |
 | `ALERT_THRESHOLD` | no | riesgo mínimo para alertar (default 60) |
 | `CLASSIFIER_TIMEOUT_MS` | no | timeout del LLM antes de caer a la heurística (default 10000) |
 | `BAILEYS_LOG_LEVEL` | no | default `warn` |
-| `PORT` | no | puerto del HTTP (default `8080`; Railway lo setea solo) |
-| `NEXT_PUBLIC_WORKER_URL` | (web) | URL pública del worker en Railway; la usa la web para `/simulador` |
+| `PORT` | no | puerto del HTTP (default `8080`) |
+| `NEXT_PUBLIC_WORKER_URL` | (web) | URL pública del worker; la usa la web para `/simulador` |
 
 ## Scripts
 
@@ -77,19 +77,9 @@ Para volver a vincular: borrá la carpeta de `AUTH_DIR` y reiniciá.
 - `npm run selftest` — smoke test sin red (entidades, filtro, heurística, textos de alerta).
 - `npm run test:classify` — 10 estafas + 10 normales con el clasificador real (requiere `OPENROUTER_API_KEY`; sin key muestra la heurística).
 
-## Deploy en Railway
+## Deploy
 
-1. New Project → Deploy from GitHub repo → este repo.
-2. Settings del servicio:
-   - **Root Directory:** `worker`
-   - **Config file path:** `/worker/railway.json` (Railway no lo busca dentro del root directory solo). Si no, poné **Start Command** `npm start` a mano.
-3. **Volumen:** Add Volume → mount path `/data`. Variable `AUTH_DIR=/data/auth_info`. Así no se re-escanea el QR en cada deploy.
-4. Variables: las de la tabla de arriba.
-5. Deploy → abrí los logs y escaneá el QR (o abrí el link que imprime el log). Después de vincular, Baileys reinicia la conexión solo (code 515) y queda `[wa] conectado como ...`.
-6. **Networking → Generate Domain** (puerto `8080` o el `PORT` que asigne Railway). Esa URL va en `NEXT_PUBLIC_WORKER_URL` de Vercel. No configures healthcheck en Railway: mantiene viva la instancia vieja hasta que pasa la nueva y las dos sesiones de WhatsApp se pisan (code 440).
-7. **Una sola réplica** (dos procesos con la misma sesión se patean entre sí, code 440).
-
-Si el log dice `sesión cerrada (logged out)`: se desvinculó desde el teléfono → borrá `/data/auth_info` (o el volumen) y redeploy para un QR nuevo.
+Corre en el VPS (systemd de usuario `mula-worker`, una sola instancia; el QR se escanea allá, nunca local). Pasos, comandos de logs/reinicio y re-vinculación: `docs/deploy.md` §3. Atajos: `scripts/vps.sh deploy|logs|restart|status|qr|set|vars`.
 
 ## Notas
 

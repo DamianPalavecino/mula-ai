@@ -70,7 +70,7 @@ No se dice "simulador" ni "plan B". Si alguien pregunta: "es la misma detección
 | 7 | Cierre con logo y URL | Editor | 10 s |
 
 - Grabar las tomas 2–6 **de corrido** en una sola pasada y cortar en edición.
-- No mostrar configuración, código, logs, menús, el `.env`, Railway ni Supabase.
+- No mostrar configuración, código, logs, menús, el `.env`, el VPS ni Supabase.
 - Voz en off grabada aparte con el celular cerca de la boca, en un lugar callado.
 - Subtítulos quemados (el jurado puede verlo sin sonido).
 - Música de fondo baja, sin copyright (la biblioteca de audio de YouTube).

@@ -7,12 +7,12 @@ Un repo con dos carpetas independientes y Supabase como contrato. Damian escribe
 - **13:30** — primera integración: se manda un mensaje de estafa y tiene que aparecer en `/red`.
 - **14:30** — recorrido completo andando; se empieza a grabar.
 
-## Worker (Damian → Railway)
+## Worker (Damian → VPS)
 1. Conectar Baileys a un número secundario y loguear mensajes (lo primero que puede trabarse).
 2. Filtro de desconocidos y regex de entidades.
 3. Clasificador con salida JSON. Probarlo con 10 mensajes de estafa y 10 normales antes de conectarlo (`npm run test:classify`).
 4. `registrar_reporte` y alertas: al chat propio (`jidNormalizedUser(sock.user.id)`) y al grupo familiar.
-5. Deploy en Railway con un volumen para `auth_info`, así no se reescanea el QR en cada reinicio.
+5. Deploy en el VPS (systemd `mula-worker`) con `auth_info` fuera del repo, así no se reescanea el QR en cada reinicio.
 6. Audios, si sobra tiempo.
 
 Ojo con Baileys:

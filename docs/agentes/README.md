@@ -14,7 +14,7 @@ El coordinador sos vos, o este chat con `00-coordinador.md`.
 
 ## Dependencias
 - **2 → 3**: el simulador consume `POST /analizar` del worker. El contrato está escrito igual en los dos prompts, así 3 arranca con un mock y después apunta a la URL real.
-- **1 → todos**: hasta que Supabase prod, Vercel y Railway estén arriba, cada uno prueba en local.
+- **1 → todos**: hasta que Supabase prod, Vercel y el worker en el VPS estén arriba, cada uno prueba en local.
 - **5** necesita a 2 y 3 andando para grabar, pero arranca ya con guion, mensajes y capturas.
 
 ## Lanzar con Orca (PowerShell, desde la raíz del repo)
@@ -35,6 +35,6 @@ Sin Orca: abrí un chat de Claude Code por agente (idealmente cada uno en su wor
 
 ## Horarios
 - **13:15** — `POST /analizar` andando en local; simulador contra mock.
-- **13:45** — Supabase prod sembrado, web en Vercel, worker en Railway.
+- **13:45** — Supabase prod sembrado, web en Vercel, worker en el VPS.
 - **14:30** — recorrido completo (WhatsApp real + simulador + `/verificar` + `/red`). Freeze de features.
 - **14:30–15:30** — grabar video. **15:45** submit.

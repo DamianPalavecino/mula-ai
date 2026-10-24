@@ -197,7 +197,7 @@ async function conectar(): Promise<void> {
       estadoWa = 'qr';
       log('[qr] Escaneá con WhatsApp → Dispositivos vinculados → Vincular un dispositivo:');
       qrcode.generate(qr, { small: true });
-      console.log(`[qr] Si no se ve bien (ej. logs de Railway), copiá este string en un generador de QR:\n${qr}`);
+      console.log(`[qr] Si no se ve bien (ej. logs del VPS), copiá este string en un generador de QR:\n${qr}`);
       console.log(
         `[qr] o abrí este link (renderiza el QR; vence en ~20s): https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(qr)}`,
       );

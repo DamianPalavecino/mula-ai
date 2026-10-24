@@ -32,7 +32,7 @@ Guion, mensajes de prueba y capturas de ejemplo en [`docs/demo/`](docs/demo/).
 ## Cómo funciona
 
 ```
-WhatsApp de la persona ──► worker (Node + Baileys, Railway)
+WhatsApp de la persona ──► worker (Node + Baileys, VPS)
                              │ filtro: ignora contactos de confianza, grupos y mensajes propios
                              │ LLM: clasifica el guion y extrae alias / CBU / CVU / teléfonos
                              ▼
@@ -69,4 +69,4 @@ Tests: `npm run check` en la raíz. Detalle en el README de cada carpeta: [`supa
 
 ## Stack
 
-Node + [Baileys](https://github.com/WhiskeySockets/Baileys) (worker, Railway) · DeepSeek V4 Flash vía OpenRouter y Claude (IA) · Supabase: Postgres, RPC y Realtime (la red) · Next.js en Vercel (web).
+Node + [Baileys](https://github.com/WhiskeySockets/Baileys) (worker, en un VPS) · DeepSeek V4 Flash vía OpenRouter y Claude (IA) · Supabase: Postgres, RPC y Realtime (la red) · Next.js en Vercel (web).
