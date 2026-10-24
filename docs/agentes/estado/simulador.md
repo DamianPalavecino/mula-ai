@@ -32,3 +32,8 @@ Tarea original: `docs/agentes/03-web-simulador.md`. Toca solo `web/` (menos `/me
 ## Bloqueos / qué necesita del humano
 - URL HTTPS pública del worker en el VPS → `NEXT_PUBLIC_WORKER_URL` en Vercel. Con `http://` el navegador lo bloquea desde Vercel y cae al mock sin avisar.
 - Antes de grabar: `npm run reset-demo` (mis pruebas dejaron 3 reportes de ensayo; juli quedó en 27).
+
+## Asistente (agente chat-ia, 24/10)
+- Chat en Inicio: `components/chat/Chat.tsx` + `app/app/api/chat/route.ts` + `lib/chat.ts` (+test). Texto, fotos (adjuntar, pegar, arrastrar; se achican a JPEG), historial en memoria de la pestaña, tarjetas `ResumenCard compacto` por cada cuenta consultada.
+- `tsconfig.json`: `allowImportingTsExtensions` (lib/chat.ts importa `./verificar.ts` en runtime para que lo corra node --test).
+- Falta: probar en prod con login.

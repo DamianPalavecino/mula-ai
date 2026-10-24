@@ -50,8 +50,8 @@ Herramientas: Supabase CLI en `C:\Users\dami_\AppData\Local\Programs\Supabase\su
 | `pre-demo` | `node --test scripts/pre-demo.test.mjs` | ✅ | 0s | 24/10/2026, 13:16:24 | 823cd2b |
 | `prod` | `node --env-file-if-exists=.env scripts/smoke-prod.mjs` | ✅ | 4s | 24/10/2026, 14:50:03 | 5a380ba |
 | `prod` | `node scripts/smoke-prod.mjs` | ⏭️ omitido | 0s | 24/10/2026, 12:28:39 | c6d5a8f |
-| `web` | `npm run build` | ✅ | 37s | 24/10/2026, 15:31:40 | 704c34d |
-| `web` | `npm test` | ✅ | 3s | 24/10/2026, 15:31:40 | 704c34d |
+| `web` | `npm run build` | ✅ | 36s | 24/10/2026, 15:31:42 | 9d4668d |
+| `web` | `npm test` | ✅ | 3s | 24/10/2026, 15:31:42 | 9d4668d |
 | `worker` | `npm run selftest` | ✅ | 1s | 24/10/2026, 15:18:27 | f9c193d |
 | `worker` | `npm run typecheck` | ✅ | 0s | 24/10/2026, 15:18:27 | f9c193d |
 <!-- check:end -->
@@ -75,6 +75,10 @@ Marcá `[x]` con hora y quién.
 - [x] Realtime activo en `alertas` — 13:2x agente vercel-web: `/red` de mula-ai.vercel.app abierta en Playwright, `POST /analizar` en el VPS (riesgo 95) → la alerta entra "recién" al feed sin recargar
 - [x] Web en Vercel — 13:2x agente vercel-web: Playwright headless (contexto limpio) 1440 y 375: `/`, `/verificar` juli (rojo, 27) y maria.gomez.gym (sin reportes), `/red` (grafo + En vivo), `/me-estafaron`; todas 200 y sin scroll horizontal. `mula-ai.vercel.app` pública (200); `mula-ai-damianpalavecinos-projects.vercel.app` da 302 SSO. Vercel deploya solo cada push a main
 - [x] 12:45 worker — en el VPS. systemd `mula-worker` en `contabo-vps`, `[wa] conectado como 549343xxxxxxx`; tras `restart` reconecta en 1 s sin QR, `/health` → `{"ok":true,"whatsapp":"conectado"}`. Sesión en `~/mula-data/auth_info`, vars en `~/.config/mula-ai/worker.conf`. Operar con `worker/scripts/vps.sh deploy|qr|logs|status`
+
+**Chat con IA (Inicio de /app)**
+- [x] 24/10 15:3x agente chat-ia — `components/chat/Chat.tsx` montado en Inicio (contrato `docs/agentes/estado/chat.md`) → `POST /app/api/chat` (sesión, OpenRouter con visión + tools `verificar_cuenta` → `resumen_entidad` y `mis_alertas`; solo lee, no registra). Texto, fotos (adjuntar/pegar/arrastrar), tarjetas `ResumenCard` por cuenta consultada. Alias/CBU/tel/link del texto se consultan antes del LLM (`lib/chat.ts`, 7 tests). `npm run check web` verde
+- [ ] En Vercel con login: "¿juli.martinez.mp es estafa?" → tarjeta roja + respuesta; una captura (`docs/demo/capturas/chat.png`) → extrae y verifica; "¿Marta tuvo alertas?" → usa `mis_alertas`
 
 **Worker / WhatsApp**
 - [x] 12:33 worker — vinculado local (número de Damian 549343xxxxxxx, lid xxxxxxxxxxxxxx, `ANALIZAR_SOLO` con 2 números de prueba). Demo desde 341xxxxxxx → `[clasif:llm] riesgo=85 familiar_numero_nuevo alias:juli.martinez.mp` → alerta al chat propio 4 s después del mensaje. `registrar_reporte` falló: la función no existe todavía en Supabase (pendiente el schema)
@@ -125,6 +129,7 @@ Marcá `[x]` con hora y quién.
 - [ ] Submit hecho
 
 ## Próximo paso
+- **Chat con IA (chat-ia):** probar en prod con login (texto, captura, alertas). Modelo: `CHAT_MODEL` ?? `EXTRACTOR_MODEL` ?? gemini-3.5-flash-lite.
 - **Landing real:** `/` ya usa el diseño verde/lima y chats de WhatsApp, navbar responsive y red de casos ilustrativa. Demo corregida: mensaje sospechoso → aviso separado al chat propio → aviso al familiar. Verificar el deploy automático tras el push; los ejemplos públicos no llaman a DB ni LLM.
 - **Diseños:** prototipo responsive de landing, familiar y administrador en `docs/design/`, con chats de WhatsApp, verde/lima y los guiones actuales. `npm run check design` verde (7 pruebas + sintaxis). Landing integrada en `web/`; seguir con las vistas autenticadas según el sistema actual.
 - /admin: probar con login admin que un caso sin alerta (me-estafaron → sumar a la red) aparece en el grafo en ≤15 s sin recargar, pulsando (refresco propio del grafo, 14:15).

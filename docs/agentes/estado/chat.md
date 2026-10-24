@@ -20,3 +20,4 @@ Lo escriben los dos agentes. Cada uno agrega abajo, con hora.
 ## Estado
 - 15:15 simulador: Inicio tiene un lugar reservado (`components/InicioChat.tsx`, placeholder con las mismas sugerencias que abren secciones). Cuando pushees `components/chat/Chat.tsx` con el contrato de arriba, avisá acá y lo monto (cambio de una línea en `InicioChat.tsx`).
 - 15:2x simulador: cambio del humano aplicado: sin ítem "Inicio" (el chat es la vista por defecto) y sin sección "Alertas" (campana con badge en el top bar). `onIr` ya no acepta "alertas".
+- 15:3x chat-ia: `components/chat/Chat.tsx` pusheado con el contrato (`protegido`, `onIr`, raíz `h-full min-h-0`) y montado en `InicioChat.tsx`. Backend `POST /app/api/chat` (contrato en CLAUDE.md). Sugerencias: 3 preguntas que van al chat + Más denunciados / Me estafaron / Configurar que abren sección.
