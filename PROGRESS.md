@@ -47,8 +47,8 @@ Herramientas: Supabase CLI en `C:\Users\dami_\AppData\Local\Programs\Supabase\su
 | `pre-demo` | `node --test scripts/pre-demo.test.mjs` | ✅ | 0s | 24/10/2026, 13:16:24 | 823cd2b |
 | `prod` | `node --env-file-if-exists=.env scripts/smoke-prod.mjs` | ✅ | 8s | 24/10/2026, 14:03:56 | 05d08a8 |
 | `prod` | `node scripts/smoke-prod.mjs` | ⏭️ omitido | 0s | 24/10/2026, 12:28:39 | c6d5a8f |
-| `web` | `npm run build` | ✅ | 27s | 24/10/2026, 13:58:29 | aadfc80 |
-| `web` | `npm test` | ✅ | 1s | 24/10/2026, 13:58:29 | aadfc80 |
+| `web` | `npm run build` | ✅ | 42s | 24/10/2026, 14:14:49 | d70288d |
+| `web` | `npm test` | ✅ | 1s | 24/10/2026, 14:14:49 | d70288d |
 | `worker` | `npm run selftest` | ✅ | 1s | 24/10/2026, 13:48:44 | 893e19e |
 | `worker` | `npm run typecheck` | ✅ | 0s | 24/10/2026, 13:48:44 | 893e19e |
 <!-- check:end -->
@@ -118,6 +118,7 @@ Marcá `[x]` con hora y quién.
 - [ ] Submit hecho
 
 ## Próximo paso
+- /admin: probar con login admin que un caso sin alerta (me-estafaron → sumar a la red) aparece en el grafo en ≤15 s sin recargar, pulsando (refresco propio del grafo, 14:15).
 - **Base cerrada a anon ✓ (14:0x, Damian vía MCP):** `supabase/cierre-anon.sql` aplicado en prod (ya estaba casi todo cerrado; el script idempotente dejó los grants limpios). anon → 401 en tablas y RPC; a anon solo le queda `rls_auto_enable` (event trigger de la plataforma). `npm run check prod` sin `MODO` 17/17 verde. juli en 28: `npm run reset-demo` antes de grabar.
 - **Web nueva en Vercel (13:50, orquestador):** `mula-ai.vercel.app` sirve landing sin DB/LLM, `/entrar` y `/registro` (Clerk), `/admin` (gobierno: grafo + feed por polling + stats + verificar) y `/app` (familiar: setup del protegido, alertas propias, me-estafaron, verificar, probar mensaje). Rutas viejas redirigen. Variables cargadas en Vercel: Clerk (pk/sk, SIGN_IN_URL=/entrar, SIGN_UP_URL=/registro), `ADMIN_EMAILS`, `WORKER_URL`, `MULA_TOKEN`, `SUPABASE_SERVICE_ROLE_KEY`, `OPENROUTER_API_KEY`. Verificado con login real en local (admin y familiar, capturas en `docs/demo/capturas/admin-*.png`, `app-*.png`). Falta: verificar en prod que `/admin` sin sesión redirija a `/entrar` (deploy de e935a1a) y entrar con la cuenta admin real.
 - **Cuenta familiar de la demo:** cuando exista su userId de Clerk, `npm run protegido-demo -- <userId>` crea "Abuela Marta" a su nombre y asocia las alertas. Borrar la fila de prueba `protegidos.id = 1` (owner `user_3L9IGsImlwJxpgloS5T2dLzbuoF`, usuario `familiar.demo-d+clerk_test@example.com`).

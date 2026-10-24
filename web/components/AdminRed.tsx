@@ -8,6 +8,7 @@ import { TIPOS_ENTIDAD } from "@/lib/tipos";
 import AdminFeed from "@/components/AdminFeed";
 import ResumenCard from "@/components/ResumenCard";
 import { COLORES } from "@/components/colores";
+import { fusionar } from "@/lib/red";
 
 // react-force-graph-2d usa canvas/window: solo en el cliente.
 const Graph = dynamic(() => import("@/components/Graph"), {
@@ -17,6 +18,8 @@ const Graph = dynamic(() => import("@/components/Graph"), {
 
 const DURACION_DESTACADO = 8000;
 const POLL_MS = 4000;
+// Refresco propio del grafo: casos sin alerta (me-estafaron, detecciones bajo el umbral).
+const GRAFO_MS = 15000;
 const MAX_ALERTAS = 30;
 
 function Aviso({ texto }: { texto: string }) {
@@ -27,20 +30,9 @@ function Aviso({ texto }: { texto: string }) {
   );
 }
 
-// Mantiene los objetos de nodos ya existentes (con su posición x/y) para que
-// el grafo no se reacomode entero cada vez que se refresca.
+// Nodos ya dibujados (con su x/y): fusionar() los reusa para que el grafo no se reacomode.
 const nodos0 = new Map<string, Nodo>();
 
-function fusionar(previos: Map<string, Nodo>, nuevo: Grafo): Grafo {
-  const nodes = (nuevo.nodes ?? []).map((n) => {
-    const previo = previos.get(n.id);
-    if (previo) return Object.assign(previo, n);
-    return { ...n };
-  });
-  previos.clear();
-  for (const n of nodes) previos.set(n.id, n);
-  return { nodes, links: (nuevo.links ?? []).map((l) => ({ ...l })) };
-}
 
 const LEYENDA: TipoNodo[] = ["alias", "cbu", "cvu", "telefono", "cuit", "link", "reporte"];
 
@@ -51,7 +43,7 @@ export default function AdminRed({
   grafoInicial: Grafo;
   alertasIniciales: Alerta[];
 }) {
-  const [grafo, setGrafo] = useState<Grafo | null>(() => fusionar(nodos0, grafoInicial));
+  const [grafo, setGrafo] = useState<Grafo | null>(() => fusionar(nodos0, grafoInicial).grafo);
   const [alertas, setAlertas] = useState<Alerta[]>(alertasIniciales);
   const [nuevas, setNuevas] = useState<number[]>([]);
   const [enVivo, setEnVivo] = useState(true);
@@ -73,14 +65,18 @@ export default function AdminRed({
     }
   }, [seleccionado]);
 
-  const cargarGrafo = useCallback(async () => {
+  // Devuelve los ids de nodos que no estaban (para destacarlos).
+  const cargarGrafo = useCallback(async (): Promise<string[]> => {
     try {
       const r = await fetch("/admin/api/grafo", { cache: "no-store" });
       if (!r.ok) throw new Error();
+      const { grafo: g, nuevos } = fusionar(nodos.current, (await r.json()) as Grafo);
       setError(false);
-      setGrafo(fusionar(nodos.current, (await r.json()) as Grafo));
+      setGrafo(g);
+      return nuevos;
     } catch {
       setError(true);
+      return [];
     }
   }, []);
 
@@ -105,14 +101,30 @@ export default function AdminRed({
       .catch(() => {});
   }, []);
 
-  const destacar = useCallback((alerta: Alerta, conPanel = false) => {
-    const ids = (alerta.entidad_ids ?? []).map((id) => `e_${id}`);
+  // Pulso rojo por unos segundos y cámara sobre el primero.
+  const destacarIds = useCallback((ids: string[], conPanel = false) => {
     if (ids.length === 0) return;
     setDestacados(ids);
-    setFoco({ id: ids[0], vez: Date.now(), conPanel });
+    setFoco({ id: ids.find((id) => id.startsWith("e_")) ?? ids[0], vez: Date.now(), conPanel });
     if (timerDestacado.current) clearTimeout(timerDestacado.current);
     timerDestacado.current = setTimeout(() => setDestacados([]), DURACION_DESTACADO);
   }, []);
+
+  const destacar = useCallback(
+    (alerta: Alerta, conPanel = false, extra: string[] = []) => {
+      const ids = (alerta.entidad_ids ?? []).map((id) => `e_${id}`);
+      destacarIds([...ids, ...extra.filter((id) => !ids.includes(id))], conPanel);
+    },
+    [destacarIds],
+  );
+
+  // El grafo se refresca solo, aunque no entren alertas, y destaca lo nuevo.
+  useEffect(() => {
+    const t = setInterval(async () => {
+      destacarIds(await cargarGrafo());
+    }, GRAFO_MS);
+    return () => clearInterval(t);
+  }, [cargarGrafo, destacarIds]);
 
   // Polling: trae las alertas con id mayor al máximo que tenemos.
   useEffect(() => {
@@ -133,8 +145,7 @@ export default function AdminRed({
         const idsNuevas = nuevasAlertas.map((a) => a.id);
         setNuevas((n) => [...n, ...idsNuevas]);
         setTimeout(() => setNuevas((n) => n.filter((id) => !idsNuevas.includes(id))), 6000);
-        await cargarGrafo();
-        destacar(nuevasAlertas[0]);
+        destacar(nuevasAlertas[0], false, await cargarGrafo());
       } catch {
         if (vivo) setEnVivo(false);
       }
