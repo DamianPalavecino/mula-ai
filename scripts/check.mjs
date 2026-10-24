@@ -6,6 +6,7 @@ import { execSync, spawnSync } from 'node:child_process';
 import { readFileSync, writeFileSync } from 'node:fs';
 
 const FEATURES = {
+  design: { paths: ['docs/design/'], cwd: '.', cmds: ['node --test docs/design/design.test.mjs', 'node --check docs/design/app.mjs', 'node --check docs/design/screens.mjs'] },
   worker: { paths: ['worker/'], cwd: 'worker', cmds: ['npm run typecheck', 'npm run selftest'] },
   // pega a OpenRouter (cuesta tokens); sin OPENROUTER_API_KEY prueba solo la heurística
   classify: { paths: ['worker/src/classify'], cwd: 'worker', cmds: ['npm run test:classify'] },

@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="es-AR">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#d9ed87">
+    <meta name="description" content="Mula AI. Una red de cuidado frente a las estafas. Prototipo de diseño: landing, familia y administración.">
+    <title>Mula, una red que te cuida</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='12' fill='%23183e36'/%3E%3Cpath d='M10 27V16a5 5 0 0 1 10 0v11m0-11a5 5 0 0 1 10 0v11' fill='none' stroke='%23d3ec89' stroke-width='4'/%3E%3C/svg%3E">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Epilogue:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./styles.css">
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Ir al contenido</a>
+    <div id="app"><header class="site-header container"><a class="wordmark" href="#inicio">mula</a></header><main id="main" class="container"><h1>Antes de que salga la plata.</h1><p class="lead">Tu guardián de WhatsApp. Una alerta, toda tu familia.</p><p>Prototipo de diseño con una landing, un panel familiar y un mapa de cuentas reportadas.</p></main></div>
+    <nav class="design-switch" aria-label="Pantallas del prototipo">
+      <span class="switch-label">Prototipo</span>
+      <a href="#inicio" data-screen="inicio">01 <span>Landing</span></a>
+      <a href="#familia" data-screen="familia">02 <span>Familia</span></a>
+      <a href="#admin" data-screen="admin">03 <span>Admin</span></a>
+    </nav>
+    <div id="toast" class="toast" role="status"></div>
+    <noscript>Activá JavaScript para navegar el prototipo. Este diseño usa datos ilustrativos y no se conecta a cuentas reales.</noscript>
+    <script>window.hallmarkSlots = (slots) => { for (const [key, value] of Object.entries(slots)) { const slot = document.querySelector(`[data-slot="${key}"]`); if (!slot) continue; const img = new Image(); img.src = typeof value === 'string' ? value : value.src; img.alt = typeof value === 'object' ? value.alt || '' : ''; img.addEventListener('error', () => img.remove(), { once: true }); slot.querySelectorAll(':scope > img').forEach(old => old.remove()); slot.prepend(img); } };</script>
+    <script type="module" src="./app.mjs"></script>
+  </body>
+</html>

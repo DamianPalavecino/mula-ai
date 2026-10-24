@@ -1,0 +1,63 @@
+[
+ {
+  "shape": "product demonstration",
+  "theme": "custom",
+  "axes": "light/grotesk-sans/chromatic-green",
+  "hero": "custom",
+  "nav": "product masthead",
+  "footer": "compact",
+  "imagery": "WhatsApp-style interactive sample requested by the user",
+  "photos": [],
+  "entry": "index.html",
+  "fingerprint": [
+   "product-demonstration",
+   "chat",
+   "forest-masthead",
+   "compact",
+   "whatsapp-ui",
+   "demo-switcher"
+  ],
+  "sections": [
+   "WhatsApp hero",
+   "family conversation",
+   "shared reports",
+   "compact close"
+  ],
+  "signature": "Mensaje sospechoso y aviso en el WhatsApp familiar",
+  "waived": [],
+  "prompt": "Mula AI: más color, menos texto, UI de WhatsApp reconocible y funciones actuales",
+  "date": "2026-10-24",
+  "mode": "build"
+ },
+ {
+  "shape": "product demonstration",
+  "theme": "custom",
+  "axes": "light/grotesk-sans/chromatic-teal",
+  "hero": "Counter",
+  "nav": "masthead",
+  "footer": "mast",
+  "imagery": "UI de WhatsApp pedida por el usuario con datos sintéticos",
+  "photos": [],
+  "entry": "index.html",
+  "fingerprint": [
+   "split-studio",
+   "counter",
+   "masthead",
+   "mast",
+   "product",
+   "ruled-list"
+  ],
+  "sections": [
+   "hero intervention",
+   "care notice",
+   "demo evidence",
+   "questions",
+   "family CTA"
+  ],
+  "signature": "Conversaciones de WhatsApp y doble aviso familiar",
+  "waived": [],
+  "prompt": "Mula AI landing, family dashboard and administrator dashboard",
+  "date": "2026-10-24",
+  "mode": "build"
+ }
+]

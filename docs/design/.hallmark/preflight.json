@@ -1,0 +1,27 @@
+{
+  "scanned": "2026-10-24",
+  "findings": {
+    "fonts": "Geist via next/font in web/app/layout.tsx:2",
+    "palette": "Ink, grays, red alert and WhatsApp greens in web/app/globals.css:5",
+    "motion": "CSS only, web/app/globals.css:24",
+    "spacing": "Tailwind CSS 4, web/package.json:24",
+    "framework": "Next.js App Router with Clerk, web/package.json:17",
+    "material": "Existing UI and product contract, docs/spec.md; synthetic demo alias juli.martinez.mp with 23 reports across five provinces",
+    "scope": "Separate navigable design prototype, existing production routes owned by another developer",
+    "baseline": "Vercel público y código main inspeccionados el 24/10; /app requiere sesión y no se capturó autenticado"
+  },
+  "preserve": [
+    "Product behavior",
+    "Spanish Argentine copy",
+    "Family and government roles",
+    "Existing database contract",
+    "Risk as a semantic red"
+  ],
+  "introduce": [
+    "Dirección WhatsApp, verde y lima según feedback del usuario",
+    "Epilogue",
+    "Chats interactivos con los tres guiones actuales",
+    "Panel familiar con prioridad en alertas",
+    "Grafo y herramientas actuales en el administrador"
+  ]
+}

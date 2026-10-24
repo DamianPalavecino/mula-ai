@@ -43,6 +43,9 @@ Herramientas: Supabase CLI en `C:\Users\dami_\AppData\Local\Programs\Supabase\su
 | Feature | Comando | Resultado | Duración | Cuándo | Commit |
 |---|---|---|---|---|---|
 | `classify` | `npm run test:classify` | ✅ | 76s | 24/10/2026, 13:48:44 | 893e19e |
+| `design` | `node --check docs/design/app.mjs` | ✅ | 0s | 24/10/2026, 14:18:25 | 20872aa |
+| `design` | `node --check docs/design/screens.mjs` | ✅ | 0s | 24/10/2026, 14:18:25 | 20872aa |
+| `design` | `node --test docs/design/design.test.mjs` | ✅ | 0s | 24/10/2026, 14:18:25 | 20872aa |
 | `e2e` | `npm run e2e` | ✅ | 3s | 24/10/2026, 12:49:18 | 11979d5 |
 | `pre-demo` | `node --test scripts/pre-demo.test.mjs` | ✅ | 0s | 24/10/2026, 13:16:24 | 823cd2b |
 | `prod` | `node --env-file-if-exists=.env scripts/smoke-prod.mjs` | ✅ | 8s | 24/10/2026, 14:03:56 | 05d08a8 |
@@ -54,6 +57,9 @@ Herramientas: Supabase CLI en `C:\Users\dami_\AppData\Local\Programs\Supabase\su
 <!-- check:end -->
 
 ## Qué falta probar (manual / e2e)
+
+**Diseños**
+- [ ] Integrar el prototipo de `docs/design/` en las rutas reales de `web/` y comprobar sus datos autenticados.
 Marcá `[x]` con hora y quién.
 
 **Base y deploy**
@@ -118,6 +124,7 @@ Marcá `[x]` con hora y quién.
 - [ ] Submit hecho
 
 ## Próximo paso
+- **Diseños:** prototipo responsive de landing, familiar y administrador en `docs/design/`, con chats de WhatsApp, verde/lima y los guiones actuales. `npm run check design` verde (7 pruebas + sintaxis). Integración en `web/` pendiente.
 - /admin: probar con login admin que un caso sin alerta (me-estafaron → sumar a la red) aparece en el grafo en ≤15 s sin recargar, pulsando (refresco propio del grafo, 14:15).
 - **Base cerrada a anon ✓ (14:0x, Damian vía MCP):** `supabase/cierre-anon.sql` aplicado en prod (ya estaba casi todo cerrado; el script idempotente dejó los grants limpios). anon → 401 en tablas y RPC; a anon solo le queda `rls_auto_enable` (event trigger de la plataforma). `npm run check prod` sin `MODO` 17/17 verde. juli en 28: `npm run reset-demo` antes de grabar.
 - **Web nueva en Vercel (13:50, orquestador):** `mula-ai.vercel.app` sirve landing sin DB/LLM, `/entrar` y `/registro` (Clerk), `/admin` (gobierno: grafo + feed por polling + stats + verificar) y `/app` (familiar: setup del protegido, alertas propias, me-estafaron, verificar, probar mensaje). Rutas viejas redirigen. Variables cargadas en Vercel: Clerk (pk/sk, SIGN_IN_URL=/entrar, SIGN_UP_URL=/registro), `ADMIN_EMAILS`, `WORKER_URL`, `MULA_TOKEN`, `SUPABASE_SERVICE_ROLE_KEY`, `OPENROUTER_API_KEY`. Verificado con login real en local (admin y familiar, capturas en `docs/demo/capturas/admin-*.png`, `app-*.png`). Falta: verificar en prod que `/admin` sin sesión redirija a `/entrar` (deploy de e935a1a) y entrar con la cuenta admin real.
