@@ -45,7 +45,7 @@ export default function AppProbarMensaje() {
   const enviado = estado.tipo === "inicial" ? null : estado.texto;
 
   return (
-    <section className="overflow-hidden rounded-3xl border border-linea bg-wa-fondo">
+    <section className="overflow-hidden rounded-tarjeta border border-linea bg-wa-fondo">
       {/* Cabecera estilo WhatsApp: número desconocido */}
       <div className="flex items-center gap-3 bg-wa-barra px-4 py-3 text-white">
         <span className="flex h-9 w-9 items-center justify-center rounded-full bg-white/20 font-semibold">?</span>
@@ -87,7 +87,7 @@ export default function AppProbarMensaje() {
               type="button"
               disabled={cargando}
               onClick={() => analizar(m.texto)}
-              className={`presionable flex shrink-0 cursor-pointer items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-semibold disabled:opacity-50 ${
+              className={`presionable flex shrink-0 cursor-pointer items-center gap-1.5 rounded-pastilla border px-3 py-1.5 text-sm font-semibold disabled:opacity-50 ${
                 m.normal
                   ? "border-seguro-linea bg-seguro-fondo text-seguro"
                   : "border-alerta-linea bg-alerta-fondo text-alerta"
@@ -133,7 +133,7 @@ export default function AppProbarMensaje() {
 function Resultado({ r }: { r: RespuestaAnalizar }) {
   if (!r.es_sospechoso) {
     return (
-      <div className="flex animate-entrada items-center gap-3 self-center rounded-2xl border-2 border-seguro-linea bg-seguro-fondo px-4 py-3 text-seguro">
+      <div className="flex animate-entrada items-center gap-3 self-center rounded-tarjeta border-2 border-seguro-linea bg-seguro-fondo px-4 py-3 text-seguro">
         <IconoOk className="h-7 w-7" />
         <div>
           <p className="font-bold">Sin señales de estafa</p>
@@ -144,7 +144,7 @@ function Resultado({ r }: { r: RespuestaAnalizar }) {
   }
   const red = lineaRed(r.entidades ?? []);
   return (
-    <div role="alert" className="w-full max-w-md animate-entrada self-center overflow-hidden rounded-2xl border-2 border-alerta bg-white shadow-lg">
+    <div role="alert" className="w-full max-w-md animate-entrada self-center overflow-hidden rounded-tarjeta border-2 border-alerta bg-white shadow-lg">
       <div className="flex items-center justify-between gap-3 bg-alerta px-4 py-3 text-white">
         <span className="flex items-center gap-2 text-lg font-extrabold">
           <IconoPeligro className="h-6 w-6" /> No transfieras

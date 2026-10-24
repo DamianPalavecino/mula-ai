@@ -73,12 +73,12 @@ export default function VerificarPanel({ inicial = "" }: { inicial?: string }) {
               autoCapitalize="none"
               autoCorrect="off"
               spellCheck={false}
-              className={`h-14 w-full rounded-2xl border-2 bg-fondo pr-24 pl-12 font-mono text-lg text-tinta placeholder:font-sans placeholder:text-suave focus:outline-none ${
+              className={`h-14 w-full rounded-control border-2 bg-fondo pr-24 pl-12 font-mono text-lg text-tinta placeholder:font-sans placeholder:text-suave focus:outline-none ${
                 error ? "border-alerta" : "border-linea focus:border-bosque"
               }`}
             />
             {v.ok && (
-              <span className="absolute top-1/2 right-3 flex -translate-y-1/2 items-center gap-1 rounded-lg bg-seguro-fondo px-2 py-1 text-xs font-semibold text-seguro">
+              <span className="absolute top-1/2 right-3 flex -translate-y-1/2 items-center gap-1 rounded-control bg-seguro-fondo px-2 py-1 text-xs font-semibold text-seguro">
                 <IconoOk className="h-3.5 w-3.5" />
                 {TIPOS_ENTIDAD[v.tipo]}
               </span>
@@ -87,7 +87,7 @@ export default function VerificarPanel({ inicial = "" }: { inicial?: string }) {
           <button
             type="submit"
             disabled={!v.ok || cargando}
-            className="presionable flex h-14 cursor-pointer items-center justify-center gap-2 rounded-2xl bg-bosque px-7 text-lg font-semibold text-bosque-tinta disabled:cursor-not-allowed disabled:opacity-40"
+            className="presionable flex h-14 cursor-pointer items-center justify-center gap-2 rounded-control bg-bosque px-7 text-lg font-semibold text-bosque-tinta disabled:cursor-not-allowed disabled:opacity-40"
           >
             {cargando ? <IconoGiro className="h-5 w-5" /> : <IconoBuscar className="h-5 w-5" />}
             Verificar
@@ -105,7 +105,7 @@ export default function VerificarPanel({ inicial = "" }: { inicial?: string }) {
                 setTocado(false);
                 consultar(e.valor);
               }}
-              className={`presionable flex cursor-pointer items-center gap-1.5 rounded-full border px-3 py-1.5 font-mono text-sm ${
+              className={`presionable flex cursor-pointer items-center gap-1.5 rounded-pastilla border px-3 py-1.5 font-mono text-sm ${
                 e.limpio
                   ? "border-seguro-linea bg-seguro-fondo text-seguro"
                   : "border-alerta-linea bg-alerta-fondo text-alerta"
@@ -118,10 +118,10 @@ export default function VerificarPanel({ inicial = "" }: { inicial?: string }) {
         </div>
       </form>
 
-      {cargando && <div className="h-56 animate-pulse rounded-xl bg-panel" aria-label="Buscando" />}
+      {cargando && <div className="h-56 animate-pulse rounded-tarjeta bg-panel" aria-label="Buscando" />}
       {estado.tipo === "listo" && <ResumenCard key={estado.resumen.valor_normalizado} resumen={estado.resumen} />}
       {estado.tipo === "error" && (
-        <p className="flex items-center gap-2 rounded-xl border-2 border-linea bg-panel p-4 font-medium text-texto">
+        <p className="flex items-center gap-2 rounded-tarjeta border-2 border-linea bg-panel p-4 font-medium text-texto">
           <IconoPeligro className="h-5 w-5 text-suave" /> No pudimos consultar la red. Probá de nuevo.
         </p>
       )}

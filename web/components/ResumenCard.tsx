@@ -24,7 +24,7 @@ function Chips({ icono, items }: { icono: React.ReactNode; items: string[] }) {
       {items.map((t) => (
         <li
           key={t}
-          className="flex items-center gap-1 rounded-full border border-alerta-linea bg-fondo px-2.5 py-1 text-sm font-medium text-tinta"
+          className="flex items-center gap-1 rounded-pastilla border border-alerta-linea bg-fondo px-2.5 py-1 text-sm font-medium text-tinta"
         >
           <span className="text-alerta">{icono}</span>
           {t}
@@ -45,7 +45,7 @@ export default function ResumenCard({
   if (!resumen.reportes) {
     return (
       <div
-        className={`animate-entrada rounded-xl border-2 border-seguro-linea bg-seguro-fondo ${compacto ? "p-4" : "p-5 sm:p-6"}`}
+        className={`animate-entrada rounded-tarjeta border-2 border-seguro-linea bg-seguro-fondo ${compacto ? "p-4" : "p-5 sm:p-6"}`}
       >
         <div className="flex items-center gap-3 text-seguro">
           <IconoOk className={compacto ? "h-7 w-7" : "h-10 w-10"} />
@@ -64,7 +64,7 @@ export default function ResumenCard({
   const chico = "h-3.5 w-3.5";
 
   return (
-    <div className="animate-entrada overflow-hidden rounded-xl border-2 border-alerta shadow-lg" role="alert">
+    <div className="animate-entrada overflow-hidden rounded-tarjeta border-2 border-alerta shadow-lg" role="alert">
       <div className={`bg-alerta text-white ${compacto ? "px-4 py-3" : "px-5 py-5 sm:px-7 sm:py-6"}`}>
         <div className="flex items-center gap-2.5">
           <IconoPeligro className={compacto ? "h-6 w-6" : "h-9 w-9"} />

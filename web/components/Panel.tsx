@@ -49,7 +49,7 @@ export interface DatosPanel {
 
 function Stat({ label, valor, tono = "normal" }: { label: string; valor: number; tono?: "normal" | "alerta" }) {
   return (
-    <div className="min-w-0 rounded-2xl bg-white/10 px-4 py-3">
+    <div className="min-w-0 rounded-tarjeta bg-white/10 px-4 py-3">
       <p className="truncate text-xs font-medium text-bosque-tinta/80">{label}</p>
       <p className={`mt-0.5 text-3xl font-bold tracking-tight tabular-nums ${tono === "alerta" ? "text-lima" : ""}`}>
         {valor.toLocaleString("es-AR")}
@@ -61,7 +61,7 @@ function Stat({ label, valor, tono = "normal" }: { label: string; valor: number;
 function Barras({ titulo, items }: { titulo: string; items: Conteo[] }) {
   const max = Math.max(1, ...items.map((i) => i.n));
   return (
-    <section className="rounded-2xl border border-linea bg-fondo p-5">
+    <section className="rounded-tarjeta border border-linea bg-fondo p-5">
       <h3 className="text-base font-semibold text-tinta">{titulo}</h3>
       <ul className="mt-4 flex flex-col gap-3">
         {items.slice(0, 8).map((i) => (
@@ -85,7 +85,7 @@ function Atajo({ Icono, titulo, tono, onClick }: { Icono: (p: { className?: stri
     <button
       type="button"
       onClick={onClick}
-      className={`presionable flex w-full cursor-pointer items-center gap-3 rounded-2xl border px-4 py-4 text-left text-base font-semibold ${
+      className={`presionable flex w-full cursor-pointer items-center gap-3 rounded-tarjeta border px-4 py-4 text-left text-base font-semibold ${
         tono === "alerta"
           ? "border-alerta-linea bg-alerta-fondo text-alerta"
           : "border-seguro-linea bg-seguro-fondo text-bosque"
@@ -139,12 +139,12 @@ export default function Panel(d: DatosPanel) {
             </div>
             {nombre && (
               <div className="flex flex-wrap gap-2">
-                <span className="flex items-center gap-2 rounded-full bg-lima px-4 py-2 text-sm font-semibold text-bosque">
+                <span className="flex items-center gap-2 rounded-pastilla bg-lima px-4 py-2 text-sm font-semibold text-bosque">
                   <IconoEscudo className="h-5 w-5" /> Protegida
                 </span>
                 <Link
                   href="/app/vincular"
-                  className="presionable flex items-center gap-2 rounded-full border border-bosque-tinta/30 px-4 py-2 text-sm font-semibold text-bosque-tinta hover:bg-white/10"
+                  className="presionable flex items-center gap-2 rounded-pastilla border border-bosque-tinta/30 px-4 py-2 text-sm font-semibold text-bosque-tinta hover:bg-white/10"
                 >
                   <IconoChat className="h-5 w-5" /> WhatsApp
                 </Link>
@@ -192,7 +192,7 @@ export default function Panel(d: DatosPanel) {
 
       <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-8">
         {d.error && (
-          <p className="mb-4 flex items-center gap-2 rounded-2xl border border-linea bg-panel p-4 text-sm font-medium text-texto">
+          <p className="mb-4 flex items-center gap-2 rounded-tarjeta border border-linea bg-panel p-4 text-sm font-medium text-texto">
             <IconoPeligro className="h-5 w-5 text-suave" /> Algunos datos no cargaron. Recargá en unos segundos.
           </p>
         )}
@@ -207,7 +207,7 @@ export default function Panel(d: DatosPanel) {
                 <button
                   type="button"
                   onClick={() => ir("ajustes")}
-                  className="presionable flex w-full cursor-pointer flex-col items-start gap-3 rounded-3xl bg-lima p-6 text-left text-bosque sm:p-8"
+                  className="presionable flex w-full cursor-pointer flex-col items-start gap-3 rounded-tarjeta bg-lima p-6 text-left text-bosque sm:p-8"
                 >
                   <IconoEscudo className="h-10 w-10" />
                   <span className="text-2xl font-bold tracking-tight">Cargá a quién cuidás</span>
@@ -232,7 +232,7 @@ export default function Panel(d: DatosPanel) {
             {d.probarConfigurado ? (
               <AppProbarMensaje />
             ) : (
-              <p className="rounded-2xl border border-linea bg-panel p-5 text-texto">El guardián no está conectado ahora.</p>
+              <p className="rounded-tarjeta border border-linea bg-panel p-5 text-texto">El guardián no está conectado ahora.</p>
             )}
           </div>,
         )}
