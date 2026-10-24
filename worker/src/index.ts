@@ -21,7 +21,7 @@ import pino from 'pino';
 import qrcode from 'qrcode-terminal';
 import { enviadorWhatsapp } from './alerts.js';
 import { config, validarConfig } from './config.js';
-import { debeAnalizar } from './filter.js';
+import { debeAnalizar, esMensajePrevio } from './filter.js';
 import { iniciarHttp, type EstadoWhatsapp } from './http.js';
 import { normalizarTelefono } from './phone.js';
 import { procesarMensaje as pipeline } from './pipeline.js';
@@ -33,6 +33,9 @@ const baileysLogger = pino({ level: process.env.BAILEYS_LOG_LEVEL ?? 'warn' });
 const log = (...a: unknown[]) => console.log(new Date().toISOString().slice(11, 19), ...a);
 
 // ---------------- historial corto en memoria ----------------
+
+/** Lo anterior a este momento son chats previos: no se analizan. */
+const ARRANQUE_MS = Date.now();
 
 const HISTORIAL_MAX = 5;
 const historial = new Map<string, string[]>();
@@ -107,6 +110,7 @@ async function procesarMensaje(sock: WASocket, msg: WAMessage): Promise<void> {
   const chat = key.remoteJid;
   if (!chat || key.fromMe) return;
   if (isJidGroup(chat) || isJidStatusBroadcast(chat) || isJidBroadcast(chat) || isJidNewsletter(chat)) return;
+  if (esMensajePrevio(msg.messageTimestamp, ARRANQUE_MS)) return;
   if (yaProcesado(key.id)) return;
 
   let texto = extraerTexto(msg);

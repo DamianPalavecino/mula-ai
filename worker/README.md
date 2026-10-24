@@ -94,5 +94,6 @@ Si el log dice `sesión cerrada (logged out)`: se desvinculó desde el teléfono
 ## Notas
 
 - Remitentes `@lid`: Baileys 7 puede mandar el chat como `xxxx@lid`. El teléfono se toma de `key.remoteJidAlt` (o `participantAlt`, o `senderPn` en versiones viejas); si no, del mapeo LID→PN del signal repository. Si no se puede resolver, se trata como desconocido.
+- Chats previos: se ignora todo mensaje con `messageTimestamp` anterior al arranque del proceso (incluye lo que Baileys entrega como `notify` al reconectar tras estar offline). Solo se analiza lo que llega con el worker corriendo.
 - El historial corto (últimos 5 mensajes por chat) vive en memoria y solo para desconocidos: los mensajes de contactos de confianza no se procesan ni se loguean.
 - El link del QR usa `api.qrserver.com` (servicio de terceros); el QR vence en segundos, pero si preferís, usá el string crudo con un generador local.

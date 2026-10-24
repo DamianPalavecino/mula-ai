@@ -5,7 +5,7 @@
 import { armarAlertas } from './alerts.js';
 import { clasificarHeuristico } from './classify.js';
 import { completarCbu, detectarEntidades, validarCbu } from './entities.js';
-import { debeAnalizar } from './filter.js';
+import { debeAnalizar, esMensajePrevio } from './filter.js';
 import { normalizarTelefono } from './phone.js';
 import type { AddressInfo } from 'node:net';
 import { crearServidorHttp, RateLimiter, validarAnalizar } from './http.js';
@@ -80,6 +80,11 @@ check('ANALIZAR_SOLO: número de la lista se analiza', debeAnalizar('3410000000'
 check('ANALIZAR_SOLO: número fuera de la lista no', !debeAnalizar('3419999999', DEMO, confianza, solo));
 check('ANALIZAR_SOLO: sin número resuelto no', !debeAnalizar(null, DEMO, confianza, solo));
 check('ANALIZAR_SOLO vacío: comportamiento normal', debeAnalizar('3419999999', DEMO, confianza, new Set()));
+const arranque = Date.UTC(2026, 9, 24, 15, 0, 0);
+check('mensaje anterior al arranque se ignora', esMensajePrevio(arranque / 1000 - 60, arranque));
+check('mensaje posterior al arranque se procesa', !esMensajePrevio(arranque / 1000 + 5, arranque));
+check('timestamp Long (toNumber) anterior se ignora', esMensajePrevio({ toNumber: () => arranque / 1000 - 1 }, arranque));
+check('sin timestamp se procesa', !esMensajePrevio(null, arranque));
 
 // --- heurística + alertas ---
 const h = clasificarHeuristico(DEMO, { protegido: 'la abuela' });

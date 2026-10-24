@@ -53,3 +53,17 @@ export function debeAnalizar(
   if (tienePalabraClave(t)) return true;
   return detectarEntidades(t).length > 0;
 }
+
+/**
+ * ¿El mensaje es de antes de que arrancara el worker? Al reconectar, Baileys entrega como
+ * `notify` lo que llegó offline; esos chats previos no se analizan. `messageTimestamp` viene
+ * en segundos (number o Long). Sin timestamp → se procesa.
+ */
+export function esMensajePrevio(
+  ts: number | { toNumber(): number } | null | undefined,
+  desdeMs: number,
+): boolean {
+  if (ts == null) return false;
+  const seg = typeof ts === 'number' ? ts : ts.toNumber();
+  return seg * 1000 < desdeMs;
+}
