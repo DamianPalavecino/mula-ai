@@ -78,6 +78,27 @@ check('desconocido sin número resuelto se analiza', debeAnalizar(null, DEMO, co
 check('"urgente" corto se analiza', debeAnalizar('3410000000', 'urgente!!', confianza));
 check('alias suelto se analiza', debeAnalizar('3410000000', 'juli.martinez.mp', confianza));
 check('"hola" suelto no se analiza', !debeAnalizar('3410000000', 'hola', confianza));
+// Solo pasa al LLM lo que tiene señales (palabra clave, monto o entidad): charla común no gasta tokens.
+const sinSenales = [
+  'nos vemos mañana en el cumple de la tía Rosa',
+  'hola, cómo andás? hace mucho que no hablamos',
+  'a qué hora llegás a casa hoy a la noche',
+];
+for (const t of sinSenales) check(`charla sin señales no se analiza: "${t}"`, !debeAnalizar('3410000000', t, confianza));
+const conSenales = [
+  'hola ma, cambié de número, agendame',
+  'necesito 50 mil para mañana',
+  'te paso $15.000 ahora',
+  'pasame la guita que te debo',
+  'me prestás unas lucas hasta el viernes',
+  'entrá a este link para reclamar tu beneficio',
+  'tu cuenta fue bloqueada, verificá tus datos',
+  'tenés un reintegro pendiente',
+  'te devuelvo 200 usdt en una semana',
+  'mirá esto https://bit.ly/abc123',
+  'llamame al 341 555 1234 urgente',
+];
+for (const t of conSenales) check(`con señales se analiza: "${t}"`, debeAnalizar('3410000000', t, confianza));
 const solo = new Set(['3410000000']);
 check('ANALIZAR_SOLO: número de la lista se analiza', debeAnalizar('3410000000', DEMO, confianza, solo));
 check('ANALIZAR_SOLO: número fuera de la lista no', !debeAnalizar('3419999999', DEMO, confianza, solo));

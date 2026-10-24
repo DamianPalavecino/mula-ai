@@ -9,7 +9,21 @@ export const PALABRAS_CLAVE = [
   'mandame', 'manda', 'pasame', 'prestame', 'prestamo', 'banco', 'home banking', 'tarjeta',
   'clave', 'codigo', 'token', 'premio', 'sorteo', 'ganaste', 'ganador', 'comisaria', 'accidente',
   'choque', 'abogado', 'inversion', 'invertir', 'cripto', 'mercado pago', 'pesos', 'dolares', 'efectivo',
+  // plata en criollo
+  'guita', 'luca', 'lucas', 'mango', 'mangos', 'palo', 'palos', 'mil', 'pagar', 'pago', 'pagame', 'cobrar',
+  'cobro', 'deuda', 'debo', 'cuota', 'monto', 'saldo', 'presta', 'prestas', 'prestar', 'devuelvo', 'seña',
+  'comprobante', 'cuenta', 'billetera', 'uala', 'brubank', 'naranja x', 'lemon', 'binance', 'usdt', 'bitcoin',
+  // organismos, policía y salud
+  'policia', 'detenido', 'fianza', 'multa', 'hospital', 'operacion', 'internado', 'pami', 'mi argentina',
+  'banco nacion', 'galicia', 'santander', 'macro', 'bbva',
+  // links, cuentas y beneficios
+  'link', 'enlace', 'verifica', 'verificar', 'verificacion', 'bloqueada', 'bloqueado', 'suspendida', 'datos',
+  'reintegro', 'reembolso', 'beneficio', 'bono', 'subsidio', 'reclamar', 'ganancia', 'ganancias', 'rendimiento',
+  'agendame', 'agenda este', 'guarda este', 'whatsapp nuevo',
 ];
+
+const LINK = /\b(?:https?:\/\/|www\.)\S+|\b(?:bit\.ly|tinyurl\.com|wa\.me|t\.me)\/\S+/i;
+const PLATA = /\$\s?\d|\b\d+\s?(?:k|mil|lucas?|palos?|millones?)\b/i;
 
 const RISA_O_RELLENO =
   /^(?:(?:j[aeiou]){2,}j?|(?:a?j){2,}|ok|oka|okey|dale|si|no|gracias|genial|joya|bueno|listo|jaj+a?|xd+|[\p{Extended_Pictographic}\s]+)$/iu;
@@ -26,12 +40,18 @@ export function tienePalabraClave(texto: string): boolean {
   return PALABRAS_CLAVE.some((p) => new RegExp(`(?<![a-z])${p}(?![a-z])`).test(t));
 }
 
+/** Palabra clave, monto, link o entidad (alias/CBU/CVU/teléfono). Sin nada de eso no se gasta el LLM. */
+export function tieneSenales(texto: string): boolean {
+  return tienePalabraClave(texto) || LINK.test(texto) || PLATA.test(texto) || detectarEntidades(texto).length > 0;
+}
+
 /**
  * ¿Hay que mandar este mensaje al clasificador?
  * - ANALIZAR_SOLO seteado → solo esos teléfonos (para vincular un número personal en la demo).
  * - Contacto de confianza → nunca (ni se procesa).
- * - Desconocido (o teléfono no resuelto) → sí si tiene más de 2 palabras o trae
- *   entidades / palabras clave. "jaja", "dale", stickers y emojis sueltos se ignoran.
+ * - Desconocido (o teléfono no resuelto) → solo si trae señales (palabra clave de plata/estafa,
+ *   monto, link o entidad). La charla común no pasa por el LLM: ahorra tokens. El contexto no se
+ *   pierde porque el listener igual guarda los mensajes salteados en el historial del chat.
  */
 export function debeAnalizar(
   telefono: string | null,
@@ -49,9 +69,7 @@ export function debeAnalizar(
   // Todo risa/relleno aunque sean varias palabras ("jaja dale ok")
   if (palabras.every((w) => RISA_O_RELLENO.test(normalizar(w).replace(/[!.?¡¿,]+/g, '')))) return false;
 
-  if (palabras.length > 2) return true;
-  if (tienePalabraClave(t)) return true;
-  return detectarEntidades(t).length > 0;
+  return tieneSenales(t);
 }
 
 /**

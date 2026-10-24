@@ -49,8 +49,8 @@ Herramientas: Supabase CLI en `C:\Users\dami_\AppData\Local\Programs\Supabase\su
 | `prod` | `node scripts/smoke-prod.mjs` | ⏭️ omitido | 0s | 24/10/2026, 12:28:39 | c6d5a8f |
 | `web` | `npm run build` | ✅ | 17s | 24/10/2026, 13:00:21 | fbc3601 |
 | `web` | `npm test` | ✅ | 2s | 24/10/2026, 13:00:21 | fbc3601 |
-| `worker` | `npm run selftest` | ✅ | 1s | 24/10/2026, 13:23:53 | 2a5195a |
-| `worker` | `npm run typecheck` | ✅ | 0s | 24/10/2026, 13:23:53 | 2a5195a |
+| `worker` | `npm run selftest` | ✅ | 1s | 24/10/2026, 13:38:04 | f6c1eed |
+| `worker` | `npm run typecheck` | ✅ | 0s | 24/10/2026, 13:38:04 | f6c1eed |
 <!-- check:end -->
 
 ## Qué falta probar (manual / e2e)
@@ -74,6 +74,8 @@ Marcá `[x]` con hora y quién.
 - [x] Latencia < 5 s (deploy `e050908`) — 13:22 worker-latencia: 3 estafas por `/analizar` en el VPS → `[tiempo] llm=2693/3333/2589ms red=0ms total=3038/3531/2799ms` (total incluye `registrar_alerta`; antes ~5 s). Cambios: `resumen_entidad` en paralelo al LLM, la alerta sale antes de `registrar_reporte`, y si el LLM pasa `CLASSIFIER_BUDGET_MS` (3500) con la heurística ya ≥ umbral alerta con la heurística. `test:classify` 20/20 con rango (mediana 2.5 s, máx 5 s). Falta: 1 mensaje real de WhatsApp para ver `alerta_enviada=` en `vps.sh logs`
 - [x] La detección suma 1 reporte a `juli.martinez.mp` (12:48, e2e: r_181, juli 23→24; falta verlo en `/verificar` de Vercel)
 - [ ] Audio de estafa transcripto y alertado (si hay key de transcripción)
+
+- [ ] Filtro por palabras clave en el VPS (desde 24/10 tarde): un desconocido solo pasa al LLM si trae plata/alias/CBU/link/monto/palabra de estafa; la charla común queda `[skip] sin señales` pero entra al historial. Probar en WhatsApp real: "hola, cómo andás" → skip; después "cambié de número, pasame plata" → alerta con el contexto. Requiere `worker/scripts/vps.sh deploy`
 
 **Plan B / features nuevas**
 - [x] `POST /analizar`: curl local con estafa / normal / body inválido (400) — 12:27, agente worker-http (LLM real: estafa riesgo 95, normal 0; OPTIONS 204; `/health` ok. Supabase falso: `reporte_id` null y alerta sin registrar, como corresponde)

@@ -129,7 +129,10 @@ async function procesarMensaje(sock: WASocket, msg: WAMessage): Promise<void> {
   if (!debeAnalizar(telefono, texto)) {
     // contactos de confianza ni se loguean con contenido
     if (config.analizarSolo.size > 0 && !(telefono && config.analizarSolo.has(telefono))) return; // fuera de ANALIZAR_SOLO: ni se loguea
-    log(`[skip] ${telefono && config.trustedContacts.has(telefono) ? 'contacto de confianza' : 'sin señales'} · ${quien}`);
+    const confiable = !!telefono && config.trustedContacts.has(telefono);
+    // Sin señales no gasta LLM, pero queda como contexto por si el próximo mensaje sí las trae.
+    if (!confiable) pushHistorial(chat, texto);
+    log(`[skip] ${confiable ? 'contacto de confianza' : 'sin señales'} · ${quien}`);
     return;
   }
 
