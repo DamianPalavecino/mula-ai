@@ -57,3 +57,40 @@ export const IconoGiro = ({ className }: P) => (
     <path d="M21 12a9 9 0 1 1-6.2-8.6" />
   </svg>
 );
+export const IconoCasa = ({ className }: P) => (
+  <svg {...base(className)}>
+    <path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1Z" />
+  </svg>
+);
+export const IconoChat = ({ className }: P) => (
+  <svg {...base(className)}>
+    <path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z" />
+  </svg>
+);
+export const IconoRed = ({ className }: P) => (
+  <svg {...base(className)}>
+    <circle cx="12" cy="5" r="2.5" />
+    <circle cx="5" cy="18" r="2.5" />
+    <circle cx="19" cy="18" r="2.5" />
+    <path d="m10.8 7.2-4.6 8.6M13.2 7.2l4.6 8.6M7.5 18h9" />
+  </svg>
+);
+export const IconoAjustes = ({ className }: P) => (
+  <svg {...base(className)}>
+    <path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0" />
+    <circle cx="16" cy="6" r="2" />
+    <circle cx="10" cy="12" r="2" />
+    <circle cx="18" cy="18" r="2" />
+  </svg>
+);
+export const IconoEscudo = ({ className }: P) => (
+  <svg {...base(className)}>
+    <path d="M12 22s8-3.5 8-10V5l-8-3-8 3v7c0 6.5 8 10 8 10Z" />
+    <path d="m9 12 2 2 4-4" />
+  </svg>
+);
+export const IconoFlecha = ({ className }: P) => (
+  <svg {...base(className)}>
+    <path d="M5 12h14M13 6l6 6-6 6" />
+  </svg>
+);
