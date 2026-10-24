@@ -117,10 +117,9 @@ Marcá `[x]` con hora y quién.
 - [ ] Submit hecho
 
 ## Próximo paso
+- **Cerrar la base (P0, lo hace Damian):** pegar `supabase/cierre-anon.sql` en el SQL editor de Supabase (o aprobarlo por el MCP en un chat interactivo). Después `npm run check prod` sin `MODO` tiene que dar verde. Hasta entonces la anon key sigue leyendo tablas y `grafo()`.
+- **Web nueva en Vercel (13:50, orquestador):** `mula-ai.vercel.app` sirve landing sin DB/LLM, `/entrar` y `/registro` (Clerk), `/admin` (gobierno: grafo + feed por polling + stats + verificar) y `/app` (familiar: setup del protegido, alertas propias, me-estafaron, verificar, probar mensaje). Rutas viejas redirigen. Variables cargadas en Vercel: Clerk (pk/sk, SIGN_IN_URL=/entrar, SIGN_UP_URL=/registro), `ADMIN_EMAILS`, `WORKER_URL`, `MULA_TOKEN`, `SUPABASE_SERVICE_ROLE_KEY`, `OPENROUTER_API_KEY`. Verificado con login real en local (admin y familiar, capturas en `docs/demo/capturas/admin-*.png`, `app-*.png`). Falta: verificar en prod que `/admin` sin sesión redirija a `/entrar` (deploy de e935a1a) y entrar con la cuenta admin real.
+- **Cuenta familiar de la demo:** cuando exista su userId de Clerk, `npm run protegido-demo -- <userId>` crea "Abuela Marta" a su nombre y asocia las alertas. Borrar la fila de prueba `protegidos.id = 1` (owner `user_3L9IGsImlwJxpgloS5T2dLzbuoF`, usuario `familiar.demo-d+clerk_test@example.com`).
 - Red: cuit/link listos en base + worker + web. Falta: `vps.sh deploy` del worker y decidir el re-seed de prod (ver "Qué falta probar").
-- Web: el worker ya tiene URL pública y `WORKER_URL` + `MULA_TOKEN` están en Vercel production (server-only). Falta: deploy del proxy server-side que la usa (`/app/api/analizar`) y `vercel --prod`. Si la URL del túnel cambió: `worker/scripts/vps.sh tunnel`.
-- me-estafaron: listo en main. Falta cargar en Vercel `OPENROUTER_API_KEY` (y opcional `SUPABASE_SERVICE_ROLE_KEY`, ambas sin `NEXT_PUBLIC_`) y sumar el link en el header.
-- Demo: kit listo en `docs/demo/` (guion, mensajes, jurado, checklist, capturas). Falta: conseguir celulares y número del estafador, `npm run reset-demo`, toma de respaldo (el worker ya anda en el VPS).
-- Supabase prod listo (12:55, `check prod` 6/6).
-- Después Vercel (§2); el worker ya está en el VPS (§3). Completar las URLs arriba de `docs/deploy.md`.
-- Worker: URL pública lista (Cloudflare tunnel, `vps.sh tunnel`). Latencia ~3 s (ver arriba).
+- Demo: kit en `docs/demo/` (guion ya con landing → login familiar → setup → alerta → login gobierno → grafo). Falta: `npm run reset-demo`, toma de respaldo. Si la URL del túnel cambió: `worker/scripts/vps.sh tunnel` y recargar `WORKER_URL` en Vercel.
+- Deploy a Vercel: SOLO con `git push origin main` (nunca `vercel --prod` desde el árbol local). Con `cacheComponents`: todo lo que lea sesión/searchParams va bajo un `loading.tsx`/`<Suspense>`, sin `export const dynamic`.
