@@ -1,6 +1,7 @@
 import "server-only";
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
+import { connection } from "next/server";
 import { clerkActivo } from "./clerk";
 import { esAdminEmail, rolDe, type Rol } from "./roles";
 
@@ -19,6 +20,9 @@ export interface Sesion {
 // Sesión actual o null (para el header y páginas públicas).
 // Sin keys de Clerk no hay sesión posible: devolvemos null sin llamar a auth().
 export async function getSesion(): Promise<Sesion | null> {
+  // Siempre dinámico (cacheComponents): sin esto, un build sin keys prerenderiza
+  // "sin sesión" y /app y /admin quedarían redirigiendo a /entrar para siempre.
+  await connection();
   if (!clerkActivo) return null;
   const { userId } = await auth();
   if (!userId) return null;
