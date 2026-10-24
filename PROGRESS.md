@@ -41,7 +41,7 @@ Marcá `[x]` con hora y quién.
 - [ ] `npm run check prod` verde contra Supabase prod (y con `WEB_URL` contra Vercel)
 - [ ] Realtime activo en `alertas` (un INSERT aparece en el feed de `/red`)
 - [ ] Web en Vercel: `/`, `/verificar?valor=juli.martinez.mp` (23 reportes, en rojo) y `/red` en incógnito
-- [ ] Worker en Railway: conectado, sesión persistida (redeploy sin re-escanear el QR)
+- [x] 12:45 worker — en el VPS (Railway: trial vencido y signups cerrados). systemd `mula-worker` en `contabo-vps`, `[wa] conectado como 5493436612270`; tras `restart` reconecta en 1 s sin QR, `/health` → `{"ok":true,"whatsapp":"conectado"}`. Sesión en `~/mula-data/auth_info`, vars en `~/.config/mula-ai/worker.conf`. Operar con `worker/scripts/vps.sh deploy|qr|logs|status`
 
 **Worker / WhatsApp**
 - [x] 12:33 worker — vinculado local (número de Damian 5493436612270, lid 44066381295863, `ANALIZAR_SOLO` con 2 números de prueba). Demo desde 3413950428 → `[clasif:llm] riesgo=85 familiar_numero_nuevo alias:juli.martinez.mp` → alerta al chat propio 4 s después del mensaje. `registrar_reporte` falló: la función no existe todavía en Supabase (pendiente el schema)
@@ -56,7 +56,7 @@ Marcá `[x]` con hora y quién.
 - [x] `POST /analizar`: curl local con estafa / normal / body inválido (400) — 12:27, agente worker-http (LLM real: estafa riesgo 95, normal 0; OPTIONS 204; `/health` ok. Supabase falso: `reporte_id` null y alerta sin registrar, como corresponde)
 - [ ] `POST /analizar` contra Supabase real: devuelve `reporte_id`/`alerta_id` y la alerta aparece en el feed de `/red`
 - [ ] `POST /analizar` con `enviar_whatsapp: true` y WhatsApp conectado → llega al chat propio y al grupo
-- [ ] Railway: dominio generado y `GET /health` responde desde afuera; URL cargada en `NEXT_PUBLIC_WORKER_URL` de Vercel
+- [ ] Worker con URL pública (VPS: Tailscale Funnel, pendiente OK de Damian) y `GET /health` responde desde afuera; URL cargada en `NEXT_PUBLIC_WORKER_URL` de Vercel
 - [ ] `/simulador` contra el worker real (y en modo mock sin `NEXT_PUBLIC_WORKER_URL`)
 - [ ] `/red`: el nodo de la alerta nueva se destaca
 - [x] 12:35 me-estafaron — local, `POST /api/extraer` con `chat.png` + `comprobante.png` → 200 en 27 s vía OpenRouter (`anthropic/claude-sonnet-5.5`): alias, CVU y teléfono bien extraídos, $180.000, denuncia + pedido de bloqueo + pasos. Sin body → 400. Cruce con la red da `null` (falta schema en prod)
@@ -76,7 +76,7 @@ Marcá `[x]` con hora y quién.
 
 ## Próximo paso
 - me-estafaron: listo en main. Falta cargar en Vercel `OPENROUTER_API_KEY` (y opcional `SUPABASE_SERVICE_ROLE_KEY`, ambas sin `NEXT_PUBLIC_`) y sumar el link en el header.
-- Demo: kit listo en `docs/demo/` (guion, mensajes, jurado, checklist, capturas). Falta: conseguir celulares y número del estafador, `npm run reset-demo`, toma de respaldo apenas ande el worker en Railway.
+- Demo: kit listo en `docs/demo/` (guion, mensajes, jurado, checklist, capturas). Falta: conseguir celulares y número del estafador, `npm run reset-demo`, toma de respaldo (el worker ya anda en el VPS).
 - Damian: crear Supabase prod y seguir `docs/deploy.md` §1 (no hay CLIs de supabase/vercel/railway en la PC: es por clics). Después `npm run check supabase` y `npm run check prod`.
 - Después Vercel (§2) y Railway (§3); completar las URLs arriba de `docs/deploy.md`.
-- Worker: `POST /analizar` está en main. Falta: deploy a Railway con dominio público → `NEXT_PUBLIC_WORKER_URL` en Vercel (agente `deploy`/`simulador`). Después, Tarea 2 del worker: el LLM tarda 4–6 s por mensaje y la alerta tiene que llegar en menos de 5 s.
+- Worker: `POST /analizar` está en main y el worker corre en el VPS. Falta: URL pública (Funnel) → `NEXT_PUBLIC_WORKER_URL` en Vercel (agente `deploy`/`simulador`). Después, Tarea 2 del worker: el LLM tarda 4–6 s por mensaje y la alerta tiene que llegar en menos de 5 s.

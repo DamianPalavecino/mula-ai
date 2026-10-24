@@ -5,7 +5,7 @@ Sin valores secretos acá. Las claves se cargan en cada servicio, nunca en el re
 ## URLs
 - Supabase: _(completar: https://xxxx.supabase.co)_
 - Web (Vercel): _(completar)_
-- Worker (Railway): _(completar; dominio público cuando exponga HTTP)_
+- Worker: VPS Contabo (systemd `mula-worker`, `worker/scripts/vps.sh`). Railway quedó descartado (trial vencido). Dominio público: _(pendiente, Tailscale Funnel)_
 
 ## 1. Supabase
 1. supabase.com → New project (región São Paulo). Guardá la contraseña de la base.
