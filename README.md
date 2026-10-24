@@ -43,6 +43,8 @@ El contrato entre worker y web está en [`CLAUDE.md`](CLAUDE.md).
 4. Web: `cd web && npm install && npm run dev`.
 5. Worker: `cd worker && npm install && npm run dev` y escanear el QR con el WhatsApp a proteger.
 
+6. Chequeo end-to-end: `npm run e2e` verifica con la anon key las tablas, `juli.martinez.mp`, `grafo()`, el último reporte de WhatsApp con su alerta y la suscripción Realtime. `--base` antes de la primera detección real, `--watch` para ver las alertas que entran en vivo, `--web <url>` para pegarle también a la web.
+
 Detalle en el README de cada carpeta.
 
 ## Aclaraciones

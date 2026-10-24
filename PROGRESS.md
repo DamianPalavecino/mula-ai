@@ -15,6 +15,7 @@ Entrega 16:00 · submit 15:45 · freeze 14:30.
 | `classify` | 10 estafas + 10 normales con el LLM real (OpenRouter; sin key, solo la heurística) |
 | `web` | `next build` (tipos + build de todas las rutas) |
 | `supabase` | seed contra el Supabase del entorno + la aserción de `juli.martinez.mp` |
+| `e2e` | manual: `npm run e2e` contra la base real con la anon key (`--base` antes de la 1ª detección, `--watch` para ver alertas en vivo) |
 | `prod` | manual (`npm run check prod`): con la anon key, `juli.martinez.mp` 23/5, `grafo()`, anon lee `alertas` y no escribe; con `WEB_URL`, las 3 rutas de Vercel dan 200 |
 
 ## Resultados automáticos
@@ -22,6 +23,7 @@ Entrega 16:00 · submit 15:45 · freeze 14:30.
 | Feature | Comando | Resultado | Duración | Cuándo | Commit |
 |---|---|---|---|---|---|
 | `classify` | `npm run test:classify` | ⏭️ omitido | 1s | 24/10/2026, 12:22:00 | f1093ee |
+| `e2e` | `npm run e2e` | ❌ | 3s | 24/10/2026, 12:26:00 | f9d0ffb |
 | `prod` | `node scripts/smoke-prod.mjs` | ⏭️ omitido | 0s | 24/10/2026, 12:25:00 | 9f011ae |
 | `web` | `npm run build` | ✅ | 29s | 24/10/2026, 12:21:35 | f1093ee |
 | `worker` | `npm run selftest` | ✅ | 18s | 24/10/2026, 12:21:35 | f1093ee |

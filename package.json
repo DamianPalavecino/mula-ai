@@ -4,7 +4,8 @@
   "type": "module",
   "scripts": {
     "seed": "tsx supabase/seed.ts",
-    "check": "node scripts/check.mjs"
+    "check": "node scripts/check.mjs",
+    "e2e": "tsx scripts/e2e-check.mts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.118.0",
