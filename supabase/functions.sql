@@ -438,6 +438,15 @@ grant execute on function
   public.limpiar_sintetico()
   to service_role;
 
+-- Lectura: solo service_role (anon/authenticated cerrados desde 24/10, ver cierre-anon.sql).
+revoke execute on function
+  public.normalizar(text, text),
+  public.detectar_tipo(text),
+  public.entidad_canonica(text, text),
+  public.modalidad_label(text),
+  public.resumen_entidad(text, text),
+  public.grafo()
+  from public, anon, authenticated;
 grant execute on function
   public.normalizar(text, text),
   public.detectar_tipo(text),
@@ -445,7 +454,7 @@ grant execute on function
   public.modalidad_label(text),
   public.resumen_entidad(text, text),
   public.grafo()
-  to anon, authenticated, service_role;
+  to service_role;
 
 -- PostgREST: recargar el schema cache para que las RPC nuevas aparezcan ya.
 notify pgrst, 'reload schema';

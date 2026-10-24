@@ -1,43 +1,83 @@
-// Smoke test de prod con la anon key (lo que ve la web). No lee archivos de entorno:
-//   SUPABASE_URL=https://xxxx.supabase.co SUPABASE_ANON_KEY=... [WEB_URL=https://....vercel.app] npm run check prod
+// Smoke test de prod. No lee archivos de entorno (el runner pasa --env-file-if-exists):
+//   npm run check prod
+//   SUPABASE_URL=... SUPABASE_ANON_KEY=... [SUPABASE_SERVICE_ROLE_KEY=...] [WEB_URL=https://....vercel.app] node scripts/smoke-prod.mjs
+//
+// Criterio (base cerrada a anon desde el 24/10, la web lee server-side con service role tras Clerk):
+//   - anon key: resumen_entidad, grafo y registrar_reporte → ≥400; GET alertas → ≥400 o [].
+//   - service role (si está): juli.martinez.mp ≥23 reportes y ≥5 provincias, grafo() con nodos y
+//     links, select a protegidos → 200 (requiere supabase/auth.sql aplicado).
+//   - WEB_URL (si está): / y /entrar → 200; /app y /admin sin sesión → 2xx/3xx, nunca 5xx;
+//     /red, /simulador, /verificar, /me-estafaron → 3xx o 404.
+// MODO=pre-cierre: los checks de anon imprimen WARN en vez de FAIL (antes de aplicar
+//   supabase/cierre-anon.sql). Sin la variable, exige el cierre.
 // Exit 3 = omitido (faltan variables).
-const { SUPABASE_URL, SUPABASE_ANON_KEY, WEB_URL } = process.env;
+const { SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY, WEB_URL, MODO } = process.env;
 if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
   console.log('⏭️ faltan SUPABASE_URL y/o SUPABASE_ANON_KEY en el entorno');
   process.exit(3);
 }
+const preCierre = MODO === 'pre-cierre';
+if (preCierre) console.log('(MODO=pre-cierre: los checks de anon son WARN, no FAIL)');
 
 let fallas = 0;
+let warns = 0;
 const ok = (cond, msg) => { console.log(`${cond ? 'PASS' : 'FAIL'}  ${msg}`); if (!cond) fallas++; };
-const h = { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}`, 'Content-Type': 'application/json' };
-const rpc = async (fn, body = {}) => {
+const okAnon = (cond, msg) => {
+  if (cond || !preCierre) return ok(cond, msg);
+  console.log(`WARN  ${msg}`); warns++;
+};
+
+const base = SUPABASE_URL.replace(/\/$/, '');
+const headers = (key) => ({ apikey: key, Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' });
+const req = async (url, opts) => {
   try {
-    const r = await fetch(`${SUPABASE_URL.replace(/\/$/, '')}/rest/v1/rpc/${fn}`, { method: 'POST', headers: h, body: JSON.stringify(body) });
+    const r = await fetch(url, opts);
     return { status: r.status, data: await r.json().catch(() => null) };
   } catch (e) { return { status: `sin conexión: ${e.cause?.code ?? e.message}`, data: null }; }
 };
+const rpc = (key, fn, body = {}) => req(`${base}/rest/v1/rpc/${fn}`, { method: 'POST', headers: headers(key), body: JSON.stringify(body) });
+const select = (key, path) => req(`${base}/rest/v1/${path}`, { headers: headers(key) });
+const negado = (s) => typeof s === 'number' && s >= 400;
 
-const juli = await rpc('resumen_entidad', { valor: 'juli.martinez.mp' });
-ok(juli.status === 200, `resumen_entidad responde 200 (dio ${juli.status})`);
-ok(juli.data?.reportes >= 23, `juli.martinez.mp tiene ≥23 reportes (dio ${juli.data?.reportes})`);
-ok(juli.data?.provincias?.length >= 5, `juli.martinez.mp en ≥5 provincias (dio ${juli.data?.provincias?.length})`);
+// --- anon: sin acceso a nada ---
+const a = SUPABASE_ANON_KEY;
+const aJuli = await rpc(a, 'resumen_entidad', { valor: 'juli.martinez.mp' });
+okAnon(negado(aJuli.status), `anon NO ejecuta resumen_entidad (dio ${aJuli.status})`);
+const aGrafo = await rpc(a, 'grafo');
+okAnon(negado(aGrafo.status), `anon NO ejecuta grafo (dio ${aGrafo.status})`);
+const aAlertas = await select(a, 'alertas?select=id&limit=1');
+okAnon(negado(aAlertas.status) || (aAlertas.status === 200 && Array.isArray(aAlertas.data) && aAlertas.data.length === 0),
+  `anon NO lee alertas (dio ${aAlertas.status}${aAlertas.status === 200 ? `, ${aAlertas.data?.length} filas` : ''})`);
+const aEscr = await rpc(a, 'registrar_reporte', { payload: { fuente: 'sintetico', texto: 'smoke' } });
+ok(negado(aEscr.status), `anon NO puede registrar_reporte (dio ${aEscr.status})`);
 
-const g = await rpc('grafo');
-ok(g.data?.nodes?.length > 0 && g.data?.links?.length > 0, `grafo() con nodos y links (${g.data?.nodes?.length} / ${g.data?.links?.length})`);
+// --- service role: los datos siguen ahí ---
+if (SUPABASE_SERVICE_ROLE_KEY) {
+  const s = SUPABASE_SERVICE_ROLE_KEY;
+  const juli = await rpc(s, 'resumen_entidad', { valor: 'juli.martinez.mp' });
+  ok(juli.data?.reportes >= 23, `service: juli.martinez.mp ≥23 reportes (dio ${juli.data?.reportes}, status ${juli.status})`);
+  ok(juli.data?.provincias?.length >= 5, `service: juli.martinez.mp en ≥5 provincias (dio ${juli.data?.provincias?.length})`);
+  const g = await rpc(s, 'grafo');
+  ok(g.data?.nodes?.length > 0 && g.data?.links?.length > 0, `service: grafo() con nodos y links (${g.data?.nodes?.length} / ${g.data?.links?.length})`);
+  const p = await select(s, 'protegidos?select=id&limit=1');
+  ok(p.status === 200, `service: select protegidos → 200 (dio ${p.status})`);
+  const col = await select(s, 'alertas?select=protegido_id&limit=1');
+  ok(col.status === 200, `service: alertas.protegido_id existe (dio ${col.status})`);
+} else console.log('(sin SUPABASE_SERVICE_ROLE_KEY: no pruebo datos con service role)');
 
-const escritura = await rpc('registrar_reporte', { payload: { fuente: 'sintetico', texto: 'smoke' } });
-ok(typeof escritura.status === 'number' && escritura.status >= 400, `anon NO puede registrar_reporte (dio ${escritura.status})`);
-
-const get = (url, opts) => fetch(url, opts).catch((e) => ({ status: `sin conexión: ${e.cause?.code ?? e.message}` }));
-const alertas = await get(`${SUPABASE_URL.replace(/\/$/, '')}/rest/v1/alertas?select=id&limit=1`, { headers: h });
-ok(alertas.status === 200, `anon lee alertas (dio ${alertas.status})`);
-
+// --- web ---
 if (WEB_URL) {
-  for (const p of ['/', '/verificar?valor=juli.martinez.mp', '/red']) {
-    const r = await get(new URL(p, WEB_URL));
-    ok(r.status === 200, `web ${p} → ${r.status}`);
+  const get = async (p) => {
+    try { return (await fetch(new URL(p, WEB_URL), { redirect: 'manual' })).status; }
+    catch (e) { return `sin conexión: ${e.cause?.code ?? e.message}`; }
+  };
+  const es = (s, lo, hi) => typeof s === 'number' && s >= lo && s <= hi;
+  for (const p of ['/', '/entrar']) { const s = await get(p); ok(s === 200, `web ${p} → ${s} (esperado 200)`); }
+  for (const p of ['/app', '/admin']) { const s = await get(p); ok(es(s, 200, 399), `web ${p} sin sesión → ${s} (2xx/3xx, nunca 5xx)`); }
+  for (const p of ['/red', '/simulador', '/verificar', '/me-estafaron']) {
+    const s = await get(p); ok(es(s, 300, 399) || s === 404, `web ${p} → ${s} (3xx o 404)`);
   }
 } else console.log('(sin WEB_URL: no pruebo Vercel)');
 
-console.log(fallas ? `\n${fallas} fallas` : '\nprod ok');
+console.log(fallas ? `\n${fallas} fallas${warns ? `, ${warns} warn` : ''}` : `\nprod ok${warns ? ` (${warns} warn: falta aplicar cierre-anon.sql)` : ''}`);
 process.exit(fallas ? 1 : 0);

@@ -7,7 +7,8 @@
     "check": "node scripts/check.mjs",
     "e2e": "tsx scripts/e2e-check.mts",
     "reset-demo": "tsx supabase/reset-demo.ts",
-    "pre-demo": "node scripts/pre-demo.mjs"
+    "pre-demo": "node scripts/pre-demo.mjs",
+    "protegido-demo": "node --env-file-if-exists=.env scripts/protegido-demo.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.118.0",

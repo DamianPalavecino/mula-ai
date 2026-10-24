@@ -27,8 +27,10 @@ Comparten solo la base. **No cambiar el contrato sin avisar al otro.** Si hace f
 - `entidades` — `id bigserial`, `tipo` (`alias` | `cbu` | `cvu` | `telefono`), `valor_normalizado`, `created_at`; único `(tipo, valor_normalizado)`.
 - `reporte_entidad` — `reporte_id`, `entidad_id` (PK compuesta). Es la red.
 - `alertas` — `id bigserial`, `reporte_id`, `protegido`, `riesgo`, `modalidad`, `mensaje_persona`, `mensaje_familia`, `enviada_a text[]`, `entidad_ids bigint[]`, `created_at`. **Realtime activado** (la web escucha INSERT).
+  - `protegido_id bigint` (nullable, FK → `protegidos.id`, `on delete set null`): el protegido dueño de la alerta. Se agrega, `protegido` (texto) se mantiene.
+- `protegidos` — `id bigserial`, `owner text` (userId de Clerk; la web siempre filtra `owner = userId`), `nombre`, `telefono` (normalizado), `contactos_confianza text[]`, `familiares text[]`, `provincia`, `created_at`. RLS sin policies: solo `service_role`. Demo: `npm run protegido-demo -- <clerkUserId> ["Abuela Marta"] [telefono]`.
 
-RLS: `anon` solo lee (`select` en las 4 tablas) y ejecuta `resumen_entidad`, `grafo`, `normalizar`, `detectar_tipo`. Las escrituras (`registrar_reporte`, `registrar_alerta`) son solo `service_role` (worker y seed).
+RLS: anon/authenticated: sin acceso (desde 24/10 13:xx). La web lee server-side con service role tras Clerk. Scripts: `supabase/auth.sql` (aditivo) y `supabase/cierre-anon.sql` (revokes). Las escrituras (`registrar_reporte`, `registrar_alerta`) y lecturas (`resumen_entidad`, `grafo`, etc.) son solo `service_role` (web server-side, worker y seed).
 
 ### Modalidades
 `familiar_numero_nuevo`, `accidente_o_comisaria`, `falso_organismo`, `premio_o_sorteo`, `falso_comprador`, `falsa_venta`, `inversion`, `otro`.

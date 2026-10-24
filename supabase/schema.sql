@@ -71,7 +71,7 @@ create index if not exists alertas_created_at_idx        on public.alertas (crea
 create index if not exists alertas_reporte_id_idx        on public.alertas (reporte_id);
 
 -- ---------------------------------------------------------------------------
--- RLS: anon/authenticated solo leen. Escrituras solo service_role (vía RPC).
+-- RLS: anon/authenticated sin acceso. Todo vía service_role (web server-side, worker, seed).
 -- ---------------------------------------------------------------------------
 
 alter table public.reportes        enable row level security;
@@ -79,23 +79,17 @@ alter table public.entidades       enable row level security;
 alter table public.reporte_entidad enable row level security;
 alter table public.alertas         enable row level security;
 
+-- Sin policies públicas: desde el cierre (24/10) anon/authenticated no leen nada.
+-- La web lee server-side con service role tras Clerk. Ver auth.sql y cierre-anon.sql.
 drop policy if exists reportes_select_publico        on public.reportes;
 drop policy if exists entidades_select_publico       on public.entidades;
 drop policy if exists reporte_entidad_select_publico on public.reporte_entidad;
 drop policy if exists alertas_select_publico         on public.alertas;
 
-create policy reportes_select_publico        on public.reportes        for select to anon, authenticated using (true);
-create policy entidades_select_publico       on public.entidades       for select to anon, authenticated using (true);
-create policy reporte_entidad_select_publico on public.reporte_entidad for select to anon, authenticated using (true);
-create policy alertas_select_publico         on public.alertas         for select to anon, authenticated using (true);
-
--- Privilegios de tabla (además de RLS): anon/authenticated solo SELECT.
-revoke insert, update, delete, truncate, references, trigger
+-- Privilegios de tabla (además de RLS): anon/authenticated sin acceso.
+revoke all
   on public.reportes, public.entidades, public.reporte_entidad, public.alertas
   from anon, authenticated;
-grant select
-  on public.reportes, public.entidades, public.reporte_entidad, public.alertas
-  to anon, authenticated;
 grant all
   on public.reportes, public.entidades, public.reporte_entidad, public.alertas
   to service_role;
