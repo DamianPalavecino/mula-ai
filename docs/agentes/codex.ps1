@@ -2,7 +2,7 @@
 #   pwsh docs/agentes/codex.ps1                  → los 5
 #   pwsh docs/agentes/codex.ps1 simulador demo   → solo esos
 $repo = '93434532-72b0-464c-a48c-b83211d7840b'
-$briefs = @{ 'deploy' = '01-deploy'; 'worker-http' = '02-worker-http'; 'simulador' = '03-web-simulador'; 'me-estafaron' = '04-web-me-estafaron'; 'demo' = '05-demo' }
+$briefs = @{ 'deploy' = '01-deploy'; 'worker-http' = '02-worker-http'; 'simulador' = '03-web-simulador'; 'me-estafaron' = '04-web-me-estafaron'; 'demo' = '05-demo'; 'chat-ia' = '07-chat-ia' }
 $names = if ($args.Count) { $args } else { $briefs.Keys }
 $main = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
 
