@@ -45,7 +45,7 @@ Herramientas: Supabase CLI en `C:\Users\dami_\AppData\Local\Programs\Supabase\su
 | `classify` | `npm run test:classify` | ✅ | 72s | 24/10/2026, 13:17:53 | 0931268 |
 | `e2e` | `npm run e2e` | ✅ | 3s | 24/10/2026, 12:49:18 | 11979d5 |
 | `pre-demo` | `node --test scripts/pre-demo.test.mjs` | ✅ | 0s | 24/10/2026, 13:16:24 | 823cd2b |
-| `prod` | `node --env-file-if-exists=.env scripts/smoke-prod.mjs` | ✅ | 1s | 24/10/2026, 13:15:51 | 823cd2b |
+| `prod` | `node --env-file-if-exists=.env scripts/smoke-prod.mjs` | ❌ | 3s | 24/10/2026, 13:24:41 | 707ea19 |
 | `prod` | `node scripts/smoke-prod.mjs` | ⏭️ omitido | 0s | 24/10/2026, 12:28:39 | c6d5a8f |
 | `web` | `npm run build` | ✅ | 17s | 24/10/2026, 13:00:21 | fbc3601 |
 | `web` | `npm test` | ✅ | 2s | 24/10/2026, 13:00:21 | fbc3601 |
@@ -78,6 +78,7 @@ Marcá `[x]` con hora y quién.
 **Plan B / features nuevas**
 - [x] `POST /analizar`: curl local con estafa / normal / body inválido (400) — 12:27, agente worker-http (LLM real: estafa riesgo 95, normal 0; OPTIONS 204; `/health` ok. Supabase falso: `reporte_id` null y alerta sin registrar, como corresponde)
 - [x] `POST /analizar` contra Supabase prod — 12:53, agente worker-http: r_182 + alerta #2, `juli.martinez.mp` 24→25, `npm run e2e` verde (falta verla en el feed de `/red`). Ojo: en Windows `curl -d 'texto con tildes'` manda latin1; usá `--data-binary @archivo.json` (r_182 quedó con `�`, la web manda UTF-8 bien)
+- [x] `POST /analizar` cerrado (Tarea E, deploy `707ea19`) — 13:25 worker-latencia, en el VPS: sin `X-Mula-Token` → 401, token malo → 401, token del `worker.conf` → 200 (1.6 s); `/health` 200 sin token; `Origin` ajeno → sin `Access-Control-*`. Token: `MULA_TOKEN` (acepta `HTTP_TOKEN_ENVIO`, que es el que hay hoy en el VPS). `WEB_ORIGIN` sin setear (el browser ya no llama al worker)
 - [ ] La alerta de `POST /analizar` aparece en el feed de `/red` en vivo
 - [ ] `POST /analizar` con `enviar_whatsapp: true` y WhatsApp conectado → llega al chat propio y al grupo
 - [ ] Worker con URL pública (VPS: Tailscale Funnel, pendiente OK de Damian) y `GET /health` responde desde afuera; URL cargada en `NEXT_PUBLIC_WORKER_URL` de Vercel
