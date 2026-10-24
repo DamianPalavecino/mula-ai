@@ -8,6 +8,8 @@ Lo actualiza el agente después de cada paso (commit + push). Si se corta, el si
 - Rediseño (commit `4a13236`): `web/components/MeEstafaronForm.tsx` (paso a paso subir → analizando → resultado, drop grande, validación inline, botón "Usar capturas de ejemplo" que carga `web/public/demo/{chat,comprobante}.png`, pone Santa Fe y analiza solo), `web/components/MeEstafaronResultado.tsx` (banner rojo, cuentas en rojo con número grande, Copiar a ancho completo + barra fija en mobile), `web/components/MeEstafaronIconos.tsx` (SVG inline).
 - Lógica pura + tests: `web/lib/meEstafaron.ts` / `.test.ts` (`validarArchivo`, `limpiarEntidades`, antecedentes, rate limit). `npm run check web` verde.
 
+- Velocidad (commit `0b2352a`): el LLM solo extrae (esquema chico, `max_tokens` 1500, `sort: latency`, `reasoning: minimal`, timeout 20 s, default `google/gemini-3.5-flash-lite`); denuncia, pedido y pasos salen de `armarTextos()` en `web/lib/meEstafaron.ts` (con tests). Medido desde esta PC con las 2 capturas de demo (mismo request que la ruta, script en el scratchpad): LLM 3,0–4,2 s + red 0,3–0,9 s = 3,2–5,1 s. Lee bien alias, CVU, teléfono y $180.000. La cronología viene vacía y la UI ya la oculta.
+
 ## En curso (exactamente dónde quedó: archivo, comando, qué faltaba)
 - Nada a medio hacer. Todo pusheado.
 
@@ -16,5 +18,7 @@ Lo actualiza el agente después de cada paso (commit + push). Si se corta, el si
 - Cuando el simulador termine el rediseño de la paleta (`web/app/globals.css`), hacer pull y ajustar colores si hace falta (uso solo los tokens `tinta`, `texto`, `suave`, `linea`, `panel`, `fondo`, `alerta*` y un verde `#15803d` para "Copiado").
 
 ## Bloqueos / qué necesita del humano
+- Medir en prod logueado: `/app/me-estafaron` → "Usar capturas de ejemplo", cronometrar hasta el resultado (objetivo ≤ 6 s). No lo pude hacer: `/app` pide sesión de Clerk.
+- Revisar en Vercel si `EXTRACTOR_MODEL` está cargada: si está, pisa el default nuevo (flash-lite). Borrarla o ponerla en `google/gemini-3.5-flash-lite` y redeployar.
 - Probar `/app/me-estafaron` logueado en el celu (375 px) y avisar qué no le gusta.
 - Decidir si se prueba "Sumar a la red" contra prod (suma 1 reporte a `juli.martinez.mp`).
