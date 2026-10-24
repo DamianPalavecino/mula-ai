@@ -8,6 +8,8 @@ import type { Destino, Enviador } from './pipeline.js';
 export interface TextosAlerta {
   persona: string;
   familia: string;
+  /** PDF con los datos para denunciar; se manda a la familia después del aviso. */
+  denuncia?: { pdf: Uint8Array; nombre: string };
 }
 
 export const ETIQUETA_MODALIDAD: Record<string, string> = {
@@ -122,8 +124,35 @@ export function enviadorKapso(apiKey: string, phoneNumberId: string, f: typeof f
   };
 }
 
+/** Manda un PDF a un número (549…, sin @) como documento de WhatsApp. Tira si no se pudo. */
+export type EnviarDocumento = (numero: string, pdf: Uint8Array, nombre: string, caption: string) => Promise<void>;
+
+/** Documento por Kapso: sube el PDF a /media y lo manda por id (misma ventana de 24 h que el texto). */
+export function documentoKapso(apiKey: string, phoneNumberId: string, f: typeof fetch = fetch): EnviarDocumento {
+  const base = `https://api.kapso.ai/meta/whatsapp/v23.0/${phoneNumberId}`;
+  return async (numero, pdf, nombre, caption) => {
+    const form = new FormData();
+    form.append('messaging_product', 'whatsapp');
+    form.append('type', 'application/pdf');
+    form.append('file', new Blob([pdf], { type: 'application/pdf' }), nombre);
+    const up = await f(`${base}/media`, { method: 'POST', headers: { 'X-API-Key': apiKey }, body: form });
+    if (!up.ok) throw new Error(`kapso media ${up.status}: ${(await up.text()).slice(0, 300)}`);
+    const { id } = (await up.json()) as { id: string };
+    const res = await f(`${base}/messages`, {
+      method: 'POST',
+      headers: { 'X-API-Key': apiKey, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messaging_product: 'whatsapp', to: numero, type: 'document', document: { id, filename: nombre, caption } }),
+    });
+    if (!res.ok) throw new Error(`kapso ${res.status}: ${(await res.text()).slice(0, 300)}`);
+  };
+}
+
+const CAPTION_DENUNCIA = '📄 Reporte con todos los datos para hacer la denuncia (Santa Fe: mpa.santafe.gov.ar/iris → "Fraude o estafa virtual").';
+
 const kapsoConfig: EnviarTexto | null =
   config.kapsoApiKey && config.kapsoPhoneNumberId ? enviadorKapso(config.kapsoApiKey, config.kapsoPhoneNumberId) : null;
+const kapsoDocConfig: EnviarDocumento | null =
+  config.kapsoApiKey && config.kapsoPhoneNumberId ? documentoKapso(config.kapsoApiKey, config.kapsoPhoneNumberId) : null;
 
 /**
  * Enviador de WhatsApp para el pipeline: manda al chat propio y a la familia (por defecto el
@@ -135,6 +164,7 @@ export function enviadorWhatsapp(
   sock: WASocket,
   familia: string[] = config.familyGroupJid ? [config.familyGroupJid] : [],
   kapso: EnviarTexto | null = kapsoConfig,
+  kapsoDoc: EnviarDocumento | null = kapsoDocConfig,
 ): Enviador {
   return async (textos) => {
     const enviados: Array<{ destino: Destino; jid: string }> = [];
@@ -159,6 +189,25 @@ export function enviadorWhatsapp(
         enviados.push({ destino, jid });
       } catch (err) {
         console.error(`[alerts] no pude mandar a ${destino}:`, err);
+      }
+    }
+    // El PDF para denunciar va después de los avisos (no los demora) y solo a la familia.
+    const d = textos.denuncia;
+    if (d) {
+      for (const { jid } of enviados.filter((e) => e.destino === 'familia')) {
+        if (kapsoDoc && jid.endsWith('@s.whatsapp.net')) {
+          try {
+            await kapsoDoc(jid.split('@')[0]!, d.pdf, d.nombre, CAPTION_DENUNCIA);
+            continue;
+          } catch (err) {
+            console.error('[alerts] Kapso no pudo mandar el PDF, voy por Baileys:', err);
+          }
+        }
+        try {
+          await sock.sendMessage(jid, { document: Buffer.from(d.pdf), mimetype: 'application/pdf', fileName: d.nombre, caption: CAPTION_DENUNCIA });
+        } catch (err) {
+          console.error('[alerts] no pude mandar el PDF de denuncia:', err);
+        }
       }
     }
     return enviados;

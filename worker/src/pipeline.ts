@@ -1,6 +1,7 @@
 import { armarAlertas, type TextosAlerta } from './alerts.js';
 import { clasificar, type ResultadoClasificacion } from './classify.js';
 import { config } from './config.js';
+import { pdfDenuncia } from './denuncia.js';
 import { clave, dedupe, detectarEntidades, entidadesDeRed, type Entidad } from './entities.js';
 import { asociarAlerta, consultarEntidad, registrarAlerta, registrarReporte, type ResumenEntidad } from './network.js';
 
@@ -163,8 +164,16 @@ export async function procesarMensaje(
       enviada_a: [],
     });
 
-  const textos = armarAlertas(c, resumenes.map((r) => contandoEste(r, provincia)), protegido);
+  const contados = resumenes.map((r) => contandoEste(r, provincia));
+  const textos = armarAlertas(c, contados, protegido);
   const alertar = c.riesgo >= deps.umbral;
+  if (alertar && enviar)
+    try {
+      const pdf = await pdfDenuncia({ c, resumenes: contados, texto, historial, remitente, protegido, provincia, fecha: new Date(desde) });
+      textos.denuncia = { pdf, nombre: `denuncia-mula-${new Date(desde).toISOString().slice(0, 10)}.pdf` };
+    } catch (err) {
+      log('[denuncia] no pude armar el PDF (igual se alerta):', err);
+    }
   if (!alertar) log(`[alerta] riesgo ${c.riesgo} < umbral ${deps.umbral}: no se alerta`);
 
   // Envío y registro en paralelo: la alerta no espera a la base.

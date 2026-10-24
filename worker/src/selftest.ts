@@ -14,7 +14,8 @@ import type { AddressInfo } from 'node:net';
 import { crearServidorHttp, ipCliente, RateLimiter, validarAnalizar } from './http.js';
 import type { AlertaPayload, ResumenEntidad } from './network.js';
 import { procesarMensaje, type DepsPipeline } from './pipeline.js';
-import { enviadorKapso, enviadorWhatsapp } from './alerts.js';
+import { documentoKapso, enviadorKapso, enviadorWhatsapp } from './alerts.js';
+import { armarDenuncia, pdfDenuncia } from './denuncia.js';
 import { GestorSesiones, jidDeTelefono, rutaSesion, type EventosSesion } from './sesiones.js';
 
 let ok = 0;
@@ -576,6 +577,57 @@ check('sesiones: ruta inválida → null', rutaSesion('/sesiones/abc') === null 
     tiro = /400/.test(String(e));
   }
   check('kapso: status no-2xx tira error', tiro);
+}
+{
+  // --- PDF de denuncia ---
+  const datos = {
+    c: { ...clasificarHeuristico(DEMO, { protegido: 'la abuela' }), monto: 150000, senales: ['pide plata urgente 🚨'] },
+    resumenes: [
+      { ...RESUMEN_JULI, reportes: 23, provincias: ['Santa Fe', 'Córdoba'] },
+      { ...RESUMEN_JULI, entidad_id: 13, tipo: 'telefono' as const, valor_normalizado: '3415551234', reportes: 0, provincias: [] },
+    ],
+    texto: DEMO,
+    remitente: '3415551234',
+    protegido: 'Abuela Marta',
+    provincia: 'Santa Fe',
+    fecha: new Date('2026-10-24T15:00:00-03:00'),
+  };
+  const todo = armarDenuncia(datos).flatMap((x) => [x.titulo, ...x.lineas]).join('\n');
+  check('denuncia: link al MPA de Santa Fe', todo.includes('mpa.santafe.gov.ar/iris') && todo.includes('Fraude o estafa virtual'), todo);
+  check('denuncia: alias con reportes y provincias', todo.includes('juli.martinez.mp — 23 reportes en la red Mula (Santa Fe, Córdoba)'), todo);
+  check('denuncia: número del remitente formateado', todo.includes('+54 9 341 555-1234'), todo);
+  check('denuncia: monto, suplanta y modalidad', todo.includes('$ 150.000') && todo.includes('Juli') && todo.includes('familiar con número nuevo'), todo);
+  check('denuncia: mensaje textual y datos a completar', todo.includes(DEMO) && todo.includes('DNI:'), todo);
+  const pdf = await pdfDenuncia(datos);
+  check('denuncia: PDF válido (con emoji en señales)', Buffer.from(pdf.slice(0, 5)).toString() === '%PDF-' && pdf.length > 1000, pdf.length);
+
+  // Envío: el PDF va solo a la familia, después de los avisos; Kapso primero, si falla Baileys.
+  const porSock: Array<[string, string]> = [];
+  const sock = { user: { id: '5493410000000:3@s.whatsapp.net' }, sendMessage: async (jid: string, m: any) => void porSock.push([jid, m.document ? 'doc' : 'txt']) } as any;
+  const docs: string[] = [];
+  const kapsoDoc = async (numero: string) => {
+    if (numero === '5491199999999') throw new Error('fuera de ventana');
+    docs.push(numero);
+  };
+  await enviadorWhatsapp(sock, ['5493415551234@s.whatsapp.net', '5491199999999@s.whatsapp.net'], null, kapsoDoc)({ persona: 'p', familia: 'f', denuncia: { pdf, nombre: 'd.pdf' } });
+  check('denuncia: PDF por Kapso al familiar', JSON.stringify(docs) === '["5493415551234"]', docs);
+  check('denuncia: fallo de Kapso → PDF por Baileys, al propio no', JSON.stringify(porSock.filter((x) => x[1] === 'doc')) === '[["5491199999999@s.whatsapp.net","doc"]]', porSock);
+
+  const pedidos: Array<{ url: string; init: any }> = [];
+  const fakeFetch = (async (url: string, init: any) => {
+    pedidos.push({ url, init });
+    return new Response(url.endsWith('/media') ? '{"id":"MEDIA1"}' : '{"messages":[{"id":"wamid.x"}]}', { status: 200 });
+  }) as typeof fetch;
+  await documentoKapso('KEY', '1416697921521182', fakeFetch)('5493415551234', pdf, 'd.pdf', 'cap');
+  check('kapso doc: sube a /media', pedidos[0]?.url.endsWith('/1416697921521182/media') && pedidos[0].init.body instanceof FormData, pedidos[0]?.url);
+  const b = JSON.parse(pedidos[1]?.init.body ?? '{}');
+  check('kapso doc: manda document con el id', b.type === 'document' && b.document.id === 'MEDIA1' && b.document.filename === 'd.pdf', b);
+}
+{
+  const { deps } = fakeDeps();
+  let recibidos: any = null;
+  await procesarMensaje({ texto: DEMO, remitente: '3410000000', enviar: async (t) => ((recibidos = t), []) }, deps);
+  check('pipeline: adjunta el PDF de denuncia al enviar', recibidos?.denuncia?.pdf?.length > 1000 && /\.pdf$/.test(recibidos.denuncia.nombre), recibidos?.denuncia?.nombre);
 }
 {
   const asociadas: Array<[number, number]> = [];

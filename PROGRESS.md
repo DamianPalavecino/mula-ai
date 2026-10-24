@@ -52,8 +52,8 @@ Herramientas: Supabase CLI en `C:\Users\dami_\AppData\Local\Programs\Supabase\su
 | `prod` | `node scripts/smoke-prod.mjs` | ⏭️ omitido | 0s | 24/10/2026, 12:28:39 | c6d5a8f |
 | `web` | `npm run build` | ✅ | 36s | 24/10/2026, 15:31:42 | 9d4668d |
 | `web` | `npm test` | ✅ | 3s | 24/10/2026, 15:31:42 | 9d4668d |
-| `worker` | `npm run selftest` | ✅ | 1s | 24/10/2026, 15:18:27 | f9c193d |
-| `worker` | `npm run typecheck` | ✅ | 0s | 24/10/2026, 15:18:27 | f9c193d |
+| `worker` | `npm run selftest` | ✅ | 1s | 24/10/2026, 15:32:08 | 9d4668d |
+| `worker` | `npm run typecheck` | ✅ | 0s | 24/10/2026, 15:32:08 | 9d4668d |
 <!-- check:end -->
 
 ## Qué falta probar (manual / e2e)
