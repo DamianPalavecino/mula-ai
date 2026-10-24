@@ -112,7 +112,7 @@ Señales fuertes: pide plata o un dato sensible, urgencia o secreto ("no le diga
 Los mensajes normales también piden plata a veces (dividir el asado, una vaquita, pagar una deuda entre amigos, un turno). Si no hay suplantación, urgencia ni presión y el contexto es cotidiano, es_sospechoso = false y riesgo bajo. No exageres: un falso positivo asusta a la persona.
 
 Cómo completar:
-- riesgo: entero de 0 a 100. 80+ cuando hay guion claro + pedido de plata o datos. 0-30 para mensajes normales.
+- riesgo: entero de 0 a 100. 80+ cuando hay guion claro + pedido de plata o datos (también una seña o pago adelantado a un desconocido por alias/CBU/CVU con presión de "me quedan pocos"). 0-30 para mensajes normales.
 - senales: frases cortas en español ("pide dinero", "urgencia", "dice ser familiar", "número desconocido").
 - suplanta_a: a quién dice ser ("Juli, la nieta", "ANSES", "el banco") o null si no suplanta a nadie.
 - entidades: solo alias, CBU, CVU o teléfonos que aparezcan literalmente en los mensajes. No inventes.

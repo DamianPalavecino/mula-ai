@@ -80,7 +80,43 @@ export const CASOS: Caso[] = [
     estafa: false,
     historial: ['che me prestás 20 mil para el súper? me olvidé la tarjeta', 'sí, ya te los mandé'],
   },
+
+  // ---------- casos rioplatenses extra (Tarea 2) ----------
+  {
+    texto:
+      '[audio transcripto] Señora, buenas noches, le habla el oficial Gómez de la comisaría primera. Su nieto chocó y atropelló a una persona, está acá demorado. Necesitamos que deposite doscientos mil pesos para la fianza ahora, no corte la llamada y no le avise a nadie.',
+    estafa: true,
+    modalidad: 'accidente_o_comisaria',
+  },
+  {
+    texto: 'Hola buenas tardes, soy de ANSES. Le salió un aumento en la jubilación pero tiene que validarlo hoy. ¿Me pasa el código que le va a llegar por SMS así se lo cargo?',
+    estafa: true,
+    modalidad: 'falso_organismo',
+  },
+  {
+    texto: 'Hola! Te compro la mesa de Marketplace, ya te pagué. Mercado Pago me dice que para liberar la plata tenés que entrar a este link y poner los datos de tu tarjeta: mp-liberar-pagos.com',
+    estafa: true,
+    modalidad: 'falso_comprador',
+  },
+  {
+    texto: 'me podés pasar 120 mil hoy? después te explico, es urgente',
+    estafa: true,
+    modalidad: 'familiar_numero_nuevo',
+    historial: ['hola ma, soy Lucas. Se me cayó el celu al agua, este es mi número nuevo, agendalo'],
+  },
+  {
+    texto: '[audio transcripto] Hola Marta, soy Elsa del coro. Te aviso que el ensayo del jueves se pasa al viernes a las seis, en la parroquia de siempre. Un beso.',
+    estafa: false,
+  },
+  {
+    texto: 'Hola, ¿la mesa de Marketplace sigue disponible? Si te parece paso el sábado a la mañana, la veo y te pago en efectivo ahí.',
+    estafa: false,
+  },
 ];
+
+/** Riesgo mínimo de una estafa y máximo de un mensaje normal (prompt 02, Tarea 2). */
+const RIESGO_MIN_ESTAFA = 70;
+const RIESGO_MAX_NORMAL = 39;
 
 function pad(s: string, n: number): string {
   return s.length > n ? s.slice(0, n - 1) + '…' : s.padEnd(n);
@@ -101,7 +137,9 @@ async function main(): Promise<void> {
   for (const [i, c] of CASOS.entries()) {
     const ctx = { historial: c.historial, remitente: null, protegido: 'la abuela' };
     const r = usarLlm ? await clasificar(c.texto, ctx) : { ...clasificarHeuristico(c.texto, ctx), monto: null };
-    const acierto = r.es_sospechoso === c.estafa;
+    // con LLM se exige además el rango de riesgo; la heurística solo tiene que acertar estafa/normal
+    const enRango = !usarLlm || (c.estafa ? r.riesgo >= RIESGO_MIN_ESTAFA : r.riesgo <= RIESGO_MAX_NORMAL);
+    const acierto = r.es_sospechoso === c.estafa && enRango;
     if (acierto) aciertos++;
     if (c.modalidad) {
       conModalidad++;

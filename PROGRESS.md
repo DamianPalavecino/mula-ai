@@ -42,14 +42,14 @@ Herramientas: Supabase CLI en `C:\Users\dami_\AppData\Local\Programs\Supabase\su
 <!-- check:start -->
 | Feature | Comando | Resultado | Duración | Cuándo | Commit |
 |---|---|---|---|---|---|
-| `classify` | `npm run test:classify` | ✅ | 51s | 24/10/2026, 13:14:18 | 69e9298 |
+| `classify` | `npm run test:classify` | ✅ | 72s | 24/10/2026, 13:17:53 | 0931268 |
 | `e2e` | `npm run e2e` | ✅ | 3s | 24/10/2026, 12:49:18 | 11979d5 |
 | `prod` | `node --env-file-if-exists=.env scripts/smoke-prod.mjs` | ✅ | 4s | 24/10/2026, 13:11:19 | 2d7d878 |
 | `prod` | `node scripts/smoke-prod.mjs` | ⏭️ omitido | 0s | 24/10/2026, 12:28:39 | c6d5a8f |
 | `web` | `npm run build` | ✅ | 17s | 24/10/2026, 13:00:21 | fbc3601 |
 | `web` | `npm test` | ✅ | 2s | 24/10/2026, 13:00:21 | fbc3601 |
-| `worker` | `npm run selftest` | ✅ | 3s | 24/10/2026, 13:14:18 | 69e9298 |
-| `worker` | `npm run typecheck` | ✅ | 1s | 24/10/2026, 13:14:18 | 69e9298 |
+| `worker` | `npm run selftest` | ✅ | 3s | 24/10/2026, 13:17:53 | 0931268 |
+| `worker` | `npm run typecheck` | ✅ | 1s | 24/10/2026, 13:17:53 | 0931268 |
 <!-- check:end -->
 
 ## Qué falta probar (manual / e2e)
