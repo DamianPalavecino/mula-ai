@@ -83,14 +83,15 @@ Antes de la toma buena, grabar una pasada **completa y fea**: las tomas 2–6 en
 
 1. `npm run reset-demo` en la raíz → `juli.martinez.mp: 23 reportes · 5 provincias` (cada ensayo suma un reporte).
 2. Logs del worker: `[wa] conectado como ...`.
-3. Celulares: WhatsApp con notificaciones, no molestar apagado, brillo al máximo, el resto silenciado, batería al 50 % o más.
-4. `/red` abierto y cargado en la PC (que el feed reciba la alerta en vivo).
+3. Si el worker tiene `ANALIZAR_SOLO` cargado (número personal vinculado), el teléfono del celular del estafador **tiene que estar en esa lista**; si no, el mensaje se ignora sin loguear.
+4. Celulares: WhatsApp con notificaciones, no molestar apagado, brillo al máximo, el resto silenciado, batería al 50 % o más.
+5. `/red` abierto y cargado en la PC (que el feed reciba la alerta en vivo).
 
 ## Si algo falla en la toma
 
 | Falla | Qué hacer |
 |---|---|
 | No llega la alerta en 15 s | Mirar logs del worker. `logged out` → no hay tiempo de re-vincular: plan B. |
-| No alerta nada y el log no muestra el mensaje | El número del estafador está en `TRUSTED_CONTACTS`: usar otro. |
+| No alerta nada y el log no muestra el mensaje | El número del estafador está en `TRUSTED_CONTACTS`, o `ANALIZAR_SOLO` está cargado y no lo incluye. |
 | La alerta dice "quedó registrado en la red" en vez de "24 reportes" | El alias no matcheó: el mensaje tiene que decir `juli.martinez.mp` exacto; si falta el seed, `npm run seed`. |
 | Dice 25 o más | Faltó el `reset-demo`. No importa para la voz en off; reset y seguir. |
