@@ -2,26 +2,31 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import type { RespuestaExtraer, RespuestaReporte, RolEntidad } from "@/lib/extraccion";
+import type { EntidadEnRed, RespuestaExtraer, RespuestaReporte, RolEntidad } from "@/lib/extraccion";
 import type { ResumenEntidad } from "@/lib/tipos";
 import { labelModalidad, TIPOS_ENTIDAD } from "@/lib/tipos";
 import { fechaCorta, monto, plural } from "@/lib/formato";
-import ResumenCard from "@/components/ResumenCard";
+import {
+  IconoAlerta,
+  IconoBanco,
+  IconoBilletera,
+  IconoCheck,
+  IconoCopiar,
+  IconoDescargar,
+  IconoEscudo,
+  IconoExpandir,
+  IconoImprimir,
+  IconoLey,
+  IconoTelefono,
+} from "@/components/MeEstafaronIconos";
+
+const VERDE = "bg-[#15803d]";
 
 const ROLES: Record<RolEntidad, string> = {
-  destino_plata: "Adonde fue la plata",
-  contacto_estafador: "Desde donde te escribieron",
-  otro: "Mencionado en el chat",
+  destino_plata: "Destino de la plata",
+  contacto_estafador: "Te escribió",
+  otro: "En el chat",
 };
-
-function Seccion({ titulo, children }: { titulo: string; children: React.ReactNode }) {
-  return (
-    <section className="flex flex-col gap-4">
-      <h2 className="text-2xl font-semibold tracking-tight text-tinta">{titulo}</h2>
-      {children}
-    </section>
-  );
-}
 
 function escaparHtml(s: string): string {
   return s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!);
@@ -49,38 +54,164 @@ function descargar(nombre: string, texto: string) {
   URL.revokeObjectURL(url);
 }
 
-function Documento({ titulo, archivo, texto }: { titulo: string; archivo: string; texto: string }) {
-  const [copiado, setCopiado] = useState(false);
-  const boton =
-    "h-10 cursor-pointer rounded-md border border-linea px-4 text-sm font-medium text-tinta hover:bg-panel";
+function useCopiar() {
+  const [copiado, setCopiado] = useState<string | null>(null);
+  async function copiar(id: string, texto: string) {
+    try {
+      await navigator.clipboard.writeText(texto);
+    } catch {
+      // Fallback para navegadores sin permiso de portapapeles.
+      const ta = document.createElement("textarea");
+      ta.value = texto;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      ta.remove();
+    }
+    setCopiado(id);
+    setTimeout(() => setCopiado((c) => (c === id ? null : c)), 2500);
+  }
+  return { copiado, copiar };
+}
+
+type Icono = (p: { className?: string }) => React.ReactNode;
+
+function Documento({
+  id,
+  icono: Icono,
+  titulo,
+  ayuda,
+  archivo,
+  texto,
+  copiado,
+  onCopiar,
+}: {
+  id: string;
+  icono: Icono;
+  titulo: string;
+  ayuda: string;
+  archivo: string;
+  texto: string;
+  copiado: boolean;
+  onCopiar: () => void;
+}) {
+  const [abierto, setAbierto] = useState(false);
+  const secundario =
+    "inline-flex h-10 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-linea px-3 text-sm font-medium text-tinta hover:bg-panel sm:flex-none";
   return (
-    <div className="overflow-hidden rounded-lg border border-linea">
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-linea bg-panel px-4 py-3">
-        <p className="text-base font-semibold text-tinta">{titulo}</p>
-        <div className="flex flex-wrap gap-2">
-          <button
-            type="button"
-            className={boton}
-            onClick={async () => {
-              await navigator.clipboard.writeText(texto);
-              setCopiado(true);
-              setTimeout(() => setCopiado(false), 2000);
-            }}
+    <section id={id} className="scroll-mt-20 rounded-2xl border border-linea bg-fondo p-4 sm:p-5">
+      <div className="flex flex-col gap-4">
+        <div className="flex items-center gap-3">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-alerta-fondo text-alerta">
+            <Icono className="h-5 w-5" />
+          </span>
+          <div className="min-w-0">
+            <h3 className="text-lg font-semibold text-tinta">{titulo}</h3>
+            <p className="text-sm text-suave">{ayuda}</p>
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={onCopiar}
+          className={`inline-flex h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-xl text-base font-semibold text-white transition-colors ${
+            copiado ? VERDE : "bg-tinta hover:bg-black"
+          }`}
+        >
+          {copiado ? <IconoCheck className="h-5 w-5" /> : <IconoCopiar className="h-5 w-5" />}
+          {copiado ? "Copiado" : "Copiar"}
+        </button>
+        <div className="relative">
+          <pre
+            className={`overflow-hidden rounded-xl bg-panel p-4 font-sans text-sm leading-relaxed whitespace-pre-wrap text-texto ${
+              abierto ? "" : "max-h-36"
+            }`}
           >
-            {copiado ? "Copiado" : "Copiar"}
+            {texto}
+          </pre>
+          {!abierto && (
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 rounded-b-xl bg-gradient-to-t from-panel to-transparent" />
+          )}
+        </div>
+        <div className="flex gap-2">
+          <button type="button" className={secundario} onClick={() => setAbierto((a) => !a)}>
+            <IconoExpandir className={`h-4 w-4 transition-transform ${abierto ? "rotate-180" : ""}`} />
+            {abierto ? "Menos" : "Ver todo"}
           </button>
-          <button type="button" className={boton} onClick={() => imprimir(titulo, texto)}>
-            Imprimir
+          <button type="button" className={secundario} onClick={() => descargar(archivo, texto)} aria-label="Descargar">
+            <IconoDescargar className="h-4 w-4" />
+            .txt
           </button>
-          <button type="button" className={boton} onClick={() => descargar(archivo, texto)}>
-            Descargar
+          <button type="button" className={secundario} onClick={() => imprimir(titulo, texto)} aria-label="Imprimir">
+            <IconoImprimir className="h-4 w-4" />
           </button>
         </div>
       </div>
-      <pre className="max-h-[28rem] overflow-y-auto bg-fondo p-4 font-sans text-sm leading-relaxed whitespace-pre-wrap text-texto sm:p-5">
-        {texto}
-      </pre>
-    </div>
+    </section>
+  );
+}
+
+function Cuenta({ item }: { item: EntidadEnRed }) {
+  const { entidad, resumen } = item;
+  const reportes = resumen?.reportes ?? 0;
+  const provincias = resumen?.provincias ?? [];
+  const rojo = reportes > 0;
+  return (
+    <li
+      className={`flex flex-col gap-3 rounded-2xl border-2 p-4 sm:p-5 ${
+        rojo ? "border-alerta bg-alerta-fondo" : "border-linea bg-panel"
+      }`}
+    >
+      <div className="flex min-w-0 items-start gap-3">
+        <span
+          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${
+            rojo ? "bg-alerta text-white" : "bg-fondo text-suave"
+          }`}
+        >
+          {entidad.tipo === "telefono" ? <IconoTelefono className="h-5 w-5" /> : <IconoBilletera className="h-5 w-5" />}
+        </span>
+        <div className="min-w-0">
+          <p className="text-xs font-medium tracking-wide text-suave uppercase">
+            {TIPOS_ENTIDAD[entidad.tipo]} · {ROLES[entidad.rol] ?? ROLES.otro}
+          </p>
+          <p className="mt-0.5 font-mono text-base font-semibold break-all text-tinta sm:text-lg">{entidad.valor}</p>
+        </div>
+      </div>
+      {!resumen ? (
+        <p className="text-sm text-suave">Red no disponible</p>
+      ) : rojo ? (
+        <>
+          <div className="flex items-end justify-between gap-3">
+            <div>
+              <p className="text-5xl leading-none font-bold tracking-tight text-alerta">{reportes}</p>
+              <p className="mt-1 text-sm font-semibold text-alerta">
+                {reportes === 1 ? "reporte" : "reportes"}
+                {provincias.length > 0 && ` · ${plural(provincias.length, "provincia", "provincias")}`}
+              </p>
+            </div>
+            {resumen.monto_total ? (
+              <p className="text-right text-sm text-texto">
+                <span className="block text-suave">robado</span>
+                <span className="font-semibold text-tinta">{monto(resumen.monto_total)}</span>
+              </p>
+            ) : null}
+          </div>
+          {provincias.length > 0 && (
+            <ul className="flex flex-wrap gap-1.5">
+              {provincias.map((p) => (
+                <li key={p} className="rounded-full bg-fondo px-2.5 py-0.5 text-xs font-medium text-tinta">
+                  {p}
+                </li>
+              ))}
+            </ul>
+          )}
+        </>
+      ) : (
+        <p className="flex items-center gap-1.5 text-sm text-suave">
+          <IconoCheck className="h-4 w-4" />
+          Sin reportes previos
+        </p>
+      )}
+    </li>
   );
 }
 
@@ -98,8 +229,12 @@ export default function MeEstafaronResultado({
   provincia: string;
 }) {
   const { extraccion: x, red, puede_registrar } = respuesta;
+  const { copiado, copiar } = useCopiar();
   const [registro, setRegistro] = useState<EstadoRegistro>({ tipo: "inicial" });
-  const conReportes = red.filter((r) => (r.resumen?.reportes ?? 0) > 0);
+
+  // Las cuentas con más reportes primero: es lo que tiene que saltar a la vista.
+  const cuentas = [...red].sort((a, b) => (b.resumen?.reportes ?? 0) - (a.resumen?.reportes ?? 0));
+  const peor = cuentas[0]?.resumen?.reportes ? cuentas[0] : null;
   const destino = red.find((r) => r.entidad.rol === "destino_plata")?.entidad.valor;
 
   async function sumarALaRed() {
@@ -130,217 +265,226 @@ export default function MeEstafaronResultado({
   }
 
   return (
-    <div className="flex flex-col gap-12 animate-entrada">
-      {/* Resumen del caso */}
-      <div className="overflow-hidden rounded-lg border border-alerta">
-        <div className="bg-alerta px-5 py-5 text-white sm:px-6">
-          <p className="text-sm font-medium opacity-90">{labelModalidad(x.modalidad)}</p>
-          <p className="mt-1 text-2xl font-bold tracking-tight sm:text-3xl">
-            {x.monto_total ? `Transferiste ${monto(x.monto_total)}` : "Tu caso"}
+    <div className="flex animate-entrada flex-col gap-8">
+      {/* 1. Lo que pasó, en una mirada */}
+      <div className={`overflow-hidden rounded-2xl text-white ${peor ? "bg-alerta" : "bg-tinta"}`}>
+        <div className="flex flex-col gap-3 p-5 sm:p-7">
+          <div className="flex flex-wrap gap-2 text-sm font-medium">
+            <span className="rounded-full bg-white/15 px-3 py-1">{labelModalidad(x.modalidad)}</span>
+            {x.monto_total ? <span className="rounded-full bg-white/15 px-3 py-1">{monto(x.monto_total)}</span> : null}
+          </div>
+          {peor ? (
+            <>
+              <p className="flex items-center gap-2 text-3xl leading-tight font-bold tracking-tight sm:text-4xl">
+                <IconoAlerta className="h-8 w-8 shrink-0" />
+                No sos la única víctima
+              </p>
+              <p className="text-lg leading-snug font-medium">
+                <span className="font-mono break-all">{peor.entidad.valor}</span> ·{" "}
+                {plural(peor.resumen!.reportes, "reporte", "reportes")}
+                {peor.resumen!.provincias.length > 0 &&
+                  ` en ${plural(peor.resumen!.provincias.length, "provincia", "provincias")}`}
+              </p>
+            </>
+          ) : (
+            <p className="text-3xl leading-tight font-bold tracking-tight sm:text-4xl">Tu caso</p>
+          )}
+          <p className="text-base leading-relaxed text-white/90">{x.resumen}</p>
+        </div>
+        {!x.legible && (
+          <p className="flex items-center gap-2 bg-black/20 px-5 py-3 text-sm sm:px-7">
+            <IconoAlerta className="h-4 w-4 shrink-0" />
+            Algunas capturas no se leían bien. Revisá los datos.
           </p>
-          {conReportes.length > 0 && (
-            <p className="mt-2 text-lg font-medium">
-              No sos la única víctima:{" "}
-              {conReportes
-                .map(
-                  (r) =>
-                    `${r.entidad.valor} ya tiene ${plural(r.resumen!.reportes, "reporte", "reportes")}`,
-                )
-                .join(" · ")}
-              .
-            </p>
-          )}
-        </div>
-        <div className="flex flex-col gap-4 bg-alerta-fondo p-5 sm:p-6">
-          {!x.legible && (
-            <p className="rounded-md border border-alerta-linea bg-fondo p-3 text-sm text-tinta">
-              No pudimos leer bien todo lo que subiste. Revisá los datos y completá lo que falte.
-            </p>
-          )}
-          <p className="text-base leading-relaxed text-tinta">{x.resumen}</p>
-          {x.senales.length > 0 && (
-            <ul className="flex flex-wrap gap-1.5">
-              {x.senales.map((s) => (
-                <li
-                  key={s}
-                  className="rounded-full border border-alerta-linea bg-fondo px-2.5 py-0.5 text-sm text-tinta"
-                >
-                  {s}
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
+        )}
       </div>
 
-      {/* Qué hacer ahora */}
+      {/* 2. Las cuentas y sus reportes */}
+      <section className="flex flex-col gap-3">
+        <h2 className="text-xl font-semibold tracking-tight text-tinta">Cuentas del caso</h2>
+        {cuentas.length === 0 ? (
+          <p className="rounded-2xl border border-linea bg-panel p-4 text-base text-texto">
+            No encontramos alias, CBU, teléfonos, CUIT ni links legibles.
+          </p>
+        ) : (
+          <ul className="grid gap-3 sm:grid-cols-2">
+            {cuentas.map((item) => (
+              <Cuenta key={`${item.entidad.tipo}:${item.entidad.valor}`} item={item} />
+            ))}
+          </ul>
+        )}
+      </section>
+
+      {/* 3. Los dos textos, listos para copiar */}
+      <section className="flex flex-col gap-3">
+        <h2 className="text-xl font-semibold tracking-tight text-tinta">Hacé esto ahora</h2>
+        <Documento
+          id="pedido-bloqueo"
+          icono={IconoBanco}
+          titulo="Pedido de bloqueo"
+          ayuda="Ya, a tu banco y al de destino."
+          archivo="pedido-de-bloqueo.txt"
+          texto={x.pedido_bloqueo}
+          copiado={copiado === "bloqueo"}
+          onCopiar={() => copiar("bloqueo", x.pedido_bloqueo)}
+        />
+        <Documento
+          id="denuncia"
+          icono={IconoLey}
+          titulo="Denuncia"
+          ayuda="Comisaría, fiscalía o denuncia online."
+          archivo="denuncia.txt"
+          texto={x.denuncia}
+          copiado={copiado === "denuncia"}
+          onCopiar={() => copiar("denuncia", x.denuncia)}
+        />
+        <p className="text-sm text-suave">Completá lo que está entre [corchetes].</p>
+      </section>
+
+      {/* 4. Pasos */}
       {x.pasos.length > 0 && (
-        <Seccion titulo="Qué hacer ahora">
-          <ol className="flex flex-col gap-3">
+        <section className="flex flex-col gap-3">
+          <h2 className="text-xl font-semibold tracking-tight text-tinta">Próximas horas</h2>
+          <ol className="flex flex-col divide-y divide-linea rounded-2xl border border-linea">
             {x.pasos.map((p, i) => (
-              <li key={i} className="flex gap-3 rounded-lg border border-linea p-4">
-                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-tinta text-sm font-semibold text-white">
+              <li key={i} className="flex gap-3 p-4">
+                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-tinta text-xs font-semibold text-white">
                   {i + 1}
                 </span>
                 <span className="text-base leading-relaxed text-tinta">{p}</span>
               </li>
             ))}
           </ol>
-        </Seccion>
+        </section>
       )}
 
-      {/* Cuentas y números + red */}
-      <Seccion titulo="Cuentas y números del caso">
-        {red.length === 0 ? (
-          <p className="rounded-lg border border-linea bg-panel p-4 text-base text-texto">
-            No encontramos ningún alias, CBU, CVU, teléfono, CUIT ni link legible. Si los tenés, agregalos en el
-            relato y volvé a armar el caso.
-          </p>
-        ) : (
-          <ul className="grid gap-4 sm:grid-cols-2">
-            {red.map(({ entidad, resumen }) => (
-              <li key={`${entidad.tipo}:${entidad.valor}`} className="flex flex-col gap-2">
-                <div>
-                  <p className="text-sm font-medium text-suave">
-                    {ROLES[entidad.rol] ?? ROLES.otro} · {TIPOS_ENTIDAD[entidad.tipo]} · {entidad.donde}
-                  </p>
-                  <p className="mt-0.5 font-mono text-base break-all text-tinta">{entidad.valor}</p>
-                </div>
-                {resumen ? (
-                  <ResumenCard resumen={resumen} compacto />
-                ) : (
-                  <p className="rounded-lg border border-linea bg-panel p-4 text-sm text-texto">
-                    No pudimos consultar la red para este dato.
-                  </p>
-                )}
-              </li>
-            ))}
-          </ul>
-        )}
-
-        {x.transferencias.length > 0 && (
-          <div className="overflow-x-auto rounded-lg border border-linea">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-panel text-suave">
-                <tr>
-                  <th className="px-4 py-2 font-medium">Fecha</th>
-                  <th className="px-4 py-2 font-medium">Monto</th>
-                  <th className="px-4 py-2 font-medium">Destino</th>
-                  <th className="px-4 py-2 font-medium">Operación</th>
-                </tr>
-              </thead>
-              <tbody>
-                {x.transferencias.map((t, i) => (
-                  <tr key={i} className="border-t border-linea text-tinta">
-                    <td className="px-4 py-2">
-                      {t.fecha && /^\d{4}-\d{2}-\d{2}$/.test(t.fecha)
-                        ? fechaCorta(`${t.fecha}T12:00:00`)
-                        : (t.fecha ?? "—")}
-                    </td>
-                    <td className="px-4 py-2">{t.monto != null ? monto(t.monto) : "—"}</td>
-                    <td className="px-4 py-2 font-mono break-all">
-                      {t.destino ?? "—"}
-                      {t.titular_destino && (
-                        <span className="block font-sans text-suave">{t.titular_destino}</span>
-                      )}
-                    </td>
-                    <td className="px-4 py-2 font-mono">{t.comprobante ?? "—"}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </Seccion>
-
-      {/* Sumar a la red */}
+      {/* 5. Sumar a la red */}
       {red.length > 0 && (
-        <Seccion titulo="Protegé al próximo">
-          <div className="rounded-lg border border-linea bg-panel p-5 sm:p-6">
-            {registro.tipo === "listo" ? (
-              <div className="flex flex-col gap-3">
-                <p className="text-lg font-semibold text-tinta">Listo, tu caso ya está en la red.</p>
-                <ul className="flex flex-col gap-1 text-base text-texto">
-                  {registro.entidades
-                    .filter((e) => e.encontrada)
-                    .map((e) => (
-                      <li key={`${e.tipo}:${e.valor_normalizado}`}>
-                        <span className="font-mono text-tinta">{e.valor_normalizado}</span> ahora tiene{" "}
-                        {plural(e.reportes, "reporte", "reportes")}
-                        {e.provincias.length > 0 &&
-                          ` en ${plural(e.provincias.length, "provincia", "provincias")}`}
-                        .
-                      </li>
-                    ))}
-                </ul>
-                <div className="flex flex-wrap gap-4 text-sm">
-                  {destino && (
-                    <Link
-                      href={`/app/verificar?valor=${encodeURIComponent(destino)}`}
-                      className="text-tinta underline underline-offset-2"
-                    >
-                      Ver cómo lo ve el próximo que quiera transferirle
-                    </Link>
-                  )}
+        <section className="rounded-2xl border border-linea bg-panel p-5 sm:p-6">
+          {registro.tipo === "listo" ? (
+            <div className="flex flex-col gap-3">
+              <p className="flex items-center gap-2 text-lg font-semibold text-tinta">
+                <IconoEscudo className="h-6 w-6 text-[#15803d]" />
+                Tu caso ya protege al próximo
+              </p>
+              <ul className="flex flex-col gap-1 text-base text-texto">
+                {registro.entidades
+                  .filter((e) => e.encontrada)
+                  .map((e) => (
+                    <li key={`${e.tipo}:${e.valor_normalizado}`}>
+                      <span className="font-mono break-all text-tinta">{e.valor_normalizado}</span> ·{" "}
+                      {plural(e.reportes, "reporte", "reportes")}
+                    </li>
+                  ))}
+              </ul>
+              <div className="flex flex-wrap gap-4 text-sm">
+                {destino && (
+                  <Link
+                    href={`/app/verificar?valor=${encodeURIComponent(destino)}`}
+                    className="text-tinta underline underline-offset-4"
+                  >
+                    Verificar {destino}
+                  </Link>
+                )}
+              </div>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-center gap-3">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-tinta text-white">
+                  <IconoEscudo className="h-5 w-5" />
+                </span>
+                <div>
+                  <p className="text-lg font-semibold text-tinta">Protegé al próximo</p>
+                  <p className="text-sm text-suave">Solo las cuentas, nunca tu nombre.</p>
                 </div>
               </div>
-            ) : (
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                <p className="max-w-xl text-base leading-relaxed text-texto">
-                  Si sumás tu caso, la próxima persona que pegue estas cuentas en Mula AI o reciba un
-                  mensaje desde estos números va a ver la advertencia. Solo guardamos las cuentas, los
-                  números y el resumen; nunca tu nombre ni el del titular.
-                </p>
-                <button
-                  type="button"
-                  onClick={sumarALaRed}
-                  disabled={!puede_registrar || registro.tipo === "enviando"}
-                  className="h-12 shrink-0 cursor-pointer rounded-md bg-tinta px-6 text-base font-medium text-white hover:bg-black disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  {registro.tipo === "enviando" ? "Sumando…" : "Sumar mi caso a la red"}
-                </button>
-              </div>
+              <button
+                type="button"
+                onClick={sumarALaRed}
+                disabled={!puede_registrar || registro.tipo === "enviando"}
+                className="h-12 w-full shrink-0 cursor-pointer rounded-xl bg-tinta px-6 text-base font-semibold text-white hover:bg-black disabled:cursor-not-allowed disabled:opacity-40 sm:w-auto"
+              >
+                {registro.tipo === "enviando" ? "Sumando…" : "Sumar a la red"}
+              </button>
+            </div>
+          )}
+          {!puede_registrar && registro.tipo !== "listo" && (
+            <p className="mt-3 text-sm text-suave">No habilitado en este servidor.</p>
+          )}
+          {registro.tipo === "error" && (
+            <p className="mt-3 flex items-center gap-2 text-sm text-alerta" role="alert">
+              <IconoAlerta className="h-4 w-4 shrink-0" />
+              {registro.mensaje}
+            </p>
+          )}
+        </section>
+      )}
+
+      {/* 6. Detalle, plegado */}
+      {(x.transferencias.length > 0 || x.cronologia.length > 0) && (
+        <details className="group rounded-2xl border border-linea">
+          <summary className="flex cursor-pointer list-none items-center justify-between p-4 text-base font-medium text-tinta">
+            Detalle
+            <IconoExpandir className="h-4 w-4 text-suave transition-transform group-open:rotate-180" />
+          </summary>
+          <div className="flex flex-col gap-5 border-t border-linea p-4">
+            {x.transferencias.length > 0 && (
+              <ul className="flex flex-col gap-3">
+                {x.transferencias.map((t, i) => (
+                  <li key={i} className="rounded-xl bg-panel p-3 text-sm text-texto">
+                    <p className="text-base font-semibold text-tinta">
+                      {t.monto != null ? monto(t.monto) : "—"}
+                      <span className="font-normal text-suave">
+                        {" · "}
+                        {t.fecha && /^\d{4}-\d{2}-\d{2}$/.test(t.fecha)
+                          ? fechaCorta(`${t.fecha}T12:00:00`)
+                          : (t.fecha ?? "—")}
+                      </span>
+                    </p>
+                    {t.destino && <p className="mt-1 font-mono break-all">{t.destino}</p>}
+                    {t.titular_destino && <p className="mt-0.5">Titular: {t.titular_destino}</p>}
+                    {t.comprobante && <p className="mt-0.5">Operación: {t.comprobante}</p>}
+                  </li>
+                ))}
+              </ul>
             )}
-            {!puede_registrar && registro.tipo !== "listo" && (
-              <p className="mt-3 text-sm text-suave">Sumar casos no está habilitado en este servidor.</p>
-            )}
-            {registro.tipo === "error" && (
-              <p className="mt-3 text-sm text-alerta" role="alert">
-                {registro.mensaje}
-              </p>
+            {x.cronologia.length > 0 && (
+              <ol className="flex flex-col gap-2 border-l-2 border-linea pl-4">
+                {x.cronologia.map((c, i) => (
+                  <li key={i} className="text-sm leading-relaxed text-texto">
+                    {c}
+                  </li>
+                ))}
+              </ol>
             )}
           </div>
-        </Seccion>
+        </details>
       )}
 
-      {/* Documentos */}
-      <Seccion titulo="Pedido de bloqueo al banco">
-        <p className="text-base leading-relaxed text-texto">
-          Mandalo ya: cuanto antes lo reciba el banco o la billetera, más chances hay de frenar la plata.
-          Completá los datos entre corchetes.
-        </p>
-        <Documento titulo="Pedido de bloqueo" archivo="pedido-de-bloqueo.txt" texto={x.pedido_bloqueo} />
-      </Seccion>
-
-      <Seccion titulo="Denuncia">
-        <p className="text-base leading-relaxed text-texto">
-          Presentala en una comisaría, en la fiscalía o en la denuncia online del Ministerio Público de
-          tu provincia, con las capturas impresas. Completá los datos entre corchetes.
-        </p>
-        <Documento titulo="Denuncia penal por estafa" archivo="denuncia.txt" texto={x.denuncia} />
-      </Seccion>
-
-      {x.cronologia.length > 0 && (
-        <Seccion titulo="Cómo pasó">
-          <ol className="flex flex-col gap-2 border-l-2 border-linea pl-4">
-            {x.cronologia.map((c, i) => (
-              <li key={i} className="text-base leading-relaxed text-texto">
-                {c}
-              </li>
-            ))}
-          </ol>
-        </Seccion>
-      )}
+      {/* Barra fija en el celu: los dos textos siempre a mano */}
+      <div className="sticky bottom-0 z-10 -mx-4 flex gap-2 border-t border-linea bg-fondo/95 px-4 py-3 backdrop-blur sm:hidden">
+        <button
+          type="button"
+          onClick={() => copiar("bloqueo", x.pedido_bloqueo)}
+          className={`inline-flex h-11 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-xl text-sm font-semibold text-white ${
+            copiado === "bloqueo" ? VERDE : "bg-tinta"
+          }`}
+        >
+          {copiado === "bloqueo" ? <IconoCheck className="h-4 w-4" /> : <IconoCopiar className="h-4 w-4" />}
+          {copiado === "bloqueo" ? "Copiado" : "Bloqueo"}
+        </button>
+        <button
+          type="button"
+          onClick={() => copiar("denuncia", x.denuncia)}
+          className={`inline-flex h-11 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-xl text-sm font-semibold ${
+            copiado === "denuncia" ? `${VERDE} text-white` : "border border-tinta text-tinta"
+          }`}
+        >
+          {copiado === "denuncia" ? <IconoCheck className="h-4 w-4" /> : <IconoCopiar className="h-4 w-4" />}
+          {copiado === "denuncia" ? "Copiado" : "Denuncia"}
+        </button>
+      </div>
     </div>
   );
 }

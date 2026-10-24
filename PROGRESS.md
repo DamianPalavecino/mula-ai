@@ -47,8 +47,8 @@ Herramientas: Supabase CLI en `C:\Users\dami_\AppData\Local\Programs\Supabase\su
 | `pre-demo` | `node --test scripts/pre-demo.test.mjs` | ✅ | 0s | 24/10/2026, 13:16:24 | 823cd2b |
 | `prod` | `node --env-file-if-exists=.env scripts/smoke-prod.mjs` | ❌ | 3s | 24/10/2026, 13:24:41 | 707ea19 |
 | `prod` | `node scripts/smoke-prod.mjs` | ⏭️ omitido | 0s | 24/10/2026, 12:28:39 | c6d5a8f |
-| `web` | `npm run build` | ✅ | 4s | 24/10/2026, 13:48:44 | 893e19e |
-| `web` | `npm test` | ✅ | 0s | 24/10/2026, 13:48:44 | 893e19e |
+| `web` | `npm run build` | ✅ | 27s | 24/10/2026, 13:58:29 | aadfc80 |
+| `web` | `npm test` | ✅ | 1s | 24/10/2026, 13:58:29 | aadfc80 |
 | `worker` | `npm run selftest` | ✅ | 1s | 24/10/2026, 13:48:44 | 893e19e |
 | `worker` | `npm run typecheck` | ✅ | 0s | 24/10/2026, 13:48:44 | 893e19e |
 <!-- check:end -->

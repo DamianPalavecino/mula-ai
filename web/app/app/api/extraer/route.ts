@@ -31,7 +31,7 @@ const MAX_BYTES_IMAGEN = 4 * 1024 * 1024; // el cliente ya las achica; Vercel co
 // Cada análisis cuesta tokens: 5 por minuto por IP (en memoria, por instancia).
 const permitir = crearRateLimiter(5, 60_000);
 const MAX_RELATO = 8000;
-const TIPOS_IMAGEN = ["image/jpeg", "image/png", "image/webp", "image/gif"] as const;
+const TIPOS_IMAGEN = ["image/jpeg", "image/png"] as const;
 type TipoImagen = (typeof TIPOS_IMAGEN)[number];
 type ParteMensaje =
   | { type: "text"; text: string }
@@ -188,7 +188,7 @@ export async function POST(request: Request) {
   const contenido: ParteMensaje[] = [];
   for (const [i, archivo] of archivos.entries()) {
     if (!TIPOS_IMAGEN.includes(archivo.type as TipoImagen)) {
-      return error(400, `La captura ${i + 1} no es una imagen JPG, PNG, WEBP o GIF.`);
+      return error(400, `La captura ${i + 1} no es PNG ni JPG.`);
     }
     if (archivo.size > MAX_BYTES_IMAGEN) {
       return error(400, `La captura ${i + 1} pesa más de 4 MB.`);

@@ -119,3 +119,15 @@ export function crearRateLimiter(max: number, ventanaMs: number) {
     return true;
   };
 }
+
+/** Tope del archivo original (el cliente lo achica a JPEG antes de subirlo). */
+export const MAX_BYTES_ORIGINAL = 10 * 1024 * 1024;
+export const TIPOS_ACEPTADOS = ["image/png", "image/jpeg"];
+
+/** Error corto para mostrar inline, o null si la captura sirve. */
+export function validarArchivo(f: { type: string; size: number }): string | null {
+  if (!f.size) return "Archivo vacío";
+  if (!TIPOS_ACEPTADOS.includes(f.type)) return "Solo PNG o JPG";
+  if (f.size > MAX_BYTES_ORIGINAL) return "Más de 10 MB";
+  return null;
+}

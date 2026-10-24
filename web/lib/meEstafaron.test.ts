@@ -8,6 +8,8 @@ import {
   insertarAntecedentes,
   limpiarEntidades,
   MARCA_RED,
+  MAX_BYTES_ORIGINAL,
+  validarArchivo,
 } from "./meEstafaron.ts";
 
 const ent = (tipo: EntidadExtraida["tipo"], valor: string): EntidadExtraida => ({
@@ -127,5 +129,19 @@ describe("crearRateLimiter", () => {
     assert.equal(permitir("ip", 2), false);
     assert.equal(permitir("otra", 2), true);
     assert.equal(permitir("ip", 60_001), true);
+  });
+});
+
+describe("validarArchivo", () => {
+  const f = (type: string, size: number) => ({ type, size, name: "x" });
+  it("acepta png y jpg dentro del tamaño", () => {
+    assert.equal(validarArchivo(f("image/png", 1000)), null);
+    assert.equal(validarArchivo(f("image/jpeg", 1000)), null);
+  });
+  it("rechaza vacío, otro tipo y muy pesado", () => {
+    assert.equal(validarArchivo(f("image/png", 0)), "Archivo vacío");
+    assert.equal(validarArchivo(f("image/webp", 1000)), "Solo PNG o JPG");
+    assert.equal(validarArchivo(f("application/pdf", 1000)), "Solo PNG o JPG");
+    assert.equal(validarArchivo(f("image/jpeg", MAX_BYTES_ORIGINAL + 1)), "Más de 10 MB");
   });
 });
