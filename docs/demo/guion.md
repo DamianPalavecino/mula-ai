@@ -59,7 +59,7 @@ Si el worker no está conectado a WhatsApp al grabar (`/health` no dice `conecta
 Disparo fuera de cámara (el token está en el VPS, no se copia a ningún lado):
 
 ```bash
-ssh contabo-vps 'curl -s localhost:8080/analizar -H "Content-Type: application/json" -H "X-Mula-Token: $(grep ^HTTP_TOKEN_ENVIO= ~/.config/mula-ai/worker.conf | cut -d= -f2-)" --data-binary "{\"texto\":\"hola abu, soy Juli, cambié de número. Choqué con el auto y necesito plata urgente para el seguro, mandá a juli.martinez.mp que después te explico\"}"'
+ssh contabo-vps 'curl -s localhost:8080/analizar -H "Content-Type: application/json" -H "X-Mula-Token: $(grep ^MULA_TOKEN= ~/.config/mula-ai/worker.conf | cut -d= -f2-)" --data-binary "{\"texto\":\"hola abu, soy Juli, cambié de número. Choqué con el auto y necesito plata urgente para el seguro, mandá a juli.martinez.mp que después te explico\"}"'
 ```
 
 No se dice "plan B". Si alguien pregunta: "es la misma detección; en el video entra por la web".
