@@ -12,7 +12,12 @@ Tarea original: `docs/agentes/03-web-simulador.md`. Toca solo `web/` (menos `/me
 - 12:59: restaurado el simulador que había borrado `ea0610f` (/me-estafaron commiteó desde un árbol viejo). Commit `96675b2`.
 
 ## En curso (exactamente dónde quedó: archivo, comando, qué faltaba)
-- Nada a medias. Todo lo de arriba está en `main`.
+- **Tarea nueva (13:20, hasta freeze 14:30): rediseño UX** de landing, Header, /simulador, /verificar y /red (criterios en el pedido: 1 acción por pantalla, menos texto, rojo=peligro/verde=seguro, mobile 375 + 1080p). Plan en pasos, cada uno con check + push:
+  1. [ ] tokens (`web/app/globals.css`: color `seguro`) + `Header.tsx` (link `/me-estafaron`) + landing (`web/app/page.tsx`: hero corto, CTA simulador / verificar alias, sin párrafos).
+  2. [ ] /verificar (`VerifyForm.tsx`, `ResumenCard.tsx`): resultado grande, rojo/verde, cargando/error lindos.
+  3. [ ] simulador (`Simulador.tsx`): más WhatsApp (status bar, fondo, ticks) + alerta que impacte (banner + sacudida).
+  4. [ ] /red (`Graph.tsx`, `colores.ts`, `RedView.tsx`, `AlertFeed.tsx`): colores por riesgo como /verificar, leyenda simple, feed claro.
+- Capturas: script CDP en el scratchpad del agente (no está en el repo); alternativa: abrir `next start` y mirar a mano en 375 px y 1920x1080.
 
 ## Próximo paso
 1. Cuando el worker del VPS tenga URL **HTTPS**: cargar `NEXT_PUBLIC_WORKER_URL` en Vercel (sin `/analizar`) y redeployar (se embebe en el build). Probar `/simulador` en la URL de Vercel: no debe decir "modo demo".
