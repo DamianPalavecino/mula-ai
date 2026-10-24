@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import Simulador from "@/components/Simulador";
+import DemoGuiada from "@/components/DemoGuiada";
 
 export const metadata: Metadata = {
   title: { absolute: "Mula AI — Guardián de WhatsApp contra estafas" },
@@ -23,9 +23,9 @@ const QUE_HACE = [
       "Cada número y cada cuenta mula detectados quedan en una red compartida y protegen a todos los demás.",
   },
   {
-    titulo: "Antes de pagar",
+    titulo: "Le da datos al Estado",
     texto:
-      "Cualquiera puede pegar un alias, CBU o teléfono y ver si tiene reportes antes de transferir.",
+      "El gobierno consulta la red: qué cuentas mula se repiten, en qué provincias y con qué guion.",
   },
 ];
 
@@ -61,23 +61,29 @@ export default function Inicio() {
           Las estafas funcionan porque cada víctima está sola.
         </h1>
         <p className="mt-5 max-w-2xl text-lg leading-relaxed text-texto">
-          Mula AI vigila el WhatsApp de la persona, reconoce el guion de estafa y la
-          cuenta mula en el momento en que llegan, y le avisa a ella y a su familia
-          antes de que salga la plata.
+          Mula AI vigila el WhatsApp de la persona, reconoce el guion de estafa y la cuenta
+          mula en el momento en que llegan, y le avisa a ella y a su familia antes de que
+          salga la plata. Cada caso se suma a una red compartida que consulta el gobierno.
         </p>
         <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-          <Link href="/verificar" className={botonPrimario}>
-            Verificar un alias antes de pagar
+          <Link href="/entrar" className={botonPrimario}>
+            Entrar
           </Link>
-          <Link href="/red" className={botonSecundario}>
-            Ver la red en vivo
+          <Link href="/registro" className={botonSecundario}>
+            Crear cuenta
           </Link>
         </div>
-        <div className="mt-14">
-          <p className="mb-6 text-center text-sm font-medium text-suave">
-            Probalo: mandá un mensaje de estafa y mirá qué le llega a la abuela
+      </section>
+
+      <section className="border-t border-linea bg-panel">
+        <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
+          <h2 className="text-center text-2xl font-semibold tracking-tight text-tinta">
+            Mirá qué le llega a la abuela
+          </h2>
+          <p className="mx-auto mt-2 mb-8 max-w-xl text-center text-base leading-relaxed text-texto">
+            Elegí un mensaje y fijate qué hace Mula AI con cada uno.
           </p>
-          <Simulador compacto />
+          <DemoGuiada />
         </div>
       </section>
 
@@ -118,18 +124,18 @@ export default function Inicio() {
         <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-16 sm:px-6 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <h2 className="text-2xl font-semibold tracking-tight text-tinta">
-              ¿Te pasaron un alias para transferir?
+              Protegé a alguien de tu familia
             </h2>
             <p className="mt-2 text-base leading-relaxed text-texto">
-              Fijate si alguien ya lo reportó antes de mandar la plata.
+              Creá tu cuenta, vinculá su WhatsApp y cargá a quién avisar.
             </p>
           </div>
           <div className="flex flex-col gap-3 sm:flex-row">
-            <Link href="/verificar" className={botonPrimario}>
-              Verificar ahora
+            <Link href="/registro" className={botonPrimario}>
+              Crear cuenta
             </Link>
-            <Link href="/red" className={botonSecundario}>
-              Ver la red
+            <Link href="/entrar" className={botonSecundario}>
+              Entrar
             </Link>
           </div>
         </div>

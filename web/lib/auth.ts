@@ -1,10 +1,13 @@
 import "server-only";
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
+import { clerkActivo } from "./clerk";
+import { esAdminEmail, rolDe, type Rol } from "./roles";
 
 // Roles: admin = email primario en ADMIN_EMAILS (server-only, separados por coma).
 // Cualquier otro usuario logueado es "usuario" (familiar / persona protegida).
-export type Rol = "admin" | "usuario";
+export type { Rol };
+export { esAdminEmail };
 
 export interface Sesion {
   userId: string;
@@ -13,17 +16,10 @@ export interface Sesion {
   rol: Rol;
 }
 
-export function esAdminEmail(email: string | null | undefined): boolean {
-  if (!email) return false;
-  const lista = (process.env.ADMIN_EMAILS ?? "")
-    .split(",")
-    .map((e) => e.trim().toLowerCase())
-    .filter(Boolean);
-  return lista.includes(email.trim().toLowerCase());
-}
-
 // Sesión actual o null (para el header y páginas públicas).
+// Sin keys de Clerk no hay sesión posible: devolvemos null sin llamar a auth().
 export async function getSesion(): Promise<Sesion | null> {
+  if (!clerkActivo) return null;
   const { userId } = await auth();
   if (!userId) return null;
   const user = await currentUser();
@@ -32,7 +28,7 @@ export async function getSesion(): Promise<Sesion | null> {
     userId,
     email,
     nombre: user?.firstName ?? user?.username ?? null,
-    rol: esAdminEmail(email) ? "admin" : "usuario",
+    rol: rolDe(email),
   };
 }
 

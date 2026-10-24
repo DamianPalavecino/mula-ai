@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import Header from "@/components/Header";
+import { ClerkProvider } from "@clerk/nextjs";
+import { esES } from "@clerk/localizations";
+import { Suspense } from "react";
+import Header, { HeaderBase } from "@/components/Header";
+import { clerkActivo } from "@/lib/clerk";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -23,15 +27,20 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
-  return (
+  const pagina = (
     <html
       lang="es-AR"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col font-sans">
-        <Header />
+        {/* cacheComponents: el header lee la sesión (dato dinámico) → va en Suspense. */}
+        <Suspense fallback={<HeaderBase />}>
+          <Header />
+        </Suspense>
         <div className="flex flex-1 flex-col">{children}</div>
       </body>
     </html>
   );
+  // Sin keys de Clerk la web anda igual (sin login): no montamos el provider.
+  return clerkActivo ? <ClerkProvider localization={esES} afterSignOutUrl="/">{pagina}</ClerkProvider> : pagina;
 }

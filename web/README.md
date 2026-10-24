@@ -3,7 +3,8 @@
 Next.js 16 (App Router, TypeScript, Tailwind 4). Lee la red de Supabase con la anon key; nunca escribe.
 
 - `/` — qué es y cómo se configura.
-- `/simulador` — dos celulares (estafador y abuela): manda el texto a `POST ${NEXT_PUBLIC_WORKER_URL}/analizar` y muestra la alerta y el aviso al grupo familiar. Sin la variable, o si el worker falla, usa un mock local (`lib/simulador.ts`). Versión compacta en el hero de `/`.
+- `/` — landing pública con demo guiada (`components/DemoGuiada.tsx`, resultados precalculados en `lib/demo.ts`): cero requests a Supabase o al worker desde el browser. `/simulador` redirige a `/`.
+- `/entrar`, `/registro` — Clerk (`<SignIn/>`, `<SignUp/>`). Sin `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` la web buildea y muestra "Login no configurado" (`lib/clerk.ts`).
 - `/verificar` — "antes de pagar": `resumen_entidad(valor)`. Acepta `?valor=` en la URL.
 - `/red` — grafo de `grafo()` + feed de `alertas` en vivo (Realtime, INSERT).
 
@@ -26,7 +27,9 @@ También podés ponerlos en un archivo de entorno local de Next (está en `.giti
 |---|---|
 | `NEXT_PUBLIC_SUPABASE_URL` | URL del proyecto Supabase |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | anon key (pública). **Nunca** la service role. |
-| `NEXT_PUBLIC_WORKER_URL` | URL pública del worker (VPS), sin `/analizar`; tiene que ser HTTPS (la web está en Vercel). Opcional: sin ella el simulador usa el mock. |
+| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` / `CLERK_SECRET_KEY` | Clerk. Opcionales: sin ellas no hay login. |
+| `ADMIN_EMAILS` | Emails con rol admin (server-only, coma). |
+| `WORKER_URL` / `MULA_TOKEN` | Worker, solo desde el server (nunca `NEXT_PUBLIC_`). |
 
 Sin variables la web buildea igual y las páginas muestran "Falta configurar Supabase".
 
