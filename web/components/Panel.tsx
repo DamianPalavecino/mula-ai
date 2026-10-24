@@ -21,9 +21,7 @@ import {
   IconoPeligro,
   IconoRed,
 } from "@/components/iconos";
-
-export const TABS = ["inicio", "probar", "verificar", "me-estafaron", "red", "ajustes"] as const;
-export type Tab = (typeof TABS)[number];
+import type { Tab } from "@/lib/panel";
 
 const NAV: { id: Tab; label: string; Icono: (p: { className?: string }) => React.ReactNode }[] = [
   { id: "inicio", label: "Inicio", Icono: IconoCasa },

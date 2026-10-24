@@ -6,7 +6,8 @@ import { formatearTelefono } from "@/lib/setup";
 import { PROVINCIAS } from "@/lib/extraccion";
 import { alertaParaRol, calcularStats, entidadesDistintas } from "@/lib/adminStats";
 import type { Alerta, Grafo, Protegido } from "@/lib/tipos";
-import Panel, { TABS, type Tab } from "@/components/Panel";
+import Panel from "@/components/Panel";
+import { tabInicial as aTab } from "@/lib/panel";
 
 export const metadata: Metadata = { title: "Mi panel" };
 
@@ -22,8 +23,7 @@ export default async function AppPage({
 }) {
   const sesion = await requireUser();
   const sp = await searchParams;
-  const tabPedida = primero(sp.tab) as Tab;
-  const tabInicial: Tab = TABS.includes(tabPedida) ? tabPedida : "inicio";
+  const tabInicial = aTab(primero(sp.tab));
 
   const sb = supabaseAdmin();
   let protegidos: Protegido[] = [];

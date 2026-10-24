@@ -48,10 +48,10 @@ Herramientas: Supabase CLI en `C:\Users\dami_\AppData\Local\Programs\Supabase\su
 | `design` | `node --test docs/design/design.test.mjs` | ✅ | 0s | 24/10/2026, 14:18:25 | 20872aa |
 | `e2e` | `npm run e2e` | ✅ | 3s | 24/10/2026, 12:49:18 | 11979d5 |
 | `pre-demo` | `node --test scripts/pre-demo.test.mjs` | ✅ | 0s | 24/10/2026, 13:16:24 | 823cd2b |
-| `prod` | `node --env-file-if-exists=.env scripts/smoke-prod.mjs` | ✅ | 8s | 24/10/2026, 14:03:56 | 05d08a8 |
+| `prod` | `node --env-file-if-exists=.env scripts/smoke-prod.mjs` | ✅ | 4s | 24/10/2026, 14:50:03 | 5a380ba |
 | `prod` | `node scripts/smoke-prod.mjs` | ⏭️ omitido | 0s | 24/10/2026, 12:28:39 | c6d5a8f |
-| `web` | `npm run build` | ✅ | 26s | 24/10/2026, 14:41:20 | 81ce674 |
-| `web` | `npm test` | ✅ | 4s | 24/10/2026, 14:41:20 | 81ce674 |
+| `web` | `npm run build` | ✅ | 3s | 24/10/2026, 14:51:54 | 5a380ba |
+| `web` | `npm test` | ✅ | 0s | 24/10/2026, 14:51:54 | 5a380ba |
 | `worker` | `npm run selftest` | ✅ | 1s | 24/10/2026, 13:48:44 | 893e19e |
 | `worker` | `npm run typecheck` | ✅ | 0s | 24/10/2026, 13:48:44 | 893e19e |
 <!-- check:end -->
