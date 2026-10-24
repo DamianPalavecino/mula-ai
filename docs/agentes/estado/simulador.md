@@ -20,12 +20,14 @@ Tarea original: `docs/agentes/03-web-simulador.md`. Toca solo `web/` (menos `/me
 - Para cambiar un token: editarlo en `DESIGN.md` **y** en `web/app/globals.css` (mismo nombre y valor).
 - **15:11 `288cfa1`: /app sobre Efferd app-shell-4** (pedido del humano: sin banner verde, sin atajos repetidos, sin pills inútiles). `components.json` (registry `@efferd`), `components/ui/*` de shadcn, `lib/utils.ts` (cn), `hooks/use-mobile.ts`. `components/app-shell.tsx` + `components/app-sidebar.tsx` (adaptados de Efferd: sidebar flotante colapsable, drawer en mobile con ítems de 44 px; protegido como encabezado chico con estado; secciones Inicio, Alertas, Probar, Verificar, Me estafaron, Red, Ajustes; badge de alertas en Inicio; Vincular WhatsApp y UserButton en el footer). `Panel.tsx`: stats en fila de cards chicas + alertas en vivo como contenido de Inicio; "Alertas" = alertas de la red. Variables de shadcn mapeadas a tokens en `:root` de `globals.css` (documentado en DESIGN.md). El header global se oculta en /app (`data-header-global` + `<style>` en el shell). Tabs en `lib/panel.ts` (no en módulos "use client": eso dio un 500, ver `e85f79f`).
 - **No tocar** `Graph.tsx`, `colores.ts` ni la leyenda: los rediseña el agente me-estafaron.
+- **15:3x `6370690`, `b4be30d`, `145c1b1`: Inicio = chat con IA.** Lugar reservado en `components/InicioChat.tsx` (placeholder con sugerencias que abren secciones); contrato con chat-ia en `docs/agentes/estado/chat.md` (`components/chat/Chat.tsx`, default export, props `protegido` y `onIr`). Sidebar sin "Inicio" (el chat es la vista por defecto; el logo vuelve) ni "Alertas". **Alertas en la campana del top bar** (`components/AlertasCampana.tsx`): badge rojo de no vistas (`lib/alertasVistas.ts` + test, último id visto en localStorage), panel con `AppAlertas` siempre montado (polling autenticado; nueva prop opcional `onCambio`); Esc/clic afuera cierra; en mobile ocupa el ancho. `UserButton` pasó al top bar. `PublicNav` también lleva `data-header-global` (se oculta dentro del panel).
+- Reparto: la sección **Red** (grafo, card del nodo, alertas de Red) es del agente me-estafaron; yo solo la monto (`AdminRed` en `Panel.tsx`).
 - Ojo: `qrcode` es dependencia nueva (de `/app/vincular`): `cd web && npm install` antes de buildear.
 - Capturas sin login: ruta temporal `app/preview-panel/page.tsx` (NO commitear) que renderiza `<Panel>` con datos fijos dentro de `<Suspense>` + `await connection()`; mirar con el navegador de Orca.
 
 ## Próximo paso
-- Probar /app con login real en Vercel (desktop 1080p y 375 px): sidebar, drawer, cada sección.
-- Capturas: el script CDP quedó en about:blank; usar el navegador de Orca (735 px = modo mobile).
+- Cuando chat-ia pushee `web/components/chat/Chat.tsx`: en `components/InicioChat.tsx` reemplazar el placeholder por `<Chat protegido={protegido} onIr={onIr} />` (mirar `docs/agentes/estado/chat.md`), `npm run check web`, push.
+- Probar /app con login real en Vercel (1080p y 375 px): campana, drawer, cada sección.
 
 ## Bloqueos / qué necesita del humano
 - URL HTTPS pública del worker en el VPS → `NEXT_PUBLIC_WORKER_URL` en Vercel. Con `http://` el navegador lo bloquea desde Vercel y cae al mock sin avisar.
