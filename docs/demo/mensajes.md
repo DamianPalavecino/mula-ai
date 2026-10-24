@@ -12,7 +12,7 @@ Desde el celular del estafador (número que no está en `TRUSTED_CONTACTS`):
 hola abu, soy Juli, cambié de número. Choqué con el auto y necesito plata urgente para el seguro, mandá a juli.martinez.mp que después te explico
 ```
 
-Es el mismo que trae precargado `/simulador` (en versión un poco más corta), así el plan A y el plan B cuentan lo mismo.
+Es el mismo que usa el plan B (disparo por HTTP en el VPS, ver [`guion.md`](guion.md#plan-b--sin-whatsapp)) y el guion "familiar con número nuevo" de la demo programática de la landing, así los dos planes cuentan lo mismo.
 
 ## Estafa — en dos mensajes (más realista)
 
@@ -47,15 +47,17 @@ Buenas, le hablamos de ANSES. Para cobrar el refuerzo de octubre tiene que valid
 
 ## Mensajes normales (no tienen que alertar)
 
-Desde el mismo número desconocido, para mostrar que no grita por cualquier cosa:
+Desde el mismo número desconocido, para mostrar que no grita por cualquier cosa (no tienen que aparecer en `/app` ni en el feed de `/admin`):
 
 1. `abu, el domingo vamos a comer? llevo las empanadas`
 2. `Buenas, soy Carlos el plomero. Mañana a las 10 paso por lo del calefón, ¿le queda bien?`
 3. `Hola! Le escribo de la farmacia, ya llegó su receta, puede pasar a retirarla cuando quiera`
 
-Y desde un contacto de confianza (está en `TRUSTED_CONTACTS`), cualquier cosa, incluso `mandame plata al alias juli.martinez.mp`: **no se procesa** (ni aparece en los logs del worker). Sirve si el jurado pregunta "¿leen todos mis chats?".
+Y desde un contacto de confianza (cargado en `/app/setup` o en `TRUSTED_CONTACTS` del worker), cualquier cosa, incluso `mandame plata al alias juli.martinez.mp`: **no se procesa** (ni aparece en los logs del worker). Sirve si el jurado pregunta "¿leen todos mis chats?".
 
-## Para `/verificar`
+## Para el buscador (`/app/verificar` del familiar o `/admin/verificar` del gobierno)
+
+Ya no hay `/verificar` público: se busca logueado.
 
 | Pegar | Qué se tiene que ver |
 |---|---|

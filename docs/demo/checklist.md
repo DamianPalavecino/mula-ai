@@ -22,10 +22,11 @@
 ## 15:30–15:45 — verificación final
 
 **Web** (https://mula-ai.vercel.app, en incógnito y desde otro celular con datos móviles, no el wifi del lugar; **no** la URL `mula-ai-damianpalavecinos-projects.vercel.app`, que pide login de Vercel):
-- [ ] `/` carga. — amigo
-- [ ] `/verificar` con `juli.martinez.mp` da rojo con reportes; con `maria.gomez.gym` da "sin reportes". — amigo
-- [ ] `/red` muestra el grafo y el feed de alertas. — amigo
-- [ ] `/simulador` manda el mensaje 1 y muestra la alerta. — amigo
+- [ ] `/` (landing) carga sin login, y sin requests a Supabase ni al worker. — amigo
+- [ ] `/entrar` loguea con la cuenta de familiar y con la de gobierno (Clerk). — amigo
+- [ ] `/app` (familiar): muestra a "Abuela Marta" y sus alertas; `/admin` lo rebota. — amigo
+- [ ] `/admin` (gobierno): grafo con `juli.martinez.mp`, feed de alertas y stats. — amigo
+- [ ] Sin sesión, `/app` y `/admin` mandan a `/entrar`. — amigo
 
 **Repo** (`github.com/DamianPalavecino/mula-ai`, sin sesión):
 - [ ] Es público y abre en incógnito. — Damian
@@ -41,13 +42,13 @@
   ```
   — Damian
 - [ ] README con la URL de la web y el link al video en lugar de `TODO_URL` y `TODO_VIDEO`. — Damian
-- [ ] Si `/simulador` o `/me-estafaron` se cortaron, sacarlos de la sección Demo del README. — Damian
+- [ ] Las rutas de la sección Demo del README existen en Vercel (si `/app/me-estafaron` o `/app/verificar` no llegaron, sacarlas). — Damian
 
-**Credenciales:** la web es pública y sin login, no hacen falta. Si el jurado quiere probar el WhatsApp, se ofrece el número secundario de la demo, nunca uno personal.
+**Credenciales:** `/app` y `/admin` piden login. Las cuentas de demo (familiar y gobierno) van **en el formulario del submit**, nunca en el repo (es público). Si el jurado quiere probar el WhatsApp, se ofrece el número secundario de la demo, nunca uno personal.
 
 ## 15:45 — submit
 
-- [ ] Formulario con los tres links: https://mula-ai.vercel.app, repo de GitHub, video de YouTube. Abrir cada uno desde el formulario antes de mandar. — Damian
+- [ ] Formulario con los tres links: https://mula-ai.vercel.app, repo de GitHub, video de YouTube, y las dos cuentas de demo (familiar y gobierno). Abrir cada link desde el formulario antes de mandar. — Damian
 - [ ] Submit hecho. Hora: ____ — Damian
 - [ ] Worker y web quedan prendidos (el jurado puede probar después). — todos
 
@@ -62,7 +63,7 @@ Mula AI — guardián de WhatsApp contra estafas y cuentas mula (shippe.ar 2026)
 Descripción:
 
 ```
-Las estafas funcionan porque cada víctima está sola. Mula AI vigila el WhatsApp de una persona, reconoce el guion de estafa y la cuenta mula en el momento en que llegan, avisa a la persona y a su familia, y suma cada caso a una red compartida que cualquiera puede consultar antes de pagar.
+Las estafas funcionan porque cada víctima está sola. Mula AI vigila el WhatsApp de una persona, reconoce el guion de estafa y la cuenta mula en el momento en que llegan, avisa a la persona y a su familia, y suma cada caso a una red compartida donde fiscalías y organismos ven la banda completa: la misma cuenta en muchas provincias.
 
 Web: https://mula-ai.vercel.app
 Código: https://github.com/DamianPalavecino/mula-ai

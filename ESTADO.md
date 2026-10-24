@@ -1,4 +1,4 @@
-# Estado — Mula AI (13:30)
+# Estado — Mula AI (13:40)
 
 Web: https://mula-ai.vercel.app
 
@@ -27,6 +27,7 @@ Resumen para leer rápido e iterar. El detalle vivo (cada prueba, con hora y qui
 Ya resuelto en esta pasada: `/me-estafaron` en Vercel tiene la key (`/api/extraer` responde); latencia del LLM 2–3 s con corte a 3,5 s; README con la URL real; repo sin secretos (ojo: el chequeo hay que correrlo con `rtk proxy git log -p`, ver `docs/demo/checklist.md`).
 
 ### Kit de entrega
+- **13:40, cambio de plan**: guion, mensajes, checklist y README ya describen landing `/` → `/entrar` → `/app` (familia) → `/admin` (gobierno). Para grabar hacen falta: web nueva en Vercel, las 2 cuentas de demo en Clerk (familiar con "Abuela Marta" cargada, admin en `ADMIN_EMAILS`) y que la alerta del worker aparezca en `/app` de esa familia.
 - `npm run pre-demo`: reset-demo → `check prod` contra Vercel → `/health` del worker → semáforo 🟢/🔴. `-- --dry` no borra nada.
 - `docs/demo/guion.md` (con tiempos esperados), `mensajes.md` (todos probados: estafas ≥85, normales ≤10), `checklist.md` (con título y descripción de YouTube).
 - El número real de Damian quedó en la historia del repo (commits `d4f4843`, `11979d5`, en `PROGRESS.md`); en el archivo actual está redactado.

@@ -4,7 +4,7 @@
 
 | | |
 |---|---|
-| 🌐 **Web** | **https://mula-ai.vercel.app** · probá [`/verificar?valor=juli.martinez.mp`](https://mula-ai.vercel.app/verificar?valor=juli.martinez.mp) |
+| 🌐 **Web** | **https://mula-ai.vercel.app** (landing pública; `/app` y `/admin` con las cuentas de demo del formulario) |
 | ▶️ **Video (2 min)** | TODO_VIDEO |
 | 🏁 **Hackatón** | [shippe.ar](https://shippe.ar) · Track Social & Sector Público |
 
@@ -13,7 +13,7 @@ Título:
 Mula AI — guardián de WhatsApp contra estafas y cuentas mula (shippe.ar 2026)
 
 Descripción:
-Las estafas funcionan porque cada víctima está sola. Mula AI vigila el WhatsApp de una persona, reconoce el guion de estafa y la cuenta mula en el momento en que llegan, avisa a la persona y a su familia, y suma cada caso a una red compartida que cualquiera puede consultar antes de pagar.
+Las estafas funcionan porque cada víctima está sola. Mula AI vigila el WhatsApp de una persona, reconoce el guion de estafa y la cuenta mula en el momento en que llegan, avisa a la persona y a su familia, y suma cada caso a una red compartida donde fiscalías y organismos ven la banda completa: la misma cuenta en muchas provincias.
 
 Web: https://mula-ai.vercel.app
 Código: https://github.com/DamianPalavecino/mula-ai
@@ -30,17 +30,17 @@ Un guardián para el WhatsApp de una persona, sobre todo adultos mayores. Cuando
 1. **Reconoce el guion** en segundos con IA: suplantación de un familiar, accidente, comisaría, falso ANSES, falso comprador y otros guiones locales.
 2. **Consulta la red**: "el alias juli.martinez.mp tiene 24 reportes en 5 provincias".
 3. **Avisa a la persona y al grupo familiar**, porque alguien asustado decide mal y la familia puede verificar. Nunca le responde al estafador.
-4. **Suma el número y la cuenta a una red compartida** que cualquiera consulta antes de pagar en `/verificar`.
+4. **Suma el número y la cuenta a una red compartida**: la familia la consulta antes de pagar y la fiscalía ve la banda completa en un tablero.
 
 Toda estafa necesita dos piezas que las bandas reusan con decenas de víctimas: un **contacto** y una **cuenta mula**. Hoy la víctima ve el chat, el banco ve la transferencia y la fiscalía ve una denuncia suelta. Mula AI junta las piezas.
 
 ## Demo
 
-- **WhatsApp real** (el video): un número desconocido le escribe a "la abuela" y la alerta llega a su chat y al grupo familiar en segundos.
-- **[`/verificar`](https://mula-ai.vercel.app/verificar)**: pegá un alias, CBU/CVU o teléfono (probá `juli.martinez.mp`) y mirá sus reportes antes de transferir.
-- **[`/red`](https://mula-ai.vercel.app/red)**: el grafo de cuentas y números conectados por los casos, con las alertas entrando en vivo.
-- **[`/simulador`](https://mula-ai.vercel.app/simulador)**: la misma detección sin WhatsApp, para probarla vos: dos celulares en pantalla, el del estafador y el de la abuela.
-- **[`/me-estafaron`](https://mula-ai.vercel.app/me-estafaron)**: para quien ya transfirió. Sube capturas y recibe la denuncia y el pedido de bloqueo armados, vinculados a los otros casos.
+- **[`/`](https://mula-ai.vercel.app)** — landing pública: qué es y una demo con guiones de estafa precalculados (sin login, sin IA ni base desde el navegador).
+- **[`/entrar`](https://mula-ai.vercel.app/entrar)** — login (Clerk). Las cuentas de demo de familiar y de gobierno van en el formulario de la entrega.
+- **`/app`** — el familiar: carga a quién protege (teléfono, contactos de confianza, quién recibe el aviso) y ve **sus** alertas en vivo. Adentro: `/app/verificar` (buscar un alias, CBU/CVU o teléfono antes de pagar) y `/app/me-estafaron` (capturas → denuncia y pedido de bloqueo).
+- **`/admin`** — el gobierno o la fiscalía: el grafo de cuentas y números conectados por los casos (probá el nodo `juli.martinez.mp`), el feed de alertas y stats por provincia y modalidad.
+- **WhatsApp real** (el video): un número desconocido le escribe a "la abuela" y la alerta llega a su chat, a la familia y a `/app` en segundos.
 
 Guion, mensajes de prueba y capturas de ejemplo en [`docs/demo/`](docs/demo/).
 
@@ -52,7 +52,8 @@ WhatsApp de la persona ──► worker (Node + Baileys, VPS)
                              │ LLM: clasifica el guion y extrae alias / CBU / CVU / teléfonos
                              ▼
                         Supabase (la red) ◄──── web (Next.js, Vercel)
-                             │                   /verificar · /red · /simulador · /me-estafaron
+                             │                   / (landing) · /app (familia) · /admin (gobierno)
+                             │                   todo server-side, detrás de login (Clerk)
                              ▼
               alerta al chat propio + al grupo familiar
 ```
@@ -61,7 +62,7 @@ WhatsApp de la persona ──► worker (Node + Baileys, VPS)
 |---|---|
 | Clasificador (DeepSeek V4 Flash vía OpenRouter, salida JSON estructurada) | Riesgo 0–100, modalidad, señales, a quién suplanta, entidades y los textos de las alertas |
 | Transcripción | Audios de WhatsApp → texto antes de clasificar |
-| Visión (Claude) en `/me-estafaron` | Lee capturas de chats y comprobantes y redacta la denuncia y el pedido de bloqueo |
+| Visión (Claude) en `/app/me-estafaron` | Lee capturas de chats y comprobantes y redacta la denuncia y el pedido de bloqueo |
 
 La normalización es determinista (en SQL): `Juli.Martinez.MP`, `@juli.martinez.mp` y `juli.martinez.mp` son la misma cuenta; `+54 9 341 555-1234` y `0341 15 555-1234` son el mismo teléfono.
 
@@ -80,6 +81,7 @@ Tests: `npm run check` en la raíz. Detalle en el README de cada carpeta: [`supa
 
 - **Datos sintéticos.** Los reportes previos de la red son generados para la demo y están marcados (`fuente = 'sintetico'`), incluido el alias `juli.martinez.mp`. Las detecciones en vivo se guardan con `fuente = 'whatsapp'`.
 - **Baileys es el prototipo.** El worker se vincula como WhatsApp Web para validar la detección. En producción el mismo motor va en una app Android que lee las notificaciones del propio teléfono, y como API de riesgo para bancos y billeteras. Para la demo usamos un número secundario.
+- **Base cerrada.** El navegador no toca Supabase ni el worker: la landing es estática y `/app` y `/admin` leen server-side después del login, cada familia solo sus alertas.
 - **Privacidad.** Los mensajes de contactos de confianza no se procesan ni se guardan. La red guarda cuentas y teléfonos, nunca nombres de titulares: el titular de una cuenta mula muchas veces es otra víctima. Las alertas piden verificar con la familia; no bloquean nada.
 
 ## Stack

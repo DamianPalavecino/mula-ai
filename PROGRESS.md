@@ -98,11 +98,13 @@ Marcá `[x]` con hora y quién.
 - [ ] `npm run reset-demo` contra Supabase prod deja `juli.martinez.mp` en 23/5 (correrlo antes de cada toma)
 - [ ] Capturas de `docs/demo/capturas/` (chat + comprobante) probadas en `/me-estafaron`
 - [ ] Toma de respaldo grabada y subida como "no listada" (`docs/demo/guion.md`)
+- [ ] README: rutas de la sección Demo verificadas en Vercel (hoy describen el plan nuevo, todavía no deployado); paso 1 de "Correrlo" con `supabase/auth.sql` cuando exista
 - [ ] README: `TODO_VIDEO` reemplazado (el título y la descripción de YouTube están en un comentario HTML debajo de la tabla); sacar `/simulador` o `/me-estafaron` si se cortaron
 - [x] 13:25 agente entrega — README con `https://mula-ai.vercel.app` (las 6 rutas dan 200 por curl), links a `/verificar`, `/red`, `/simulador`, `/me-estafaron`, sin WhatsApp local ni Railway. Misma URL en `docs/demo/checklist.md` y `guion.md`
 - [x] 13:12 agente entrega — repo sin secretos. **Ojo: el hook de rtk resume `git log -p` y el grep da vacío aunque haya algo**; con `rtk proxy git log -p --all | grep -iE "sk-ant|sk-or-|service_role\"?\s*[:=]|eyJhbGci"` salen 5 líneas y las 5 son docs que citan el mismo comando (con `| grep -v "grep -iE"` → vacío). `git ls-files | grep -E "auth_info|(^|/)\.env($|\.)" | grep -v "\.env\.example$"` → vacío. `git log --all --name-only --format= | grep -E "auth_info/" | sort -u` → vacío
 - [x] 13:12 agente entrega — capturas trackeadas (`docs/demo/capturas/chat.png`, `comprobante.png`) sin teléfonos reales (el del chat es el ficticio `+54 9 11 4444-5555`). El número real de Damian estaba en este archivo (redactado 13:25), pero sigue en la historia (`d4f4843`, `11979d5`)
 - [x] 13:2x agente entrega — mensajes exactos de `docs/demo/mensajes.md` con el clasificador real: estafas 85–100, normales 0–10, LLM 2–3 s (ANSES y el alias suelto cortaron a 3,5 s y alertaron por heurística). `npm run check classify` 20/20
+- [x] 13:40 agente entrega — cambio de plan (`docs/agentes/06-landing-dashboards.md`): `guion.md` reescrito para landing → login familiar → setup → estafa por WhatsApp → alerta en `/app` → login gobierno → grafo en `/admin` (plan B: disparo por HTTP en el VPS); `mensajes.md` sin `/simulador` ni `/verificar` público; checklist "Web" con `/`, `/entrar`, `/app`, `/admin` y las cuentas de demo en el formulario; README con las rutas nuevas. `pre-demo` solo llama a `npm run check prod` (el smoke lo actualiza el agente de Supabase)
 - [x] 13:28 agente entrega — `npm run pre-demo` (reset-demo → `check prod` con `WEB_URL=https://mula-ai.vercel.app` → `/health` del VPS → semáforo). Probado con `-- --dry`: 3/3 🟢 (juli en 28 por los ensayos, sin borrar). Falta la corrida real ~14:00
 - [ ] Submit hecho
 
