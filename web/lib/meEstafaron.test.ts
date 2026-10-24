@@ -4,10 +4,9 @@ import type { EntidadEnRed, EntidadExtraida } from "@/lib/extraccion";
 import type { ResumenEntidad } from "@/lib/tipos";
 import {
   antecedentesRed,
+  armarTextos,
   crearRateLimiter,
-  insertarAntecedentes,
   limpiarEntidades,
-  MARCA_RED,
   MAX_BYTES_ORIGINAL,
   validarArchivo,
 } from "./meEstafaron.ts";
@@ -104,20 +103,37 @@ describe("antecedentesRed", () => {
   });
 });
 
-describe("insertarAntecedentes", () => {
-  it("reemplaza la marca", () => {
-    assert.equal(insertarAntecedentes(`Hechos.\n\n${MARCA_RED}\n\nPido.`, "Antecedentes."), 
-      "Hechos.\n\nAntecedentes.\n\nPido.",
-    );
+describe("armarTextos", () => {
+  const datos = {
+    modalidad: "familiar_numero_nuevo" as const,
+    entidades: [ent("alias", "juli.martinez.mp"), { ...ent("telefono", "+54 9 11 4444-5555"), rol: "contacto_estafador" as const }],
+    transferencias: [{ monto: 180000, fecha: "2026-10-23", destino: "juli.martinez.mp", titular_destino: null, comprobante: "OP-123" }],
+    monto_total: 180000,
+    fecha_hecho: "2026-10-23",
+  };
+
+  it("arma denuncia y pedido con las cuentas, el monto y los antecedentes", () => {
+    const t = armarTextos(datos, "Santa Fe", "Antecedentes: juli.martinez.mp 23 reportes.");
+    assert.ok(t.denuncia.startsWith("Formulo denuncia penal por estafa"));
+    for (const x of ["juli.martinez.mp", "+54 9 11 4444-5555", "$180.000", "OP-123", "Antecedentes: juli", "[NOMBRE Y APELLIDO]", "Santa Fe"]) {
+      assert.ok(t.denuncia.includes(x), `denuncia sin ${x}`);
+    }
+    assert.ok(t.pedido_bloqueo.includes("juli.martinez.mp") && t.pedido_bloqueo.includes("$180.000"));
+    assert.ok(!t.pedido_bloqueo.includes("+54 9 11"), "el teléfono no es cuenta a bloquear");
+    assert.ok(t.pasos.length >= 4);
   });
 
-  it("saca la marca si no hay antecedentes", () => {
-    assert.equal(insertarAntecedentes(`Hechos.\n\n${MARCA_RED}\n\nPido.`, null), "Hechos.\n\nPido.");
+  it("muestra las fechas ISO como dd/mm/aaaa", () => {
+    const t = armarTextos(datos, "", null);
+    assert.ok(t.denuncia.includes("23/10/2026") && !t.denuncia.includes("2026-10-23"));
+    assert.ok(t.pedido_bloqueo.includes("23/10/2026"));
   });
 
-  it("agrega al final si el modelo no puso la marca", () => {
-    assert.equal(insertarAntecedentes("Hechos.", "Antecedentes."), "Hechos.\n\nAntecedentes.");
-    assert.equal(insertarAntecedentes("Hechos.", null), "Hechos.");
+  it("sin datos deja marcadores y no inventa", () => {
+    const t = armarTextos({ modalidad: "otro", entidades: [], transferencias: [], monto_total: null, fecha_hecho: null }, "", null);
+    assert.ok(t.denuncia.includes("[MONTO]") && t.denuncia.includes("[FECHA DEL HECHO]"));
+    assert.ok(t.pedido_bloqueo.includes("[CUENTA DE DESTINO]"));
+    assert.ok(!t.denuncia.includes("Antecedentes"));
   });
 });
 

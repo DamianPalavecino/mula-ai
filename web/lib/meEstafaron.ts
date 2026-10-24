@@ -1,6 +1,6 @@
 // Lógica pura de "Me estafaron" (sin red ni LLM): la testea lib/meEstafaron.test.ts con node:test.
 // Solo `import type`: así Node lo corre directo (strip types) sin bundler ni dependencias.
-import type { EntidadEnRed, EntidadExtraida } from "@/lib/extraccion";
+import type { EntidadEnRed, EntidadExtraida, Extraccion } from "@/lib/extraccion";
 import type { TipoEntidad } from "@/lib/tipos";
 
 const TIPOS: Record<TipoEntidad, string> = {
@@ -15,9 +15,6 @@ const TIPOS: Record<TipoEntidad, string> = {
 function plural(n: number, singular: string, pluralForma: string): string {
   return `${n} ${n === 1 ? singular : pluralForma}`;
 }
-
-/** Marca que el modelo deja en la denuncia donde van los antecedentes de la red. */
-export const MARCA_RED = "[ANTECEDENTES_RED]";
 
 // CUIT/CUIL: 11 dígitos, prefijo conocido y dígito verificador mod 11.
 export function cuitValido(digitos: string): boolean {
@@ -95,13 +92,53 @@ export function antecedentesRed(red: EntidadEnRed[]): string | null {
   );
 }
 
-export function insertarAntecedentes(texto: string, parrafo: string | null): string {
-  if (texto.includes(MARCA_RED)) {
-    return parrafo
-      ? texto.replace(MARCA_RED, parrafo)
-      : texto.replace(/\n*\[ANTECEDENTES_RED\]/, "");
-  }
-  return parrafo ? `${texto}\n\n${parrafo}` : texto;
+const pesos = (n: number) => `$${n.toLocaleString("es-AR")}`;
+// "2026-10-23" → "23/10/2026"; cualquier otro formato queda como vino.
+const dia = (f: string) => f.replace(/^(\d{4})-(\d{2})-(\d{2})$/, "$3/$2/$1");
+
+type DatosCaso = Pick<Extraccion, "modalidad" | "entidades" | "transferencias" | "monto_total" | "fecha_hecho">;
+
+// Textos armados con plantilla (no con el LLM): salen al instante y nunca inventan datos.
+export function armarTextos(x: DatosCaso, provincia: string, antecedentes: string | null) {
+  const destino = x.entidades.filter((e) => e.rol === "destino_plata" && e.tipo !== "link");
+  const contacto = x.entidades.filter((e) => e.rol !== "destino_plata");
+  const lista = (ents: EntidadExtraida[]) => ents.map((e) => `${TIPOS[e.tipo]} ${e.valor}`).join("; ");
+  const monto = x.monto_total != null ? pesos(x.monto_total) : "[MONTO]";
+  const fecha = x.fecha_hecho ? dia(x.fecha_hecho) : "[FECHA DEL HECHO]";
+  const cuentas = destino.length ? lista(destino) : "[CUENTA DE DESTINO]";
+  const transferencias = x.transferencias.map((t, i) =>
+    `${i + 1}. ${t.monto != null ? pesos(t.monto) : "[MONTO]"}, el ${t.fecha ? dia(t.fecha) : "[FECHA]"}, a ${t.destino ?? "[CUENTA DE DESTINO]"}` +
+    (t.titular_destino ? `, titular ${t.titular_destino}` : "") +
+    (t.comprobante ? `, operación ${t.comprobante}` : "") + ".",
+  );
+  const denuncia = [
+    `Formulo denuncia penal por estafa${provincia ? ` ante el Ministerio Público de ${provincia}` : ""}.`,
+    "Denunciante: [NOMBRE Y APELLIDO], DNI [DNI], con domicilio en [DOMICILIO], teléfono [TELÉFONO], email [EMAIL].",
+    `Hechos: el ${fecha} fui contactado/a por una persona que, mediante engaño, me hizo transferir ${monto}. [CONTÁ BREVEMENTE CÓMO FUE EL ENGAÑO].`,
+    transferencias.length ? `Transferencias realizadas:\n${transferencias.join("\n")}` : `Transferí ${monto} a: ${cuentas}.`,
+    `Cuentas de destino: ${cuentas}.`,
+    contacto.length ? `Números y medios usados por los estafadores: ${lista(contacto)}.` : "",
+    "Acompaño como prueba las capturas del chat y los comprobantes de transferencia.",
+    antecedentes ?? "",
+    "Solicito que se investigue el hecho, que se identifique a los titulares de las cuentas y líneas mencionadas y que se ordene el bloqueo de las cuentas de destino y el congelamiento de los fondos.",
+    "[LOCALIDAD], [FECHA].\n\nFirma: ____________________",
+  ].filter(Boolean).join("\n\n");
+  const pedido_bloqueo = [
+    "A: [ENTIDAD]",
+    `Solicito el bloqueo preventivo de la cuenta de destino y la retención de los fondos de la transferencia de ${monto} realizada el ${fecha}${x.transferencias[0]?.comprobante ? ` (operación ${x.transferencias[0].comprobante})` : ""}, obtenida mediante estafa.`,
+    `Cuenta de destino: ${cuentas}.`,
+    "Estoy realizando la denuncia penal correspondiente.",
+    "[NOMBRE Y APELLIDO], DNI [DNI], teléfono [TELÉFONO].",
+  ].join("\n\n");
+  const pasos = [
+    "Llamá ya a tu banco o billetera, reportá la transferencia y pedí que contacten al banco de destino.",
+    "Mandá el pedido de bloqueo por escrito al banco de origen y al de destino.",
+    "Hacé la denuncia penal hoy (comisaría, fiscalía o denuncia online).",
+    "Si pasaste claves o códigos, cambialos ahora.",
+    "Guardá las capturas y comprobantes. No borres el chat.",
+    "Desconfiá de quien ofrezca recuperar la plata cobrando.",
+  ];
+  return { denuncia, pedido_bloqueo, pasos };
 }
 
 /** Rate limit en memoria por instancia (alcanza para frenar abusos en la demo). */
