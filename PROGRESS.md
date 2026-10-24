@@ -15,12 +15,14 @@ Entrega 16:00 · submit 15:45 · freeze 14:30.
 | `classify` | 10 estafas + 10 normales con el LLM real (OpenRouter; sin key, solo la heurística) |
 | `web` | `next build` (tipos + build de todas las rutas) |
 | `supabase` | seed contra el Supabase del entorno + la aserción de `juli.martinez.mp` |
+| `prod` | manual (`npm run check prod`): con la anon key, `juli.martinez.mp` 23/5, `grafo()`, anon lee `alertas` y no escribe; con `WEB_URL`, las 3 rutas de Vercel dan 200 |
 
 ## Resultados automáticos
 <!-- check:start -->
 | Feature | Comando | Resultado | Duración | Cuándo | Commit |
 |---|---|---|---|---|---|
 | `classify` | `npm run test:classify` | ⏭️ omitido | 1s | 24/10/2026, 12:22:00 | f1093ee |
+| `prod` | `node scripts/smoke-prod.mjs` | ⏭️ omitido | 0s | 24/10/2026, 12:25:00 | 9f011ae |
 | `web` | `npm run build` | ✅ | 29s | 24/10/2026, 12:21:35 | f1093ee |
 | `worker` | `npm run selftest` | ✅ | 18s | 24/10/2026, 12:21:35 | f1093ee |
 | `worker` | `npm run typecheck` | ✅ | 4s | 24/10/2026, 12:21:35 | f1093ee |
@@ -30,7 +32,9 @@ Entrega 16:00 · submit 15:45 · freeze 14:30.
 Marcá `[x]` con hora y quién.
 
 **Base y deploy**
+- [x] 12:35 deploy — `docs/deploy.md` con pasos y variables por servicio; `scripts/smoke-prod.mjs` probado (sin vars → omitido, URL caída → 9 FAIL)
 - [ ] Supabase prod: `schema.sql` + `functions.sql` aplicados, `npm run check supabase` verde
+- [ ] `npm run check prod` verde contra Supabase prod (y con `WEB_URL` contra Vercel)
 - [ ] Realtime activo en `alertas` (un INSERT aparece en el feed de `/red`)
 - [ ] Web en Vercel: `/`, `/verificar?valor=juli.martinez.mp` (23 reportes, en rojo) y `/red` en incógnito
 - [ ] Worker en Railway: conectado, sesión persistida (redeploy sin re-escanear el QR)
@@ -56,4 +60,5 @@ Marcá `[x]` con hora y quién.
 - [ ] Submit hecho
 
 ## Próximo paso
-- Deploy de Supabase prod + seed (agente `deploy`), así el worker y la web dejan de depender del local.
+- Damian: crear Supabase prod y seguir `docs/deploy.md` §1 (no hay CLIs de supabase/vercel/railway en la PC: es por clics). Después `npm run check supabase` y `npm run check prod`.
+- Después Vercel (§2) y Railway (§3); completar las URLs arriba de `docs/deploy.md`.

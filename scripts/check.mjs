@@ -12,6 +12,8 @@ const FEATURES = {
   web: { paths: ['web/'], cwd: 'web', cmds: ['npm run build'] },
   // manual: re-siembra la base del entorno (borra solo lo sintético) y falla si juli.martinez.mp no da 23/5
   supabase: { paths: ['supabase/'], cwd: '.', cmds: ['npm run seed'], manual: true },
+  // manual: prod con la anon key (SUPABASE_URL, SUPABASE_ANON_KEY y opcional WEB_URL en el entorno)
+  prod: { paths: ['scripts/smoke-prod'], cwd: '.', cmds: ['node scripts/smoke-prod.mjs'], manual: true },
 };
 
 const git = (cmd) => { try { return execSync(`git ${cmd}`, { encoding: 'utf8' }); } catch { return ''; } };
