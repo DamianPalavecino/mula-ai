@@ -3,7 +3,9 @@
 Entrega 16:00 · submit 15:45 · freeze 14:30.
 
 ## Traspaso (si se corta Claude y sigue Codex u otro agente)
-Este archivo es la fuente de verdad. Para retomar:
+**Relanzar los 5 con Codex:** `pwsh docs/agentes/codex.ps1` (o `... codex.ps1 simulador demo` para algunos). Arranca Codex en el mismo worktree de cada agente, así conserva lo que no se commiteó, y le pasa su brief más su estado en `docs/agentes/estado/<nombre>.md`, que cada agente actualiza después de cada paso.
+
+Este archivo es la fuente de verdad. Para retomar a mano:
 1. `git pull --rebase` y leé `CLAUDE.md` (reglas + contrato; en Windows `AGENTS.md` es un symlink que queda como texto "CLAUDE.md"), este archivo y `docs/deploy.md`.
 2. Tomá el primer ítem de "Próximo paso" y el primer `[ ]` de "Qué falta probar" de tu área. Cada área tiene el brief completo en `docs/agentes/0X-*.md`.
 3. Reglas: TDD, `npm run check` en verde, push directo a `main` (`git pull --rebase` antes), sin agentes revisores. Nunca leer ni commitear `.env*`. Ya están cargados en la raíz (`.env`) y en `web/.env.local` de cada checkout.
