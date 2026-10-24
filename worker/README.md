@@ -1,6 +1,6 @@
 # Mula AI · worker de WhatsApp
 
-Proceso Node que se vincula al WhatsApp de la persona protegida (como WhatsApp Web), escucha los mensajes de desconocidos, los clasifica con Claude, los suma a la red en Supabase y avisa a la persona (chat propio) y al grupo familiar. **Nunca le responde al remitente.**
+Proceso Node que se vincula al WhatsApp de la persona protegida (como WhatsApp Web), escucha los mensajes de desconocidos, los clasifica con un LLM (DeepSeek V4 Flash vía OpenRouter), los suma a la red en Supabase y avisa a la persona (chat propio) y al grupo familiar. **Nunca le responde al remitente.**
 
 > ⚠️ **Usá un número secundario, nunca uno personal.** Baileys no es un cliente oficial y Meta puede banear el número. Para la demo: un chip descartable.
 
@@ -11,7 +11,7 @@ messages.upsert → ignora fromMe / grupos / status / newsletters
   → texto (conversation · extendedText · caption) o audio transcripto
   → teléfono real del remitente (key.remoteJidAlt si viene @lid; si no, mapeo LID→PN)
   → filter.debeAnalizar: contacto de confianza = nunca; desconocido = >2 palabras o entidades/palabras clave
-  → classify: Claude (salida estructurada) + regex de entidades; si el LLM falla → heurística
+  → classify: DeepSeek vía OpenRouter (salida estructurada) + regex de entidades; si el LLM falla → heurística
   → si no es sospechoso pero un alias/CBU ya tiene reportes en la red → sospechoso igual
   → registrar_reporte (fuente whatsapp) → alertas al chat propio + grupo → registrar_alerta
 ```
@@ -47,8 +47,8 @@ Para volver a vincular: borrá la carpeta de `AUTH_DIR` y reiniciá.
 |---|---|---|
 | `SUPABASE_URL` | sí | URL del proyecto |
 | `SUPABASE_SERVICE_ROLE_KEY` | sí | service role (solo acá, nunca en la web) |
-| `ANTHROPIC_API_KEY` | recomendada | sin ella clasifica solo con heurística |
-| `CLASSIFIER_MODEL` | no | default `claude-haiku-5-5` |
+| `OPENROUTER_API_KEY` | recomendada | sin ella clasifica solo con heurística |
+| `CLASSIFIER_MODEL` | no | default `deepseek/deepseek-v4-flash` |
 | `PROTEGIDO_NOMBRE` | no | cómo se nombra en las alertas ("la abuela Marta") |
 | `FAMILY_GROUP_JID` | no | `...@g.us` del grupo familiar |
 | `TRUSTED_CONTACTS` | no | teléfonos separados por coma; se normalizan a 10 dígitos (`+54 9 341 555-1234` → `3415551234`) |
@@ -64,7 +64,7 @@ Para volver a vincular: borrá la carpeta de `AUTH_DIR` y reiniciá.
 - `npm run dev` / `npm start` — worker.
 - `npm run typecheck` — `tsc --noEmit`.
 - `npm run selftest` — smoke test sin red (entidades, filtro, heurística, textos de alerta).
-- `npm run test:classify` — 10 estafas + 10 normales con el clasificador real (requiere `ANTHROPIC_API_KEY`; sin key muestra la heurística).
+- `npm run test:classify` — 10 estafas + 10 normales con el clasificador real (requiere `OPENROUTER_API_KEY`; sin key muestra la heurística).
 
 ## Deploy en Railway
 

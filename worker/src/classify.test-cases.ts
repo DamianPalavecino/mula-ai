@@ -1,6 +1,6 @@
 /**
  * 10 mensajes de estafa + 10 normales, rioplatenses. `npm run test:classify`.
- * Con ANTHROPIC_API_KEY corre el clasificador real (Claude). Sin key, avisa y corre solo la
+ * Con OPENROUTER_API_KEY corre el clasificador real (DeepSeek vía OpenRouter). Sin key, avisa y corre solo la
  * heurística de fallback para ver cómo se comporta la demo si el LLM se cae.
  */
 import { clasificar, clasificarHeuristico, type Modalidad } from './classify.js';
@@ -87,10 +87,10 @@ function pad(s: string, n: number): string {
 }
 
 async function main(): Promise<void> {
-  const usarLlm = !!config.anthropicApiKey;
+  const usarLlm = !!config.openrouterApiKey;
   if (!usarLlm)
     console.log(
-      'ANTHROPIC_API_KEY no está en el entorno: no corro el LLM. Muestro solo la heurística de fallback.\n',
+      'OPENROUTER_API_KEY no está en el entorno: no corro el LLM. Muestro solo la heurística de fallback.\n',
     );
   console.log(`Clasificador: ${usarLlm ? config.classifierModel : 'heurística'}\n`);
   console.log(`${pad('#', 3)} ${pad('esperado', 9)} ${pad('obtenido', 9)} ${pad('ok', 3)} ${pad('riesgo', 6)} ${pad('modalidad', 22)} ${pad('origen', 10)} texto`);

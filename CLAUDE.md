@@ -3,6 +3,12 @@
 Hackatón shippe.ar (entrega 2026-10-24 16:00, submit 15:45). Guardián de WhatsApp que detecta guiones de estafa y cuentas mula, avisa a la persona y a su familia, y suma cada caso a una red compartida.
 Spec completo: `docs/spec.md`.
 
+## Reglas de trabajo (hackatón: no time wasting)
+- **TDD siempre**: primero el test que falla, después el código mínimo que lo pasa, después refactor. Worker: casos en `worker/src/selftest.ts` (`npm run selftest`) + `npm run typecheck`. Si la carpeta no tiene runner, sumá `vitest` y seguí.
+- **Sin review**: no lances agentes revisores ni pases de code review. Tests en verde = listo.
+- **Push directo a `main`**: commit chico y `git push origin main` apenas los tests pasan. Sin branches ni PRs. Antes de pushear, `git pull --rebase` (somos dos tocando el repo).
+- Nunca commitear `.env*` ni `auth_info/`.
+
 ## Reparto
 
 | Carpeta | Dueño | Deploy |

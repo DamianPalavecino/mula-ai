@@ -11,7 +11,7 @@ Hackatón [shippe.ar](https://shippe.ar) · Track Social & Sector Público.
 ```
 WhatsApp de la persona ──► worker (Baileys, Railway)
                              │ filtro: ignora contactos de confianza y grupos
-                             │ Claude: clasifica el guion y extrae alias/CBU/teléfonos
+                             │ LLM (DeepSeek/OpenRouter): clasifica el guion y extrae alias/CBU/teléfonos
                              ▼
                         Supabase (la red) ◄──── web (Next.js, Vercel)
                              │                   /verificar  "antes de pagar"

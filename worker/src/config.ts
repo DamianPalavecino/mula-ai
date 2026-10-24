@@ -18,8 +18,8 @@ const trustedRaw = env('TRUSTED_CONTACTS') ?? '';
 export const config = {
   supabaseUrl: env('SUPABASE_URL'),
   supabaseServiceRoleKey: env('SUPABASE_SERVICE_ROLE_KEY'),
-  anthropicApiKey: env('ANTHROPIC_API_KEY'),
-  classifierModel: env('CLASSIFIER_MODEL') ?? 'claude-haiku-5-5',
+  openrouterApiKey: env('OPENROUTER_API_KEY'),
+  classifierModel: env('CLASSIFIER_MODEL') ?? 'deepseek/deepseek-v4-flash',
   classifierTimeoutMs: Number(env('CLASSIFIER_TIMEOUT_MS') ?? 10000),
   protegidoNombre: env('PROTEGIDO_NOMBRE') ?? 'la persona protegida',
   familyGroupJid: env('FAMILY_GROUP_JID'),
@@ -52,8 +52,8 @@ export function validarConfig(): void {
     console.error('[config] Copiá .env.example a .env en worker/ (o en la raíz) y completalas.');
     process.exit(1);
   }
-  if (!config.anthropicApiKey)
-    console.warn('[config] ANTHROPIC_API_KEY no está: se usa solo el clasificador heurístico (sin LLM).');
+  if (!config.openrouterApiKey)
+    console.warn('[config] OPENROUTER_API_KEY no está: se usa solo el clasificador heurístico (sin LLM).');
   if (!config.familyGroupJid)
     console.warn(
       '[config] FAMILY_GROUP_JID no está: las alertas van solo al chat propio. Al conectar se listan los grupos para copiar el JID.',

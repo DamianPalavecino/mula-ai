@@ -1,4 +1,3 @@
-import Anthropic from '@anthropic-ai/sdk';
 import { z } from 'zod';
 import { config } from './config.js';
 import { dedupe, detectarEntidades, entidadesDeRed, montoMaximo, type Entidad } from './entities.js';
@@ -47,8 +46,8 @@ const RespuestaLlmSchema = ClasificacionSchema.extend({
 });
 
 /**
- * JSON schema para `output_config.format`, escrito a mano: el helper zodOutputFormat del SDK
- * (1.3.0) mueve los `enum` a `description` y dejaría la modalidad sin restringir.
+ * JSON schema para `response_format` (OpenRouter, modo strict), escrito a mano para que la
+ * modalidad quede restringida al enum.
  */
 export const CLASIFICACION_JSON_SCHEMA = {
   type: 'object',
@@ -123,16 +122,47 @@ Cómo completar:
 
 Escribí en español rioplatense (vos, transferí, llamá). Nunca se le responde al estafador: las alertas son solo para la persona y su familia.`;
 
-let cliente: Anthropic | null = null;
-function getCliente(): Anthropic {
-  if (!cliente) {
-    cliente = new Anthropic({
-      apiKey: config.anthropicApiKey,
-      timeout: config.classifierTimeoutMs,
-      maxRetries: 1,
-    });
-  }
-  return cliente;
+const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
+
+/** Una llamada a OpenRouter con salida JSON estricta. Devuelve el texto del mensaje. */
+async function llamarOpenRouter(userPrompt: string): Promise<string> {
+  const res = await fetch(OPENROUTER_URL, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${config.openrouterApiKey}`,
+      'Content-Type': 'application/json',
+      'HTTP-Referer': 'https://github.com/DamianPalavecino/mula-ai',
+      'X-Title': 'Mula AI',
+    },
+    body: JSON.stringify({
+      model: config.classifierModel,
+      max_tokens: 2048,
+      temperature: 0.1,
+      messages: [
+        { role: 'system', content: SYSTEM_PROMPT },
+        { role: 'user', content: userPrompt },
+      ],
+      response_format: {
+        type: 'json_schema',
+        json_schema: { name: 'clasificacion', strict: true, schema: CLASIFICACION_JSON_SCHEMA },
+      },
+      // Solo proveedores que respetan response_format; sin razonamiento para que sea rápido.
+      provider: { require_parameters: true },
+      reasoning: { enabled: false },
+    }),
+    signal: AbortSignal.timeout(config.classifierTimeoutMs),
+  });
+  if (!res.ok) throw new Error(`OpenRouter ${res.status}: ${(await res.text()).slice(0, 300)}`);
+  const data = (await res.json()) as {
+    choices?: Array<{ finish_reason?: string; message?: { content?: string | null } }>;
+    error?: { message?: string };
+  };
+  if (data.error) throw new Error(`OpenRouter: ${data.error.message}`);
+  const choice = data.choices?.[0];
+  if (choice?.finish_reason === 'length') throw new Error('respuesta cortada por max_tokens');
+  const content = choice?.message?.content;
+  if (!content) throw new Error('respuesta sin contenido');
+  return content;
 }
 
 function armarPrompt(texto: string, ctx: ContextoMensaje, regex: Entidad[]): string {
@@ -170,7 +200,7 @@ function clamp(n: number): number {
 }
 
 /**
- * Clasifica un mensaje con Claude (salida estructurada). Si el LLM falla, tarda demasiado
+ * Clasifica un mensaje con el LLM vía OpenRouter (salida estructurada). Si el LLM falla, tarda demasiado
  * o no hay API key, devuelve una clasificación heurística para que la demo no se caiga.
  */
 export async function clasificar(texto: string, ctx: ContextoMensaje = {}): Promise<ResultadoClasificacion> {
@@ -179,24 +209,17 @@ export async function clasificar(texto: string, ctx: ContextoMensaje = {}): Prom
   const regex = entidadesDeRed(detectadas);
   const monto = montoMaximo(detectarEntidades(texto)) ?? montoMaximo(detectadas);
 
-  if (!config.anthropicApiKey) return { ...clasificarHeuristico(texto, ctx), monto };
+  if (!config.openrouterApiKey) return { ...clasificarHeuristico(texto, ctx), monto };
 
   try {
-    const resp = await getCliente().messages.create({
-      model: config.classifierModel,
-      max_tokens: 2048,
-      system: SYSTEM_PROMPT,
-      messages: [{ role: 'user', content: armarPrompt(texto, ctx, regex) }],
-      output_config: {
-        effort: 'low',
-        format: { type: 'json_schema', schema: CLASIFICACION_JSON_SCHEMA },
-      },
-    });
-    if (resp.stop_reason === 'refusal') throw new Error('el modelo rechazó la solicitud (refusal)');
-    if (resp.stop_reason === 'max_tokens') throw new Error('respuesta cortada por max_tokens');
-    // Puede venir un bloque `thinking` antes: leer por tipo, no por posición.
-    const json = resp.content.find((b) => b.type === 'text')?.text;
-    if (!json) throw new Error('respuesta sin bloque de texto');
+    const prompt = armarPrompt(texto, ctx, regex);
+    let json: string;
+    try {
+      json = await llamarOpenRouter(prompt);
+    } catch (err) {
+      console.warn(`[classify] primer intento falló, reintento: ${String(err)}`);
+      json = await llamarOpenRouter(prompt);
+    }
     const parsed = RespuestaLlmSchema.safeParse(JSON.parse(json));
     if (!parsed.success) throw new Error(`salida fuera de esquema: ${parsed.error.message}`);
     const out = parsed.data;
@@ -208,9 +231,7 @@ export async function clasificar(texto: string, ctx: ContextoMensaje = {}): Prom
       monto,
     };
   } catch (err) {
-    const detalle =
-      err instanceof Anthropic.APIError ? `${err.status ?? ''} ${err.name}: ${err.message}` : String(err);
-    console.warn(`[classify] LLM falló, uso heurística: ${detalle}`);
+    console.warn(`[classify] LLM falló, uso heurística: ${String(err)}`);
     return { ...clasificarHeuristico(texto, ctx), monto };
   }
 }
