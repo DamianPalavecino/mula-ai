@@ -11,6 +11,11 @@
   --color-alerta: #c1121f;
   --color-alerta-fondo: #fdf0f1;
   --color-alerta-linea: #f3c4c8;
+  /* simulador: colores tipo WhatsApp */
+  --color-wa-barra: #075e54;
+  --color-wa-fondo: #efeae2;
+  --color-wa-propio: #d9fdd3;
+  --color-wa-composer: #f0f2f5;
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
 

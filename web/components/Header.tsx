@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 
 const LINKS = [
   { href: "/", label: "Inicio" },
+  { href: "/simulador", label: "Simulador" },
   { href: "/verificar", label: "Verificar" },
   { href: "/red", label: "Red" },
 ];
@@ -26,7 +27,7 @@ export default function Header() {
                 key={link.href}
                 href={link.href}
                 aria-current={activo ? "page" : undefined}
-                className={`rounded-md px-3 py-1.5 text-sm font-medium ${
+                className={`rounded-md px-2 py-1.5 text-sm font-medium sm:px-3 ${link.href === "/" ? "hidden sm:block" : ""} ${
                   activo ? "bg-panel text-tinta" : "text-suave hover:text-tinta"
                 }`}
               >

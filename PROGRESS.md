@@ -26,8 +26,8 @@ Entrega 16:00 · submit 15:45 · freeze 14:30.
 | `e2e` | `npm run e2e` | ✅ | 3s | 24/10/2026, 12:49:18 | 11979d5 |
 | `prod` | `node --env-file-if-exists=.env scripts/smoke-prod.mjs` | ✅ | 1s | 24/10/2026, 12:52:39 | 833c037 |
 | `prod` | `node scripts/smoke-prod.mjs` | ⏭️ omitido | 0s | 24/10/2026, 12:28:39 | c6d5a8f |
-| `web` | `npm run build` | ✅ | 17s | 24/10/2026, 12:36:34 | dcb8616 |
-| `web` | `npm test` | ✅ | 1s | 24/10/2026, 12:36:34 | dcb8616 |
+| `web` | `npm run build` | ✅ | 17s | 24/10/2026, 13:00:21 | fbc3601 |
+| `web` | `npm test` | ✅ | 2s | 24/10/2026, 13:00:21 | fbc3601 |
 | `worker` | `npm run selftest` | ✅ | 1s | 24/10/2026, 12:49:35 | 610f3c1 |
 | `worker` | `npm run typecheck` | ✅ | 0s | 24/10/2026, 12:49:35 | 610f3c1 |
 <!-- check:end -->
@@ -59,8 +59,11 @@ Marcá `[x]` con hora y quién.
 - [ ] La alerta de `POST /analizar` aparece en el feed de `/red` en vivo
 - [ ] `POST /analizar` con `enviar_whatsapp: true` y WhatsApp conectado → llega al chat propio y al grupo
 - [ ] Worker con URL pública (VPS: Tailscale Funnel, pendiente OK de Damian) y `GET /health` responde desde afuera; URL cargada en `NEXT_PUBLIC_WORKER_URL` de Vercel
-- [ ] `/simulador` contra el worker real (y en modo mock sin `NEXT_PUBLIC_WORKER_URL`)
-- [ ] `/red`: el nodo de la alerta nueva se destaca
+- [x] `/simulador` en modo mock (sin `NEXT_PUBLIC_WORKER_URL`): 3 mensajes, aviso al grupo familiar, mobile 375 px sin scroll horizontal, 1080p entra en una pantalla — 12:33, agente simulador
+- [x] `/simulador` contra worker local + Supabase prod (`NEXT_PUBLIC_WORKER_URL=http://localhost:8080`): Juli → alerta LLM riesgo 90-95 en ~7 s, `registrar_alerta` ok, aparece "recién" y resaltada en el feed de `/red`; `npm run e2e -- --reciente 10` verde (entidad_ids en grafo()) — 12:58, agente simulador. Dejó 3 reportes whatsapp de ensayo (juli en 27): `npm run reset-demo` antes de grabar
+- [ ] `/simulador` en Vercel contra el worker del VPS (URL **HTTPS**: desde una página HTTPS un `http://` lo bloquea el navegador y cae al mock sin avisar)
+- [ ] `/simulador` con el toggle "Mandar también al WhatsApp real" → llega al chat propio y al grupo
+- [ ] `/red`: el nodo de la alerta nueva se destaca (feed resaltado ✓ 12:58; el pulso del canvas no lo pude capturar, mirarlo a ojo)
 - [x] 12:35 me-estafaron — local, `POST /api/extraer` con `chat.png` + `comprobante.png` → 200 en 27 s vía OpenRouter (`anthropic/claude-sonnet-5.5`): alias, CVU y teléfono bien extraídos, $180.000, denuncia + pedido de bloqueo + pasos. Sin body → 400. Cruce con la red da `null` (falta schema en prod)
 - [x] 12:54 me-estafaron — local contra Supabase prod: capturas de demo → teléfono 11 reportes/6 prov, `juli.martinez.mp` 24/5, CVU 7/3; la denuncia trae "Antecedentes" antes del pedido (23 s)
 - [ ] `/me-estafaron` en Vercel (necesita `OPENROUTER_API_KEY` server-only en Vercel)
@@ -78,6 +81,7 @@ Marcá `[x]` con hora y quién.
 - [ ] Submit hecho
 
 ## Próximo paso
+- Web/simulador: cargar `NEXT_PUBLIC_WORKER_URL` (HTTPS del VPS) en Vercel y redeployar. Ojo agentes de web: `ea0610f` (/me-estafaron) había borrado el simulador al commitear desde un árbol viejo; ya está restaurado. Hacé `git pull --rebase` antes de commitear.
 - me-estafaron: listo en main. Falta cargar en Vercel `OPENROUTER_API_KEY` (y opcional `SUPABASE_SERVICE_ROLE_KEY`, ambas sin `NEXT_PUBLIC_`) y sumar el link en el header.
 - Demo: kit listo en `docs/demo/` (guion, mensajes, jurado, checklist, capturas). Falta: conseguir celulares y número del estafador, `npm run reset-demo`, toma de respaldo (el worker ya anda en el VPS).
 - Supabase prod listo (12:55, `check prod` 6/6).

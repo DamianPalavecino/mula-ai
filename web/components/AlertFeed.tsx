@@ -5,6 +5,7 @@ import { supabase } from "@/lib/supabase";
 import type { Alerta } from "@/lib/tipos";
 import { labelModalidad } from "@/lib/tipos";
 import { fechaRelativa } from "@/lib/formato";
+import { partesNegrita } from "@/lib/simulador";
 
 const MAX = 20;
 
@@ -115,7 +116,9 @@ export default function AlertFeed({
               </p>
               {(a.mensaje_familia || a.mensaje_persona) && (
                 <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-texto">
-                  {a.mensaje_familia || a.mensaje_persona}
+                  {partesNegrita(a.mensaje_familia || a.mensaje_persona || "").map((p, i) =>
+                    p.negrita ? <strong key={i}>{p.texto}</strong> : <span key={i}>{p.texto}</span>,
+                  )}
                 </p>
               )}
             </>
