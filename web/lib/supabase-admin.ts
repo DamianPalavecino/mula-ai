@@ -4,7 +4,7 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 // Cliente con service role, SOLO para código de servidor (server components, route handlers,
 // server actions) y SIEMPRE después de requireUser()/requireAdmin() de lib/auth.ts.
 // El browser no tiene acceso a Supabase: anon está revocado (supabase/auth.sql).
-const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL;
+const url = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
 const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 let cliente: SupabaseClient | null = null;
