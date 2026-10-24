@@ -28,8 +28,8 @@ Entrega 16:00 · submit 15:45 · freeze 14:30.
 | `prod` | `node scripts/smoke-prod.mjs` | ⏭️ omitido | 0s | 24/10/2026, 12:28:39 | c6d5a8f |
 | `web` | `npm run build` | ✅ | 17s | 24/10/2026, 12:36:34 | dcb8616 |
 | `web` | `npm test` | ✅ | 1s | 24/10/2026, 12:36:34 | dcb8616 |
-| `worker` | `npm run selftest` | ✅ | 1s | 24/10/2026, 12:37:33 | ea0610f |
-| `worker` | `npm run typecheck` | ✅ | 0s | 24/10/2026, 12:37:33 | ea0610f |
+| `worker` | `npm run selftest` | ✅ | 1s | 24/10/2026, 12:41:42 | 2c711bd |
+| `worker` | `npm run typecheck` | ✅ | 0s | 24/10/2026, 12:41:42 | 2c711bd |
 <!-- check:end -->
 
 ## Qué falta probar (manual / e2e)

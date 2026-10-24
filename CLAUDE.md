@@ -15,7 +15,7 @@ Spec completo: `docs/spec.md`.
 | Carpeta | Dueño | Deploy |
 |---|---|---|
 | `supabase/` | los dos (el contrato) | SQL editor de Supabase |
-| `worker/` | Damian | Railway (root `worker`, volumen para `AUTH_DIR`) |
+| `worker/` | Damian | VPS Contabo, systemd `mula-worker` (`worker/scripts/vps.sh deploy\|qr\|logs`) |
 | `web/` | el amigo | Vercel (root directory `web`) |
 
 Comparten solo la base. **No cambiar el contrato sin avisar al otro.** Si hace falta un campo nuevo: agregarlo (nunca renombrar ni sacar) y actualizar este archivo.
