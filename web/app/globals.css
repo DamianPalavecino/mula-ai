@@ -14,6 +14,12 @@
   --color-alerta: #c1121f;
   --color-alerta-fondo: #fdf0f1;
   --color-alerta-linea: #f3c4c8;
+  /* escala de riesgo del grafo (lib/riesgo.ts): 1, 3, 6, 10, 20+ reportes */
+  --color-riesgo-1: #8fbf9a;
+  --color-riesgo-2: #f0b429;
+  --color-riesgo-3: #f07a1a;
+  --color-riesgo-4: #d9381e;
+  --color-riesgo-5: #9e0f1d;
   --color-seguro: #187647;
   --color-seguro-fondo: #e6f3e8;
   --color-seguro-linea: #b9dcc1;

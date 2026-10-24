@@ -24,6 +24,11 @@ Referencias: prototipo `docs/design/`, skills de Emil Kowalski (animación) y de
 --color-alerta: #c1121f;
 --color-alerta-fondo: #fdf0f1;
 --color-alerta-linea: #f3c4c8;
+--color-riesgo-1: #8fbf9a;
+--color-riesgo-2: #f0b429;
+--color-riesgo-3: #f07a1a;
+--color-riesgo-4: #d9381e;
+--color-riesgo-5: #9e0f1d;
 --color-seguro: #187647;
 --color-seguro-fondo: #e6f3e8;
 --color-seguro-linea: #b9dcc1;
@@ -51,6 +56,7 @@ Referencias: prototipo `docs/design/`, skills de Emil Kowalski (animación) y de
 | Neutro | `tinta` (títulos), `texto` (cuerpo), `suave` (secundario), `linea` (bordes), `fondo`, `panel`, `papel` | Información, superficies |
 | Protegido / seguro | `seguro`, `seguro-fondo`, `seguro-linea`; `bosque` + `bosque-tinta` (banda y botón principal); `lima` (acento: estado "Protegida", números destacados sobre `bosque`) | Todo lo que dice "está bien" o "estás cuidado" |
 | Riesgo | `alerta`, `alerta-fondo`, `alerta-linea` | Estafa detectada, cuenta con reportes, errores de validación |
+| Escala de riesgo | `riesgo-1` verde suave → `riesgo-2` ámbar → `riesgo-3` naranja → `riesgo-4` rojo anaranjado → `riesgo-5` rojo intenso | Grafo de la red: color de nodos, líneas y leyenda según reportes (1, 3, 6, 10, 20+), interpolado en OKLab (`web/lib/riesgo.ts`). Nunca como color de texto: el texto va en `tinta` o `alerta` |
 | WhatsApp | `wa-barra`, `wa-fondo`, `wa-propio`, `wa-composer` | Solo para conversaciones que imitan WhatsApp |
 
 Contraste medido (AA texto normal ≥ 4.5): `alerta` sobre `fondo` 5.9, `seguro` sobre `seguro-fondo` 5.0, `suave` sobre `papel` 4.6, `bosque-tinta` sobre `bosque` 9.9, `tinta` sobre `lima` 14.

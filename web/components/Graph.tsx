@@ -8,13 +8,22 @@ import ForceGraph2D, {
 } from "react-force-graph-2d";
 import type { Grafo, Nodo, TipoEntidad } from "@/lib/tipos";
 import { labelModalidad, TIPOS_ENTIDAD } from "@/lib/tipos";
-import { etiquetaNodo, NIVELES_RIESGO, nivelRiesgo, topDenunciados } from "@/lib/riesgo";
-import { COLOR_REPORTE, ICONOS_TIPO, RIESGO } from "@/components/colores";
+import {
+  colorRiesgo,
+  ESCALA_RIESGO,
+  etiquetaNodo,
+  nivelRiesgo,
+  rgbaRiesgo,
+  tintaSobreRiesgo,
+  topDenunciados,
+} from "@/lib/riesgo";
+import { COLOR_REPORTE, ICONOS_TIPO } from "@/components/colores";
 
 type N = NodeObject<Nodo>;
 type L = LinkObject<Nodo>;
 
-const ALERTA = RIESGO[3].fill;
+const ALERTA = "#c1121f"; // --color-alerta
+const ALERTA_RGB = "193, 18, 31";
 const TINTA = "#111418";
 const TOP_N = 8; // los más denunciados: label siempre visible y ranking
 const ZOOM_LABELS = 2.2; // desde este zoom se ven los labels de todas las entidades con ≥ 2 reportes
@@ -116,11 +125,11 @@ export default function Graph({
   const conectado = (id: string) => !enFoco || id === enFoco || !!vecinos.get(enFoco)?.has(id);
   // El riesgo de una línea es el de su entidad (los links van reporte → entidad).
   const nodosPorId = useMemo(() => new Map(datos.nodes.map((n) => [n.id, n])), [datos]);
-  const riesgoLink = (l: L) => {
+  const reportesLink = (l: L) => {
     const a = nodosPorId.get(idDe(l.source));
     const b = nodosPorId.get(idDe(l.target));
     const e = esEntidad(b) ? b : a;
-    return nivelRiesgo(e?.reportes ?? 1);
+    return e?.reportes ?? 1;
   };
 
   // En el celu el ranking arranca cerrado para no tapar el grafo.
@@ -212,10 +221,10 @@ export default function Graph({
           linkColor={(l) => {
             const a = idDe(l.source);
             const b = idDe(l.target);
-            if (destacadosSet.has(a) || destacadosSet.has(b)) return `rgba(${RIESGO[3].rgb}, 0.75)`;
-            const rgb = RIESGO[riesgoLink(l)].rgb;
-            if (!enFoco) return `rgba(${rgb}, 0.35)`;
-            return a === enFoco || b === enFoco ? `rgba(${rgb}, 0.95)` : "rgba(17, 20, 24, 0.05)";
+            if (destacadosSet.has(a) || destacadosSet.has(b)) return `rgba(${ALERTA_RGB}, 0.75)`;
+            const rep = reportesLink(l);
+            if (!enFoco) return rgbaRiesgo(rep, 0.45);
+            return a === enFoco || b === enFoco ? rgbaRiesgo(rep, 0.95) : "rgba(17, 20, 24, 0.05)";
           }}
           linkWidth={(l) => {
             const a = idDe(l.source);
@@ -252,7 +261,7 @@ export default function Graph({
               const t = (Date.now() % 1400) / 1400;
               ctx.beginPath();
               ctx.arc(x, y, r + 2 + t * 14, 0, 2 * Math.PI);
-              ctx.strokeStyle = `rgba(${RIESGO[3].rgb}, ${1 - t})`;
+              ctx.strokeStyle = `rgba(${ALERTA_RGB}, ${1 - t})`;
               ctx.lineWidth = 2.5 / escala;
               ctx.stroke();
             }
@@ -269,7 +278,7 @@ export default function Graph({
             // Disco del color del riesgo, con borde claro para separarlo de las líneas.
             ctx.beginPath();
             ctx.arc(x, y, r, 0, 2 * Math.PI);
-            ctx.fillStyle = RIESGO[nivelRiesgo(n.reportes ?? 1)].fill;
+            ctx.fillStyle = colorRiesgo(n.reportes ?? 1);
             ctx.fill();
             ctx.lineWidth = 1.5 / escala;
             ctx.strokeStyle = "rgba(255, 255, 255, 0.95)";
@@ -283,7 +292,7 @@ export default function Graph({
               ctx.save();
               ctx.translate(x - lado / 2, y - lado / 2);
               ctx.scale(lado / 24, lado / 24);
-              ctx.strokeStyle = "#ffffff";
+              ctx.strokeStyle = tintaSobreRiesgo(n.reportes ?? 1);
               ctx.lineWidth = 2.4;
               ctx.lineCap = "round";
               ctx.lineJoin = "round";
@@ -371,6 +380,7 @@ export default function Graph({
             <ol className="pointer-events-auto w-full overflow-hidden rounded-2xl bg-white/90 p-1 shadow-[0_0_0_1px_rgb(17_20_24/0.06),0_8px_24px_-8px_rgb(17_20_24/0.2)] backdrop-blur">
               {top.map((n, i) => {
                 const nivel = nivelRiesgo(n.reportes ?? 1);
+                const rep = n.reportes ?? 1;
                 const activo = seleccionado === n.id;
                 return (
                   <li key={n.id}>
@@ -390,8 +400,8 @@ export default function Graph({
                         {i + 1}
                       </span>
                       <span
-                        className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-white"
-                        style={{ background: RIESGO[nivel].fill }}
+                        className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full"
+                        style={{ background: colorRiesgo(rep), color: tintaSobreRiesgo(rep) }}
                         title={TIPOS_ENTIDAD[n.tipo as TipoEntidad]}
                       >
                         <IconoTipo tipo={n.tipo as TipoEntidad} className="h-3.5 w-3.5" />
@@ -416,17 +426,20 @@ export default function Graph({
 
       {/* Leyenda: escala de riesgo (reportes) e íconos de tipo */}
       <div className="pointer-events-none absolute bottom-3 left-3 flex max-w-[calc(100%-1.5rem)] flex-wrap items-center gap-x-3 gap-y-1.5 rounded-2xl bg-white/90 px-3 py-2 text-xs text-[var(--color-texto,#3d434b)] shadow-[0_0_0_1px_rgb(17_20_24/0.06)] backdrop-blur">
-        <span className="flex items-center gap-2" aria-label="Reportes por cuenta">
-          {NIVELES_RIESGO.map((n) => (
-            <span key={n.nivel} className="flex items-center gap-1">
-              <span
-                className="rounded-full"
-                style={{ background: RIESGO[n.nivel].fill, width: 8 + n.nivel * 2, height: 8 + n.nivel * 2 }}
-                aria-hidden
-              />
-              <span className="tabular-nums">{n.rotulo}</span>
-            </span>
-          ))}
+        <span className="flex flex-col gap-0.5" role="img" aria-label="Reportes por cuenta: 1 verde suave, 3 ámbar, 6 naranja, 10 rojo, 20 o más rojo intenso">
+          <span
+            className="h-2 w-40 rounded-full"
+            style={{
+              background: `linear-gradient(in oklab to right, ${ESCALA_RIESGO.map(
+                (p, i) => `var(--color-riesgo-${i + 1}, ${p.color}) ${(i / (ESCALA_RIESGO.length - 1)) * 100}%`,
+              ).join(", ")})`,
+            }}
+          />
+          <span className="flex w-40 justify-between text-[11px] font-medium tabular-nums text-[var(--color-tinta,#111418)]">
+            {ESCALA_RIESGO.map((p, i) => (
+              <span key={p.desde}>{i === ESCALA_RIESGO.length - 1 ? `${p.desde}+` : p.desde}</span>
+            ))}
+          </span>
         </span>
         <span className="hidden h-4 w-px bg-black/10 sm:block" aria-hidden />
         <span className="flex flex-wrap items-center gap-x-2 gap-y-1">

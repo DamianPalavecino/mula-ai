@@ -1,17 +1,57 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import type { Nodo } from "@/lib/tipos";
-import { etiquetaNodo, NIVELES_RIESGO, nivelRiesgo, topDenunciados } from "./riesgo.ts";
+import {
+  colorRiesgo,
+  distanciaOklab,
+  ESCALA_RIESGO,
+  etiquetaNodo,
+  nivelRiesgo,
+  tintaSobreRiesgo,
+  topDenunciados,
+} from "./riesgo.ts";
 
-describe("nivelRiesgo", () => {
-  it("1 = neutro, 2–4 = ámbar, 5–9 = naranja, 10+ = rojo", () => {
-    assert.deepEqual(
-      [0, 1, 2, 4, 5, 9, 10, 28].map(nivelRiesgo),
-      [0, 0, 1, 1, 2, 2, 3, 3],
-    );
+describe("escala de riesgo", () => {
+  it("las paradas son los tokens --color-riesgo-1…5 de globals.css (DESIGN.md)", () => {
+    const css = readFileSync(new URL("../app/globals.css", import.meta.url), "utf8");
+    ESCALA_RIESGO.forEach((p, i) => {
+      const m = css.match(new RegExp(`--color-riesgo-${i + 1}:\\s*(#[0-9a-f]{6});`, "i"));
+      assert.ok(m, `falta --color-riesgo-${i + 1}`);
+      assert.equal(m[1].toLowerCase(), p.color.toLowerCase());
+    });
   });
-  it("la leyenda cubre los 4 niveles en orden", () => {
-    assert.deepEqual(NIVELES_RIESGO.map((n) => n.rotulo), ["1", "2–4", "5–9", "10+"]);
+
+  it("en cada parada da exactamente su color, y arriba de la última se queda en la última", () => {
+    for (const p of ESCALA_RIESGO) assert.equal(colorRiesgo(p.desde), p.color.toLowerCase());
+    assert.equal(colorRiesgo(80), ESCALA_RIESGO.at(-1)!.color.toLowerCase());
+    assert.equal(colorRiesgo(0), ESCALA_RIESGO[0].color.toLowerCase());
+  });
+
+  it("es continua: entre dos paradas da un color intermedio", () => {
+    const [a, b] = [colorRiesgo(3), colorRiesgo(6)];
+    const medio = colorRiesgo(4);
+    assert.notEqual(medio, a);
+    assert.notEqual(medio, b);
+    assert.ok(distanciaOklab(a, medio) < distanciaOklab(a, b));
+  });
+
+  it("escalones bien diferenciados (ΔE OKLab ≥ 0.08 entre paradas vecinas)", () => {
+    for (let i = 1; i < ESCALA_RIESGO.length; i++) {
+      const d = distanciaOklab(ESCALA_RIESGO[i - 1].color, ESCALA_RIESGO[i].color);
+      assert.ok(d >= 0.08, `parada ${i}→${i + 1}: ΔE ${d.toFixed(3)}`);
+    }
+  });
+
+  it("ícono oscuro sobre los colores claros y blanco sobre los oscuros (contraste ≥ 3:1)", () => {
+    assert.equal(tintaSobreRiesgo(1), "#111418");
+    assert.equal(tintaSobreRiesgo(3), "#111418");
+    assert.equal(tintaSobreRiesgo(10), "#ffffff");
+    assert.equal(tintaSobreRiesgo(30), "#ffffff");
+  });
+
+  it("nivelRiesgo: 1 neutro, 2–4, 5–9, 10+", () => {
+    assert.deepEqual([0, 1, 2, 4, 5, 9, 10, 28].map(nivelRiesgo), [0, 0, 1, 1, 2, 2, 3, 3]);
   });
 });
 

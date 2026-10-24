@@ -1,5 +1,4 @@
 import type { TipoEntidad, TipoNodo } from "@/lib/tipos";
-import type { NivelRiesgo } from "@/lib/riesgo";
 
 // Color por tipo de nodo. El grafo ya no lo usa (pinta por riesgo); queda para el styleguide.
 export const COLORES: Record<TipoNodo, string> = {
@@ -12,16 +11,7 @@ export const COLORES: Record<TipoNodo, string> = {
   reporte: "#c3c7cc",
 };
 
-// Escala de riesgo del grafo (lib/riesgo.ts): neutro → ámbar → naranja → rojo.
-// El rojo es --color-alerta y el neutro sale de --color-suave (DESIGN.md); ámbar y naranja no tienen
-// token todavía, viven acá porque solo los usa el grafo.
-export const RIESGO: Record<NivelRiesgo, { fill: string; rgb: string }> = {
-  0: { fill: "#8b939c", rgb: "139, 147, 156" },
-  1: { fill: "#d99a00", rgb: "217, 154, 0" },
-  2: { fill: "#e8590c", rgb: "232, 89, 12" },
-  3: { fill: "#c1121f", rgb: "193, 18, 31" },
-};
-
+// La escala de riesgo del grafo está en lib/riesgo.ts (tokens --color-riesgo-1…5).
 export const COLOR_REPORTE = "#c3c7cc";
 
 // Ícono de cada tipo de entidad: trazos SVG de 24×24 (estilo lucide). Los usa el canvas del grafo
