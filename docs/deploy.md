@@ -4,7 +4,7 @@ Sin valores secretos acá. Las claves se cargan en cada servicio, nunca en el re
 
 ## URLs
 - Supabase: _(completar: https://xxxx.supabase.co)_
-- Web (Vercel): _(completar)_
+- Web (Vercel): https://mula-ai.vercel.app
 - Worker: VPS Contabo (`contabo-vps` por Tailscale), servicio systemd de usuario `mula-worker`. Dominio público: _(pendiente)_
 
 ## 1. Supabase

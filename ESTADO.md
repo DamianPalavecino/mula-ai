@@ -1,4 +1,6 @@
-# Estado — Mula AI (13:02)
+# Estado — Mula AI (13:1x)
+
+Web: https://mula-ai.vercel.app
 
 Resumen para leer rápido e iterar. El detalle vivo (cada prueba, con hora y quién) está en [`PROGRESS.md`](PROGRESS.md).
 
@@ -9,19 +11,19 @@ Resumen para leer rápido e iterar. El detalle vivo (cada prueba, con hora y qui
 | Clasificador | ✅ 20/20 con el LLM real (DeepSeek por OpenRouter). Tarda 4–6 s por mensaje | `worker/src/classify.ts` · `npm run check classify` |
 | Worker WhatsApp | ✅ en el VPS (systemd `mula-worker`). Estafa real → alerta al chat propio en ~5 s → aparece en `/red` | `worker/` · `worker/scripts/vps.sh logs` |
 | `POST /analizar` | ✅ mismo pipeline que WhatsApp, probado contra prod. Le falta URL pública HTTPS | `worker/src/http.ts` |
-| `/verificar` | ✅ en local. En Vercel está deployado pero no se probó | `web/app/verificar` |
+| `/verificar` | ✅ en Vercel (200) | `web/app/verificar` |
 | `/red` (grafo + alertas en vivo) | ✅ en Vercel. El feed resalta la alerta nueva | `web/app/red` |
 | `/simulador` (plan B) | ✅ en local contra el worker. En Vercel todavía usa el mock | `web/app/simulador` |
 | `/me-estafaron` | ✅ en local (capturas → denuncia + pedido de bloqueo, ~25 s). Faltan las variables en Vercel | `web/app/me-estafaron`, `web/app/api/extraer` |
 | Kit de demo | ✅ guion, mensajes, capturas, preguntas del jurado, checklist | `docs/demo/` |
 
-## Qué falta (por prioridad)
-1. **URL pública HTTPS del worker** (Tailscale Funnel en el VPS) → `NEXT_PUBLIC_WORKER_URL` en Vercel. Sin esto, el simulador en Vercel cae al mock.
-2. **Variables de Vercel** para `/me-estafaron`: `OPENROUTER_API_KEY` y `SUPABASE_SERVICE_ROLE_KEY`, sin `NEXT_PUBLIC_`.
-3. **Alerta al grupo familiar**: falta `FAMILY_GROUP_JID` (el worker lista los grupos al conectar).
-4. **Link "Me estafaron"** en el header.
-5. **Latencia**: hoy ~5 s, al límite. Bajarla (otro modelo o timeout más corto).
-6. Probar a mano: un mensaje normal no alerta; un contacto de confianza se ignora; audio (falta `OPENAI_API_KEY`).
+## Qué falta (verificado 13:1x contra https://mula-ai.vercel.app y la VPS)
+1. **Redeploy de Vercel**: el deploy en vivo no ve las variables. `POST /api/extraer` responde "Falta configurar OPENROUTER_API_KEY" y el bundle de `/simulador` no trae `NEXT_PUBLIC_WORKER_URL`. Si ya están cargadas en Vercel, falta redeployar (Deployments → Redeploy).
+2. **URL pública HTTPS del worker**: todavía no existe (`docs/deploy.md` dice "pendiente"). Sin ella, `NEXT_PUBLIC_WORKER_URL` no tiene a qué apuntar y el simulador en Vercel usa el mock.
+3. **VPS**: no están `FAMILY_GROUP_JID` (alertas al grupo familiar) ni `OPENAI_API_KEY` (audios). El resto está cargado y `/health` da conectado.
+4. **Link "Me estafaron"** en el header (no está en `/`).
+5. **Latencia**: hoy ~5 s, al límite.
+6. Probar a mano: un mensaje normal no alerta, un contacto de confianza se ignora.
 7. **Entrega**: `npm run reset-demo` → grabar → YouTube → README sin `TODO_URL`/`TODO_VIDEO` → submit 15:45.
 
 ## Cómo iterar una feature
