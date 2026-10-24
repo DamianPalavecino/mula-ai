@@ -11,6 +11,15 @@
   --color-alerta: #c1121f;
   --color-alerta-fondo: #fdf0f1;
   --color-alerta-linea: #f3c4c8;
+  --color-seguro: #187647;
+  --color-seguro-fondo: #e6f3e8;
+  --color-seguro-linea: #b9dcc1;
+  /* panel (prototipo docs/design): verde = protegido, lima = acento */
+  --color-bosque: #164d32;
+  --color-bosque-tinta: #f0f7e7;
+  --color-lima: #d9ed87;
+  --color-papel: #fbfcf8;
+  --ease-salida: cubic-bezier(0.23, 1, 0.32, 1);
   /* simulador: colores tipo WhatsApp */
   --color-wa-barra: #075e54;
   --color-wa-fondo: #efeae2;
@@ -35,4 +44,21 @@
 body {
   background: var(--color-fondo);
   color: var(--color-tinta);
+}
+
+/* Feedback al presionar (Emil/Jakub: solo transform, 150ms, ease-out propio). */
+.presionable {
+  transition: transform 150ms var(--ease-salida);
+  -webkit-tap-highlight-color: transparent;
+}
+.presionable:active {
+  transform: scale(0.96);
+}
+@media (prefers-reduced-motion: reduce) {
+  .presionable:active {
+    transform: none;
+  }
+  .animate-entrada {
+    animation: none;
+  }
 }
