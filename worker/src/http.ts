@@ -7,6 +7,7 @@ import type { ResultadoPipeline } from './pipeline.js';
  *   GET  /health    → { ok, whatsapp }
  *   POST /analizar  → contrato en CLAUDE.md ("Endpoint HTTP del worker")
  * Sin dependencias: node:http, CORS abierto, body ≤ 20 KB, 30 pedidos/min por IP.
+ * Público (Tailscale Funnel): `enviar_whatsapp: true` exige el header `X-Mula-Token` = `tokenEnvio`.
  */
 
 export type EstadoWhatsapp = 'conectado' | 'desconectado' | 'qr';
@@ -83,12 +84,14 @@ export interface OpcionesHttp {
   analizar: (p: PedidoAnalizar) => Promise<ResultadoPipeline>;
   estadoWhatsapp: () => EstadoWhatsapp;
   limiter?: RateLimiter;
+  /** Sin token configurado, `enviar_whatsapp: true` se rechaza siempre. */
+  tokenEnvio?: string;
 }
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type',
+  'Access-Control-Allow-Headers': 'Content-Type, X-Mula-Token',
   'Access-Control-Max-Age': '86400',
 };
 
@@ -119,13 +122,14 @@ function leerBody(req: http.IncomingMessage): Promise<string> {
   });
 }
 
-function ipDe(req: http.IncomingMessage): string {
-  const fwd = req.headers['x-forwarded-for'];
-  const primera = (Array.isArray(fwd) ? fwd[0] : fwd)?.split(',')[0]?.trim();
-  return primera || req.socket.remoteAddress || '?';
+/** Solo se confía en X-Forwarded-For si viene del proxy local (Funnel), y se toma el último valor (el que agrega el proxy). */
+export function ipCliente(fwd: string | string[] | undefined, remota: string | undefined): string {
+  const local = !!remota && /^(127\.|::1$|::ffff:127\.)/.test(remota);
+  const ultima = local ? (Array.isArray(fwd) ? fwd.join(',') : fwd)?.split(',').pop()?.trim() : undefined;
+  return ultima || remota || '?';
 }
 
-export function crearServidorHttp({ analizar, estadoWhatsapp, limiter = new RateLimiter() }: OpcionesHttp): http.Server {
+export function crearServidorHttp({ analizar, estadoWhatsapp, limiter = new RateLimiter(), tokenEnvio }: OpcionesHttp): http.Server {
   return http.createServer(async (req, res) => {
     const responder = (status: number, body?: unknown) => {
       if (res.headersSent) return;
@@ -140,7 +144,7 @@ export function crearServidorHttp({ analizar, estadoWhatsapp, limiter = new Rate
       if (ruta !== '/analizar') return responder(404, { error: 'no existe' });
       if (req.method !== 'POST') return responder(405, { error: 'usá POST' });
 
-      const ip = ipDe(req);
+      const ip = ipCliente(req.headers['x-forwarded-for'], req.socket.remoteAddress);
       if (!limiter.permitir(ip)) return responder(429, { error: 'demasiados pedidos, probá en un minuto' });
 
       let body: unknown;
@@ -152,6 +156,8 @@ export function crearServidorHttp({ analizar, estadoWhatsapp, limiter = new Rate
       }
       const v = validarAnalizar(body);
       if (!v.ok) throw new ErrorHttp(400, v.error);
+      if (v.enviar_whatsapp && (!tokenEnvio || req.headers['x-mula-token'] !== tokenEnvio))
+        throw new ErrorHttp(403, '"enviar_whatsapp" requiere el header X-Mula-Token');
 
       const r = await analizar(v);
       console.log(

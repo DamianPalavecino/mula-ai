@@ -9,7 +9,7 @@ import { completarCbu, detectarEntidades, validarCbu } from './entities.js';
 import { debeAnalizar, esMensajePrevio } from './filter.js';
 import { normalizarTelefono } from './phone.js';
 import type { AddressInfo } from 'node:net';
-import { crearServidorHttp, RateLimiter, validarAnalizar } from './http.js';
+import { crearServidorHttp, ipCliente, RateLimiter, validarAnalizar } from './http.js';
 import type { AlertaPayload, ResumenEntidad } from './network.js';
 import { procesarMensaje, type DepsPipeline } from './pipeline.js';
 
@@ -238,6 +238,9 @@ check('http: enviar_whatsapp no boolean → error', !validarAnalizar({ texto: 'h
   t = 60_001;
   check('http: rate limit 2/min por IP', r1 && r2 && !r3 && rb && rl.permitir('a'));
 }
+check('http: IP detrás del proxy local = último X-Forwarded-For', ipCliente('1.1.1.1, 9.9.9.9', '127.0.0.1') === '9.9.9.9');
+check('http: IP directa ignora X-Forwarded-For', ipCliente('1.1.1.1', '203.0.113.5') === '203.0.113.5');
+check('http: IP sin X-Forwarded-For', ipCliente(undefined, '::ffff:127.0.0.1') === '::ffff:127.0.0.1');
 {
   let enviarPedido: boolean | null = null;
   const server = crearServidorHttp({
@@ -248,11 +251,13 @@ check('http: enviar_whatsapp no boolean → error', !validarAnalizar({ texto: 'h
       return procesarMensaje({ texto, remitente: null }, deps);
     },
     estadoWhatsapp: () => 'qr',
-    limiter: new RateLimiter(6, 60_000),
+    limiter: new RateLimiter(7, 60_000),
+    tokenEnvio: 'secreto',
   });
   await new Promise<void>((res) => server.listen(0, '127.0.0.1', res));
   const base = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
-  const post = (body: string) => fetch(`${base}/analizar`, { method: 'POST', headers: { 'content-type': 'application/json' }, body });
+  const post = (body: string, token?: string) =>
+    fetch(`${base}/analizar`, { method: 'POST', headers: { 'content-type': 'application/json', ...(token ? { 'x-mula-token': token } : {}) }, body });
   try {
     const h = await fetch(`${base}/health`);
     const hj = (await h.json()) as any;
@@ -260,7 +265,9 @@ check('http: enviar_whatsapp no boolean → error', !validarAnalizar({ texto: 'h
     check('http: CORS *', h.headers.get('access-control-allow-origin') === '*');
     const o = await fetch(`${base}/analizar`, { method: 'OPTIONS' });
     check('http: OPTIONS 204 con CORS', o.status === 204 && !!o.headers.get('access-control-allow-methods'), o.status);
-    const a = await post(JSON.stringify({ texto: DEMO, enviar_whatsapp: true }));
+    const sinToken = await post(JSON.stringify({ texto: DEMO, enviar_whatsapp: true }), 'otro');
+    check('http: enviar_whatsapp sin token válido → 403', sinToken.status === 403 && enviarPedido === null, sinToken.status);
+    const a = await post(JSON.stringify({ texto: DEMO, enviar_whatsapp: true }), 'secreto');
     const aj = (await a.json()) as any;
     const claves = ['es_sospechoso', 'riesgo', 'modalidad', 'senales', 'suplanta_a', 'entidades', 'alerta_persona', 'alerta_familia', 'reporte_id', 'alerta_id', 'enviada_a', 'fuente_clasificacion'];
     check('http: POST /analizar 200 con el contrato', a.status === 200 && claves.every((k) => k in aj), aj);
@@ -272,7 +279,7 @@ check('http: enviar_whatsapp no boolean → error', !validarAnalizar({ texto: 'h
     const e = await post(JSON.stringify({ texto: 'explota' }));
     check('http: error interno → 500 con {error}', e.status === 500 && typeof ((await e.json()) as any).error === 'string');
     check('http: ruta desconocida → 404', (await fetch(`${base}/nada`)).status === 404);
-    // ya van 5 POST de 6 permitidos
+    // ya van 6 POST de 7 permitidos
     await post(JSON.stringify({ texto: 'hola' }));
     await post(JSON.stringify({ texto: 'hola' }));
     const lim = await post(JSON.stringify({ texto: 'hola' }));
