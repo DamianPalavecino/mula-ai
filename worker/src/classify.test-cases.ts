@@ -120,6 +120,8 @@ async function main(): Promise<void> {
     `\nAcierto estafa/normal: ${aciertos}/${CASOS.length} (${Math.round((aciertos / CASOS.length) * 100)}%) · ` +
       `modalidad correcta en estafas: ${aciertosModalidad}/${conModalidad}  (* = modalidad distinta a la esperada)`,
   );
+  // 3 = omitido para `npm run check`: sin key no se probó el LLM
+  process.exitCode = aciertos < CASOS.length ? 1 : usarLlm ? 0 : 3;
 }
 
 main().catch((e) => {

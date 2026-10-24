@@ -5,6 +5,7 @@ Spec completo: `docs/spec.md`.
 
 ## Reglas de trabajo (hackatón: no time wasting)
 - **TDD siempre**: primero el test que falla, después el código mínimo que lo pasa, después refactor. Worker: casos en `worker/src/selftest.ts` (`npm run selftest`) + `npm run typecheck`. Si la carpeta no tiene runner, sumá `vitest` y seguí.
+- **Verificar**: `npm run check` en la raíz corre solo los tests de las features tocadas y anota el resultado en `PROGRESS.md`. Antes de pushear: verde, y actualizá ahí "Qué falta probar" y "Próximo paso". Feature nueva con lógica → su test en el comando que ya corre esa feature.
 - **Sin review**: no lances agentes revisores ni pases de code review. Tests en verde = listo.
 - **Push directo a `main`**: commit chico y `git push origin main` apenas los tests pasan. Sin branches ni PRs. Antes de pushear, `git pull --rebase` (somos dos tocando el repo).
 - Nunca commitear `.env*` ni `auth_info/`.
