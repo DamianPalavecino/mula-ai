@@ -61,7 +61,8 @@ Marcá `[x]` con hora y quién.
 - [ ] `/simulador` contra el worker real (y en modo mock sin `NEXT_PUBLIC_WORKER_URL`)
 - [ ] `/red`: el nodo de la alerta nueva se destaca
 - [x] 12:35 me-estafaron — local, `POST /api/extraer` con `chat.png` + `comprobante.png` → 200 en 27 s vía OpenRouter (`anthropic/claude-sonnet-5.5`): alias, CVU y teléfono bien extraídos, $180.000, denuncia + pedido de bloqueo + pasos. Sin body → 400. Cruce con la red da `null` (falta schema en prod)
-- [ ] `/me-estafaron` en Vercel con Supabase prod: las 3 cuentas salen en rojo y la denuncia trae el párrafo "Antecedentes" (necesita `OPENROUTER_API_KEY` server-only en Vercel)
+- [x] 12:54 me-estafaron — local contra Supabase prod: capturas de demo → teléfono 11 reportes/6 prov, `juli.martinez.mp` 24/5, CVU 7/3; la denuncia trae "Antecedentes" antes del pedido (23 s)
+- [ ] `/me-estafaron` en Vercel (necesita `OPENROUTER_API_KEY` server-only en Vercel)
 - [ ] `/me-estafaron` → "Sumar mi caso a la red" suma 1 reporte a `juli.martinez.mp` (necesita `SUPABASE_SERVICE_ROLE_KEY` server-only en Vercel; sin ella el botón queda deshabilitado)
 - [ ] Link "Me estafaron" en `Header.tsx` (lo suma el dueño del header)
 
