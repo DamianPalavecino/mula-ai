@@ -36,6 +36,9 @@ export const config = {
   analizarSolo: telefonos(env('ANALIZAR_SOLO')),
   provinciaDefault: env('PROVINCIA_DEFAULT') ?? 'Santa Fe',
   authDir: path.resolve(env('AUTH_DIR') ?? './auth_info'),
+  /** Sesiones por protegido (una carpeta por protegidos.id). Default: `sesiones/` al lado de AUTH_DIR. */
+  sesionesDir: path.resolve(env('SESIONES_DIR') ?? path.join(path.dirname(path.resolve(env('AUTH_DIR') ?? './auth_info')), 'sesiones')),
+  maxSesiones: Number(env('MAX_SESIONES') ?? 20),
   openaiApiKey: env('OPENAI_API_KEY'),
   /** Token de `POST /analizar` (header X-Mula-Token). HTTP_TOKEN_ENVIO es el nombre viejo. */
   mulaToken: env('MULA_TOKEN') ?? env('HTTP_TOKEN_ENVIO'),

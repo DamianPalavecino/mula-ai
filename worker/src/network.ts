@@ -45,7 +45,7 @@ function confianzaDe(c: ResultadoClasificacion): number {
  */
 export async function registrarReporte(
   c: ResultadoClasificacion,
-  { texto, remitente }: { texto: string; remitente: string | null },
+  { texto, remitente, provincia = config.provinciaDefault }: { texto: string; remitente: string | null; provincia?: string },
 ): Promise<ReporteRegistrado> {
   const entidades: Entidad[] = dedupe([
     ...c.entidades,
@@ -54,7 +54,7 @@ export async function registrarReporte(
   const payload = {
     fuente: 'whatsapp',
     modalidad: c.modalidad,
-    provincia: config.provinciaDefault,
+    provincia,
     monto: c.monto,
     texto,
     riesgo: c.riesgo,
@@ -93,4 +93,30 @@ export async function consultarEntidad(valor: string, tipo: TipoEntidadRed | nul
   const { data, error } = await supabase().rpc('resumen_entidad', { valor, tipo });
   if (error) throw new Error(`resumen_entidad: ${error.message}`);
   return data as ResumenEntidad;
+}
+
+/** Liga la alerta a su protegido (`alertas.protegido_id`; `registrar_alerta` no lo recibe). */
+export async function asociarAlerta(alertaId: number, protegidoId: number): Promise<void> {
+  const { error } = await supabase().from('alertas').update({ protegido_id: protegidoId }).eq('id', alertaId);
+  if (error) throw new Error(`asociar alerta: ${error.message}`);
+}
+
+/** Lo que la web cargó en /app/setup para un protegido. */
+export interface ProtegidoConfig {
+  id: number;
+  nombre: string;
+  telefono: string | null;
+  provincia: string | null;
+  contactos_confianza: string[];
+  familiares: string[];
+}
+
+export async function cargarProtegido(id: number): Promise<ProtegidoConfig | null> {
+  const { data, error } = await supabase()
+    .from('protegidos')
+    .select('id, nombre, telefono, provincia, contactos_confianza, familiares')
+    .eq('id', id)
+    .maybeSingle();
+  if (error) throw new Error(`protegidos: ${error.message}`);
+  return (data as ProtegidoConfig | null) ?? null;
 }

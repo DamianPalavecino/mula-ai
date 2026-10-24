@@ -64,7 +64,11 @@ function nombreFamiliar(suplanta: string | null): string | null {
 }
 
 /** Arma los textos finales combinando la salida del LLM con lo que dice la red. */
-export function armarAlertas(c: ResultadoClasificacion, resumenes: ResumenEntidad[]): TextosAlerta {
+export function armarAlertas(
+  c: ResultadoClasificacion,
+  resumenes: ResumenEntidad[],
+  quien: string = config.protegidoNombre,
+): TextosAlerta {
   const principal = entidadPrincipal(resumenes);
   const red = lineaRed(principal);
   const familiar = nombreFamiliar(c.suplanta_a);
@@ -81,7 +85,6 @@ export function armarAlertas(c: ResultadoClasificacion, resumenes: ResumenEntida
   p.push('No le respondas a ese número.');
 
   // --- grupo familiar ---
-  const quien = config.protegidoNombre;
   const destino = principal && esCuenta(principal.tipo) ? principal : null;
   let familia: string;
   if (c.suplanta_a || destino) {
@@ -102,16 +105,20 @@ export function armarAlertas(c: ResultadoClasificacion, resumenes: ResumenEntida
 }
 
 /**
- * Enviador de WhatsApp para el pipeline: manda al chat propio y al grupo familiar (si está
- * configurado). Nunca le manda nada al remitente. Un destino que falla no corta el otro.
+ * Enviador de WhatsApp para el pipeline: manda al chat propio y a la familia (por defecto el
+ * grupo FAMILY_GROUP_JID; en las sesiones por protegido, el chat de cada familiar). Nunca le
+ * manda nada al remitente. Un destino que falla no corta el otro.
  */
-export function enviadorWhatsapp(sock: WASocket): Enviador {
+export function enviadorWhatsapp(
+  sock: WASocket,
+  familia: string[] = config.familyGroupJid ? [config.familyGroupJid] : [],
+): Enviador {
   return async (textos) => {
     const enviados: Array<{ destino: Destino; jid: string }> = [];
     const propio = sock.user?.id ? jidNormalizedUser(sock.user.id) : null;
     const destinos: Array<[Destino, string | null | undefined, string]> = [
       ['propio', propio, textos.persona],
-      ['familia', config.familyGroupJid, textos.familia],
+      ...[...new Set(familia)].filter((jid) => jid !== propio).map((jid): [Destino, string, string] => ['familia', jid, textos.familia]),
     ];
     for (const [destino, jid, text] of destinos) {
       if (!jid) continue;

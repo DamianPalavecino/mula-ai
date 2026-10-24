@@ -2,13 +2,16 @@ import { timingSafeEqual } from 'node:crypto';
 import http from 'node:http';
 import { normalizarTelefono } from './phone.js';
 import type { ResultadoPipeline } from './pipeline.js';
+import { rutaSesion, type GestorSesiones } from './sesiones.js';
 
 /**
  * Servidor HTTP del worker (plan B de la demo: el simulador web usa la misma IA y la misma red).
  *   GET  /health    → { ok, whatsapp }
  *   POST /analizar  → contrato en CLAUDE.md ("Endpoint HTTP del worker")
+ *   GET|POST|DELETE /sesiones/:protegido_id → estado / vincular (QR) / desvincular la sesión de ese protegido
  * Sin dependencias: node:http, CORS abierto, body ≤ 20 KB, 30 pedidos/min por IP.
  * Público (Tailscale Funnel): `POST /analizar` exige siempre el header `X-Mula-Token` = `token` (MULA_TOKEN);
+ * `/sesiones/*` también exige el token (la web ya verificó que el protegido es del usuario).
  * sin token configurado responde 401 siempre. CORS solo para `origenWeb` (WEB_ORIGIN); `/health` no pide token.
  */
 
@@ -90,6 +93,10 @@ export interface OpcionesHttp {
   token?: string;
   /** WEB_ORIGIN: único origen con CORS. Sin él no se manda Access-Control-Allow-Origin. */
   origenWeb?: string;
+  /** Sesiones por protegido. Sin gestor, `/sesiones/*` responde 404. */
+  sesiones?: GestorSesiones;
+  /** Límite aparte para `/sesiones/*` (la web hace polling del QR). */
+  limiterSesiones?: RateLimiter;
 }
 
 /** Headers CORS solo si el Origin del pedido es el de la web. */
@@ -97,7 +104,7 @@ function cors(origen: string | undefined, origenWeb: string | undefined): Record
   if (!origenWeb || origen !== origenWeb) return {};
   return {
     'Access-Control-Allow-Origin': origenWeb,
-    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type, X-Mula-Token',
     'Access-Control-Max-Age': '86400',
     Vary: 'Origin',
@@ -146,7 +153,15 @@ export function ipCliente(fwd: string | string[] | undefined, remota: string | u
   return ultima || remota || '?';
 }
 
-export function crearServidorHttp({ analizar, estadoWhatsapp, limiter = new RateLimiter(), token, origenWeb }: OpcionesHttp): http.Server {
+export function crearServidorHttp({
+  analizar,
+  estadoWhatsapp,
+  limiter = new RateLimiter(),
+  token,
+  origenWeb,
+  sesiones,
+  limiterSesiones = new RateLimiter(240, 60_000),
+}: OpcionesHttp): http.Server {
   return http.createServer(async (req, res) => {
     const responder = (status: number, body?: unknown) => {
       if (res.headersSent) return;
@@ -158,6 +173,24 @@ export function crearServidorHttp({ analizar, estadoWhatsapp, limiter = new Rate
       if (req.method === 'OPTIONS') return responder(204);
       if (req.method === 'GET' && (ruta === '/health' || ruta === '/'))
         return responder(200, { ok: true, whatsapp: estadoWhatsapp() });
+
+      const sesionId = rutaSesion(ruta);
+      if (sesionId != null && sesiones) {
+        const ip = ipCliente(req.headers['x-forwarded-for'], req.socket.remoteAddress);
+        if (!limiterSesiones.permitir(ip)) return responder(429, { error: 'demasiados pedidos, probá en un minuto' });
+        if (!tokenValido(req.headers['x-mula-token'], token)) throw new ErrorHttp(401, 'falta el header X-Mula-Token o no es válido');
+        if (req.method === 'GET') return responder(200, sesiones.estado(sesionId));
+        if (req.method === 'POST') {
+          try {
+            return responder(200, await sesiones.iniciar(sesionId));
+          } catch (err) {
+            throw new ErrorHttp(503, `no pude iniciar la sesión: ${(err as Error).message}`);
+          }
+        }
+        if (req.method === 'DELETE') return responder(200, await sesiones.desvincular(sesionId));
+        return responder(405, { error: 'usá GET, POST o DELETE' });
+      }
+
       if (ruta !== '/analizar') return responder(404, { error: 'no existe' });
       if (req.method !== 'POST') return responder(405, { error: 'usá POST' });
 
@@ -192,6 +225,6 @@ export function crearServidorHttp({ analizar, estadoWhatsapp, limiter = new Rate
 export function iniciarHttp(opts: OpcionesHttp, port = Number(process.env.PORT ?? 8080)): http.Server {
   const server = crearServidorHttp(opts);
   server.on('error', (err) => console.error('[http] no pude levantar el servidor:', err));
-  server.listen(port, () => console.log(`[http] escuchando en :${port} (GET /health · POST /analizar)`));
+  server.listen(port, () => console.log(`[http] escuchando en :${port} (GET /health · POST /analizar · /sesiones/:id)`));
   return server;
 }

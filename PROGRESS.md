@@ -50,10 +50,10 @@ Herramientas: Supabase CLI en `C:\Users\dami_\AppData\Local\Programs\Supabase\su
 | `pre-demo` | `node --test scripts/pre-demo.test.mjs` | ✅ | 0s | 24/10/2026, 13:16:24 | 823cd2b |
 | `prod` | `node --env-file-if-exists=.env scripts/smoke-prod.mjs` | ✅ | 8s | 24/10/2026, 14:03:56 | 05d08a8 |
 | `prod` | `node scripts/smoke-prod.mjs` | ⏭️ omitido | 0s | 24/10/2026, 12:28:39 | c6d5a8f |
-| `web` | `npm run build` | ✅ | 15s | 24/10/2026, 14:28:11 | b6bd288 |
-| `web` | `npm test` | ✅ | 1s | 24/10/2026, 14:28:11 | b6bd288 |
-| `worker` | `npm run selftest` | ✅ | 1s | 24/10/2026, 13:48:44 | 893e19e |
-| `worker` | `npm run typecheck` | ✅ | 0s | 24/10/2026, 13:48:44 | 893e19e |
+| `web` | `npm run build` | ✅ | 3s | 24/10/2026, 14:30:20 | bb0bf62 |
+| `web` | `npm test` | ✅ | 0s | 24/10/2026, 14:30:20 | bb0bf62 |
+| `worker` | `npm run selftest` | ✅ | 1s | 24/10/2026, 14:29:13 | 5c00c12 |
+| `worker` | `npm run typecheck` | ✅ | 0s | 24/10/2026, 14:29:13 | 5c00c12 |
 <!-- check:end -->
 
 ## Qué falta probar (manual / e2e)
@@ -128,7 +128,7 @@ Marcá `[x]` con hora y quién.
 - /admin: probar con login admin que un caso sin alerta (me-estafaron → sumar a la red) aparece en el grafo en ≤15 s sin recargar, pulsando (refresco propio del grafo, 14:15).
 - **Base cerrada a anon ✓ (14:0x, Damian vía MCP):** `supabase/cierre-anon.sql` aplicado en prod (ya estaba casi todo cerrado; el script idempotente dejó los grants limpios). anon → 401 en tablas y RPC; a anon solo le queda `rls_auto_enable` (event trigger de la plataforma). `npm run check prod` sin `MODO` 17/17 verde. juli en 28: `npm run reset-demo` antes de grabar.
 - **Web nueva en Vercel (13:50, orquestador):** `mula-ai.vercel.app` sirve landing sin DB/LLM, `/entrar` y `/registro` (Clerk), `/admin` (gobierno: grafo + feed por polling + stats + verificar) y `/app` (familiar: setup del protegido, alertas propias, me-estafaron, verificar, probar mensaje). Rutas viejas redirigen. Variables cargadas en Vercel: Clerk (pk/sk, SIGN_IN_URL=/entrar, SIGN_UP_URL=/registro), `ADMIN_EMAILS`, `WORKER_URL`, `MULA_TOKEN`, `SUPABASE_SERVICE_ROLE_KEY`, `OPENROUTER_API_KEY`. Verificado con login real en local (admin y familiar, capturas en `docs/demo/capturas/admin-*.png`, `app-*.png`). Falta: verificar en prod que `/admin` sin sesión redirija a `/entrar` (deploy de e935a1a) y entrar con la cuenta admin real.
-- **Cuenta familiar de la demo:** cuando exista su userId de Clerk, `npm run protegido-demo -- <userId>` crea "Abuela Marta" a su nombre y asocia las alertas. Borrar la fila de prueba `protegidos.id = 1` (owner `user_3L9IGsImlwJxpgloS5T2dLzbuoF`, usuario `familiar.demo-d+clerk_test@example.com`).
+- ~~Cuenta familiar de la demo~~ hecho 14:02 (cierre): familiar = `testjuancruz7@gmail.com` (`user_3L9L4c43dq85o46JTuQTOvYvmCy`), "Abuela Marta" = `protegidos.id 2` con 11 alertas. Admin = `damianpalavecino.web@gmail.com` (`user_3L9LM3oM9PGkARzickaJd5LG90R`). Fila de prueba id 1 borrada. Usuarios `+clerk_test@example.com` siguen en Clerk (inofensivos).
 - Red: cuit/link en prod (base, worker, web, seed). Falta: probar /me-estafaron con un comprobante real.
 - Demo: kit en `docs/demo/` (guion ya con landing → login familiar → setup → alerta → login gobierno → grafo). Falta: `npm run reset-demo`, toma de respaldo. Si la URL del túnel cambió: `worker/scripts/vps.sh tunnel` y recargar `WORKER_URL` en Vercel.
 - Deploy a Vercel: SOLO con `git push origin main` (nunca `vercel --prod` desde el árbol local). Con `cacheComponents`: todo lo que lea sesión/searchParams va bajo un `loading.tsx`/`<Suspense>`, sin `export const dynamic`.

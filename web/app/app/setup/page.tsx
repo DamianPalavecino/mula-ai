@@ -42,8 +42,11 @@ export default async function AppSetupPage() {
       </div>
       <p className="mt-10 rounded-lg border border-linea bg-panel p-4 text-sm leading-relaxed text-texto">
         Estos datos se usan para que el guardián ignore a tus contactos de confianza y avise a tus
-        familiares. Durante la demo, el guardián de WhatsApp toma esa lista de su configuración en el
-        servidor.
+        familiares por WhatsApp. Después,{" "}
+        <Link href="/app/vincular" className="font-medium text-tinta underline underline-offset-2">
+          vinculá su WhatsApp con el código QR
+        </Link>
+        .
       </p>
     </main>
   );

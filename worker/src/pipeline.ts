@@ -2,7 +2,7 @@ import { armarAlertas, type TextosAlerta } from './alerts.js';
 import { clasificar, type ResultadoClasificacion } from './classify.js';
 import { config } from './config.js';
 import { clave, dedupe, detectarEntidades, entidadesDeRed, type Entidad } from './entities.js';
-import { consultarEntidad, registrarAlerta, registrarReporte, type ResumenEntidad } from './network.js';
+import { asociarAlerta, consultarEntidad, registrarAlerta, registrarReporte, type ResumenEntidad } from './network.js';
 
 const log = (...a: unknown[]) => console.log(new Date().toISOString().slice(11, 19), ...a);
 
@@ -19,6 +19,8 @@ export interface DepsPipeline {
   /** Riesgo mínimo para alertar. */
   umbral: number;
   protegido: string;
+  /** Liga la alerta a `protegidos.id` (sesiones por protegido). */
+  asociarAlerta?: typeof asociarAlerta;
 }
 
 const depsReales: DepsPipeline = {
@@ -26,6 +28,7 @@ const depsReales: DepsPipeline = {
   consultarEntidad,
   registrarReporte,
   registrarAlerta,
+  asociarAlerta,
   get umbral() {
     return config.alertThreshold;
   },
@@ -44,6 +47,10 @@ export interface EntradaPipeline {
   enviar?: Enviador | null;
   /** Cuándo llegó el mensaje (Date.now()), para medir la latencia de punta a punta. Default: ahora. */
   recibido?: number;
+  /** Sesión por protegido: su nombre, provincia e id (si no, los de la config). */
+  protegido?: string;
+  provincia?: string;
+  protegidoId?: number | null;
 }
 
 export interface ResultadoPipeline {
@@ -56,6 +63,9 @@ export interface ResultadoPipeline {
   enviada_a: Destino[];
   ms: number;
 }
+
+/** Etiquetas de destino sin repetir (varios familiares = una sola 'familia'). */
+const destinos = (enviados: Array<{ destino: Destino }>): Destino[] => [...new Set(enviados.map((e) => e.destino))];
 
 /** resumen_entidad de varias entidades en paralelo, por `clave`. Las que fallan quedan afuera. */
 async function consultarVarias(ents: Entidad[], deps: DepsPipeline): Promise<Map<string, ResumenEntidad>> {
@@ -91,13 +101,13 @@ function chequearRed(c: ResultadoClasificacion, resumenes: ResumenEntidad[], umb
 }
 
 /** Cómo va a quedar la entidad cuando se registre este reporte (para alertar antes de escribir en la red). */
-function contandoEste(r: ResumenEntidad): ResumenEntidad {
+function contandoEste(r: ResumenEntidad, provincia: string): ResumenEntidad {
   const provincias = r.provincias ?? [];
   return {
     ...r,
     encontrada: true,
     reportes: (r.reportes ?? 0) + 1,
-    provincias: provincias.includes(config.provinciaDefault) ? provincias : [...provincias, config.provinciaDefault],
+    provincias: provincias.includes(provincia) ? provincias : [...provincias, provincia],
   };
 }
 
@@ -108,9 +118,11 @@ function contandoEste(r: ResumenEntidad): ResumenEntidad {
  * ya suman este reporte. Si la red no responde, igual se alerta (sin registrar).
  */
 export async function procesarMensaje(
-  { texto, remitente, historial = [], enviar = null, recibido }: EntradaPipeline,
+  { texto, remitente, historial = [], enviar = null, recibido, protegido: nombre, provincia: prov, protegidoId = null }: EntradaPipeline,
   deps: DepsPipeline = depsReales,
 ): Promise<ResultadoPipeline> {
+  const protegido = nombre || deps.protegido;
+  const provincia = prov || config.provinciaDefault;
   const t0 = Date.now();
   const desde = recibido ?? t0;
   const t = { llm: 0, red: 0, envio: 0, alerta: 0 };
@@ -119,7 +131,7 @@ export async function procesarMensaje(
   // La red se consulta mientras piensa el LLM, con lo que ya se ve por reglas (+ el remitente).
   const previas = dedupe([...entidadesDeRed(detectarEntidades([...historial, texto].join('\n'))), ...remitenteEnt]);
   const enRed = consultarVarias(previas, deps);
-  const c0 = await deps.clasificar(texto, { historial, remitente, protegido: deps.protegido });
+  const c0 = await deps.clasificar(texto, { historial, remitente, protegido });
   t.llm = Date.now() - t0;
 
   const cache = await enRed;
@@ -151,7 +163,7 @@ export async function procesarMensaje(
       enviada_a: [],
     });
 
-  const textos = armarAlertas(c, resumenes.map(contandoEste));
+  const textos = armarAlertas(c, resumenes.map((r) => contandoEste(r, provincia)), protegido);
   const alertar = c.riesgo >= deps.umbral;
   if (!alertar) log(`[alerta] riesgo ${c.riesgo} < umbral ${deps.umbral}: no se alerta`);
 
@@ -169,7 +181,7 @@ export async function procesarMensaje(
             t.alerta = Date.now() - desde;
           })
       : Promise.resolve([]);
-  const registro = deps.registrarReporte(c, { texto, remitente }).catch((err) => {
+  const registro = deps.registrarReporte(c, { texto, remitente, provincia }).catch((err) => {
     log('[red] registrar_reporte falló (igual se alerta):', err);
     return null;
   });
@@ -193,7 +205,7 @@ export async function procesarMensaje(
       alerta_id = (
         await deps.registrarAlerta({
           reporte_id,
-          protegido: deps.protegido,
+          protegido,
           riesgo: c.riesgo,
           modalidad: c.modalidad,
           mensaje_persona: textos.persona,
@@ -202,10 +214,12 @@ export async function procesarMensaje(
           entidad_ids: resumenes.map((r) => r.entidad_id).filter((id): id is number => typeof id === 'number'),
         })
       ).alerta_id;
-      log(`[alerta] ${alerta_id} registrada → ${enviados.map((e) => e.destino).join(', ') || '(no se envió)'}`);
+      log(`[alerta] ${alerta_id} registrada → ${destinos(enviados).join(', ') || '(no se envió)'}`);
+      if (protegidoId != null && deps.asociarAlerta)
+        await deps.asociarAlerta(alerta_id, protegidoId).catch((err) => log('[alerta] no pude asociarla al protegido:', err));
     } catch (err) {
       log('[alerta] no pude registrar la alerta:', err);
     }
   }
-  return fin({ textos, reporte_id, alerta_id, enviada_a: enviados.map((e) => e.destino) });
+  return fin({ textos, reporte_id, alerta_id, enviada_a: destinos(enviados) });
 }

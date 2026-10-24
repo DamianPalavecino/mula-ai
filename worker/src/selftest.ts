@@ -14,6 +14,8 @@ import type { AddressInfo } from 'node:net';
 import { crearServidorHttp, ipCliente, RateLimiter, validarAnalizar } from './http.js';
 import type { AlertaPayload, ResumenEntidad } from './network.js';
 import { procesarMensaje, type DepsPipeline } from './pipeline.js';
+import { enviadorWhatsapp } from './alerts.js';
+import { GestorSesiones, jidDeTelefono, rutaSesion, type EventosSesion } from './sesiones.js';
 
 let ok = 0;
 let fail = 0;
@@ -464,6 +466,96 @@ check('http: IP sin X-Forwarded-For', ipCliente(undefined, '::ffff:127.0.0.1') =
     config.classifierTimeoutMs = timeoutOrig;
     clearInterval(vivo);
   }
+}
+
+// --- sesiones por protegido (QR desde la web) ---
+check('sesiones: jid de teléfono 10 dígitos', jidDeTelefono('3415551234') === '5493415551234@s.whatsapp.net', jidDeTelefono('3415551234'));
+check('sesiones: jid normaliza +54 9', jidDeTelefono('+54 9 341 555-1234') === '5493415551234@s.whatsapp.net');
+check('sesiones: jid inválido → null', jidDeTelefono('123') === null && jidDeTelefono(null) === null);
+check('sesiones: ruta /sesiones/7', rutaSesion('/sesiones/7') === 7);
+check('sesiones: ruta inválida → null', rutaSesion('/sesiones/abc') === null && rutaSesion('/sesiones/') === null && rutaSesion('/analizar') === null && rutaSesion('/sesiones/0') === null);
+{
+  const conexiones: Array<{ id: number; ev: EventosSesion; cerradas: boolean[] }> = [];
+  const g = new GestorSesiones(async (id, ev) => {
+    const c = { id, ev, cerradas: [] as boolean[] };
+    conexiones.push(c);
+    return { cerrar: async (logout: boolean) => void c.cerradas.push(logout) };
+  });
+  check('gestor: sin iniciar → inactiva', g.estado(7).estado === 'inactiva' && g.estado(7).qr === null);
+  const e0 = await g.iniciar(7);
+  check('gestor: recién iniciada → desconectado', e0.estado === 'desconectado' && conexiones.length === 1, e0);
+  await g.iniciar(7);
+  check('gestor: iniciar dos veces no duplica', conexiones.length === 1);
+  conexiones[0]!.ev.qr('QR-1');
+  check('gestor: QR visible', g.estado(7).estado === 'qr' && g.estado(7).qr === 'QR-1', g.estado(7));
+  conexiones[0]!.ev.abierta('3415551234');
+  const e1 = g.estado(7);
+  check('gestor: conectada con teléfono y sin QR', e1.estado === 'conectado' && e1.telefono === '3415551234' && e1.qr === null, e1);
+  check('gestor: lista activas', JSON.stringify(g.activas()) === '[7]');
+  conexiones[0]!.ev.cerrada();
+  check('gestor: se cayó → desconectado (reconecta sola)', g.estado(7).estado === 'desconectado');
+  await g.desvincular(7);
+  check('gestor: desvincular hace logout y queda inactiva', conexiones[0]!.cerradas[0] === true && g.estado(7).estado === 'inactiva', conexiones[0]!.cerradas);
+  await g.iniciar(8);
+  conexiones[1]!.ev.terminada();
+  check('gestor: sesión terminada (logout o QR vencido) → inactiva', g.estado(8).estado === 'inactiva' && g.activas().length === 0);
+  const lleno = new GestorSesiones(async () => ({ cerrar: async () => {} }), 1);
+  await lleno.iniciar(1);
+  let error = '';
+  await lleno.iniciar(2).catch((e: Error) => (error = e.message));
+  check('gestor: tope de sesiones', /máximo/.test(error), error);
+}
+{
+  const g = new GestorSesiones(async (_id, ev) => (setTimeout(() => ev.qr('QR-9'), 0), { cerrar: async () => {} }));
+  const server = crearServidorHttp({
+    analizar: async () => {
+      throw new Error('no');
+    },
+    estadoWhatsapp: () => 'conectado',
+    sesiones: g,
+    token: 'secreto',
+  });
+  await new Promise<void>((res) => server.listen(0, '127.0.0.1', res));
+  const base = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
+  const pedir = (method: string, ruta: string, token: string | null = 'secreto') =>
+    fetch(`${base}${ruta}`, { method, headers: token ? { 'x-mula-token': token } : {} });
+  try {
+    check('http: /sesiones sin token → 401', (await pedir('GET', '/sesiones/9', null)).status === 401);
+    const g0 = (await (await pedir('GET', '/sesiones/9')).json()) as any;
+    check('http: GET sesión no iniciada → inactiva', g0.estado === 'inactiva' && g0.protegido_id === 9, g0);
+    const p = await pedir('POST', '/sesiones/9');
+    check('http: POST /sesiones/9 inicia', p.status === 200 && g.activas().includes(9), p.status);
+    await new Promise((r) => setTimeout(r, 10));
+    const g1 = (await (await pedir('GET', '/sesiones/9')).json()) as any;
+    check('http: GET devuelve el QR', g1.estado === 'qr' && g1.qr === 'QR-9', g1);
+    const d = (await (await pedir('DELETE', '/sesiones/9')).json()) as any;
+    check('http: DELETE desvincula', d.estado === 'inactiva' && !g.activas().includes(9), d);
+    check('http: /sesiones/abc → 404', (await pedir('GET', '/sesiones/abc')).status === 404);
+    check('http: PUT /sesiones/9 → 405', (await pedir('PUT', '/sesiones/9')).status === 405);
+  } finally {
+    server.close();
+  }
+}
+{
+  const mandados: string[] = [];
+  const sock = { user: { id: '5493410000000:3@s.whatsapp.net' }, sendMessage: async (jid: string) => void mandados.push(jid) } as any;
+  const env = await enviadorWhatsapp(sock, ['5493415551234@s.whatsapp.net', '5491122223333@s.whatsapp.net', '5493410000000@s.whatsapp.net'])({ persona: 'p', familia: 'f' });
+  check('alerts: manda a propio + cada familiar (sin repetir el propio)', JSON.stringify(mandados) === JSON.stringify(['5493410000000@s.whatsapp.net', '5493415551234@s.whatsapp.net', '5491122223333@s.whatsapp.net']), mandados);
+  check('alerts: destinos etiquetados', env.filter((e) => e.destino === 'familia').length === 2, env);
+}
+{
+  const asociadas: Array<[number, number]> = [];
+  const { deps, llamadas } = fakeDeps({ asociarAlerta: async (a, p) => void asociadas.push([a, p]) });
+  const enviar = async () => [
+    { destino: 'propio' as const, jid: 'a' },
+    { destino: 'familia' as const, jid: 'b' },
+    { destino: 'familia' as const, jid: 'c' },
+  ];
+  const r = await procesarMensaje({ texto: DEMO, remitente: null, enviar, protegido: 'Marta', provincia: 'Córdoba', protegidoId: 4 }, deps);
+  check('pipeline: protegido de la sesión en la alerta', llamadas.alertas[0]?.protegido === 'Marta' && r.textos.familia.includes('Marta'), r.textos.familia);
+  check('pipeline: provincia de la sesión en el reporte', (llamadas.reportes[0] as any)?.d.provincia === 'Córdoba', llamadas.reportes[0]);
+  check('pipeline: alerta asociada al protegido_id', JSON.stringify(asociadas) === '[[55,4]]', asociadas);
+  check('pipeline: enviada_a sin repetidos', JSON.stringify(r.enviada_a) === '["propio","familia"]', r.enviada_a);
 }
 
 console.log(`\n${ok} ok · ${fail} fallas`);

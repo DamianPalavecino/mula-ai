@@ -69,12 +69,20 @@ export default async function AppPage() {
                 {[formatearTelefono(p.telefono), p.provincia].filter(Boolean).join(" · ")}
               </p>
             </div>
-            <Link
-              href="/app/setup"
-              className="mt-1.5 shrink-0 text-sm font-medium text-tinta underline underline-offset-2 hover:text-black"
-            >
-              Editar
-            </Link>
+            <div className="mt-1.5 flex shrink-0 gap-4">
+              <Link
+                href="/app/vincular"
+                className="text-sm font-medium text-tinta underline underline-offset-2 hover:text-black"
+              >
+                WhatsApp
+              </Link>
+              <Link
+                href="/app/setup"
+                className="text-sm font-medium text-tinta underline underline-offset-2 hover:text-black"
+              >
+                Editar
+              </Link>
+            </div>
           </div>
           <div className="mt-6">
             <AppAlertas iniciales={alertas} nombre={p.nombre ?? "tu familiar"} />
