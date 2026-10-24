@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import type { Alerta, Grafo } from "@/lib/tipos";
 import type { Conteo } from "@/lib/adminStats";
@@ -110,6 +110,12 @@ export default function Panel(d: DatosPanel) {
     window.history.replaceState(null, "", url);
     window.scrollTo({ top: 0 });
   }, []);
+
+  // Un link a /app?tab=… (header, redirects viejos) con el panel ya abierto cambia de pestaña.
+  useEffect(() => {
+    setTab(d.tabInicial);
+    setVisitadas((v) => (v.has(d.tabInicial) ? v : new Set(v).add(d.tabInicial)));
+  }, [d.tabInicial]);
 
   const nombre = d.protegido?.nombre ?? null;
   const panel = (t: Tab, contenido: React.ReactNode) =>
