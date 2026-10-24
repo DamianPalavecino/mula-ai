@@ -32,7 +32,7 @@ Sin valores secretos acá. Las claves se cargan en cada servicio, nunca en el re
    | `NEXT_PUBLIC_SUPABASE_URL` | Project URL |
    | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | anon (**nunca** la service_role) |
    | `NEXT_PUBLIC_WORKER_URL` | _(cuando el worker tenga URL pública)_ URL del worker en el VPS |
-   | `ANTHROPIC_API_KEY`, `SUPABASE_SERVICE_ROLE_KEY` | _(solo si `/me-estafaron` entra; sin `NEXT_PUBLIC_`)_ |
+   | `OPENROUTER_API_KEY` (y opcional `SUPABASE_SERVICE_ROLE_KEY`, `EXTRACTOR_MODEL`) | para `/me-estafaron`; server-only, **sin** `NEXT_PUBLIC_` |
 4. Deploy. Cada vez que cambies una `NEXT_PUBLIC_*` → Redeploy (se embeben en el build).
 5. Smoke: `$env:WEB_URL="https://<proyecto>.vercel.app"; npm run check prod` (prueba `/`, `/verificar?valor=juli.martinez.mp` y `/red`). Después abrilos en incógnito.
 
