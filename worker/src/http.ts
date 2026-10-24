@@ -1,3 +1,4 @@
+import { timingSafeEqual } from 'node:crypto';
 import http from 'node:http';
 import { normalizarTelefono } from './phone.js';
 import type { ResultadoPipeline } from './pipeline.js';
@@ -7,7 +8,8 @@ import type { ResultadoPipeline } from './pipeline.js';
  *   GET  /health    → { ok, whatsapp }
  *   POST /analizar  → contrato en CLAUDE.md ("Endpoint HTTP del worker")
  * Sin dependencias: node:http, CORS abierto, body ≤ 20 KB, 30 pedidos/min por IP.
- * Público (Tailscale Funnel): `enviar_whatsapp: true` exige el header `X-Mula-Token` = `tokenEnvio`.
+ * Público (Tailscale Funnel): `POST /analizar` exige siempre el header `X-Mula-Token` = `token` (MULA_TOKEN);
+ * sin token configurado responde 401 siempre. CORS solo para `origenWeb` (WEB_ORIGIN); `/health` no pide token.
  */
 
 export type EstadoWhatsapp = 'conectado' | 'desconectado' | 'qr';
@@ -84,16 +86,31 @@ export interface OpcionesHttp {
   analizar: (p: PedidoAnalizar) => Promise<ResultadoPipeline>;
   estadoWhatsapp: () => EstadoWhatsapp;
   limiter?: RateLimiter;
-  /** Sin token configurado, `enviar_whatsapp: true` se rechaza siempre. */
-  tokenEnvio?: string;
+  /** MULA_TOKEN. Sin token configurado, `POST /analizar` responde 401 siempre. */
+  token?: string;
+  /** WEB_ORIGIN: único origen con CORS. Sin él no se manda Access-Control-Allow-Origin. */
+  origenWeb?: string;
 }
 
-const CORS = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, X-Mula-Token',
-  'Access-Control-Max-Age': '86400',
-};
+/** Headers CORS solo si el Origin del pedido es el de la web. */
+function cors(origen: string | undefined, origenWeb: string | undefined): Record<string, string> {
+  if (!origenWeb || origen !== origenWeb) return {};
+  return {
+    'Access-Control-Allow-Origin': origenWeb,
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, X-Mula-Token',
+    'Access-Control-Max-Age': '86400',
+    Vary: 'Origin',
+  };
+}
+
+/** Compara el header con el token sin filtrar tiempos. Sin token configurado, nunca coincide. */
+export function tokenValido(recibido: string | string[] | undefined, token: string | undefined): boolean {
+  if (!token || typeof recibido !== 'string') return false;
+  const a = Buffer.from(recibido);
+  const b = Buffer.from(token);
+  return a.length === b.length && timingSafeEqual(a, b);
+}
 
 class ErrorHttp extends Error {
   constructor(
@@ -129,11 +146,11 @@ export function ipCliente(fwd: string | string[] | undefined, remota: string | u
   return ultima || remota || '?';
 }
 
-export function crearServidorHttp({ analizar, estadoWhatsapp, limiter = new RateLimiter(), tokenEnvio }: OpcionesHttp): http.Server {
+export function crearServidorHttp({ analizar, estadoWhatsapp, limiter = new RateLimiter(), token, origenWeb }: OpcionesHttp): http.Server {
   return http.createServer(async (req, res) => {
     const responder = (status: number, body?: unknown) => {
       if (res.headersSent) return;
-      res.writeHead(status, { ...CORS, ...(body !== undefined ? { 'Content-Type': 'application/json; charset=utf-8' } : {}) });
+      res.writeHead(status, { ...cors(req.headers.origin, origenWeb), ...(body !== undefined ? { 'Content-Type': 'application/json; charset=utf-8' } : {}) });
       res.end(body !== undefined ? JSON.stringify(body) : undefined);
     };
     const ruta = (req.url ?? '/').split('?')[0];
@@ -146,6 +163,7 @@ export function crearServidorHttp({ analizar, estadoWhatsapp, limiter = new Rate
 
       const ip = ipCliente(req.headers['x-forwarded-for'], req.socket.remoteAddress);
       if (!limiter.permitir(ip)) return responder(429, { error: 'demasiados pedidos, probá en un minuto' });
+      if (!tokenValido(req.headers['x-mula-token'], token)) throw new ErrorHttp(401, 'falta el header X-Mula-Token o no es válido');
 
       let body: unknown;
       try {
@@ -156,8 +174,6 @@ export function crearServidorHttp({ analizar, estadoWhatsapp, limiter = new Rate
       }
       const v = validarAnalizar(body);
       if (!v.ok) throw new ErrorHttp(400, v.error);
-      if (v.enviar_whatsapp && (!tokenEnvio || req.headers['x-mula-token'] !== tokenEnvio))
-        throw new ErrorHttp(403, '"enviar_whatsapp" requiere el header X-Mula-Token');
 
       const r = await analizar(v);
       console.log(

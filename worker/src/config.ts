@@ -37,6 +37,10 @@ export const config = {
   provinciaDefault: env('PROVINCIA_DEFAULT') ?? 'Santa Fe',
   authDir: path.resolve(env('AUTH_DIR') ?? './auth_info'),
   openaiApiKey: env('OPENAI_API_KEY'),
+  /** Token de `POST /analizar` (header X-Mula-Token). HTTP_TOKEN_ENVIO es el nombre viejo. */
+  mulaToken: env('MULA_TOKEN') ?? env('HTTP_TOKEN_ENVIO'),
+  /** Único origen con CORS en el HTTP del worker (ej. https://mula-ai.vercel.app). */
+  webOrigin: env('WEB_ORIGIN'),
   /** Riesgo mínimo (0-100) para mandar alerta. */
   alertThreshold: Number(env('ALERT_THRESHOLD') ?? 60),
 };
@@ -67,6 +71,8 @@ export function validarConfig(): void {
     console.warn('[config] TRUSTED_CONTACTS vacío: todos los remitentes se tratan como desconocidos.');
   if (config.analizarSolo.size > 0)
     console.warn(`[config] ANALIZAR_SOLO activo: solo se analizan ${config.analizarSolo.size} número(s); el resto se ignora.`);
+  if (!config.mulaToken)
+    console.warn('[config] MULA_TOKEN no está: POST /analizar rechaza todo con 401 (solo /health responde).');
   if (!config.openaiApiKey) console.warn('[config] OPENAI_API_KEY no está: los audios no se transcriben.');
   if (!process.env.PROTEGIDO_NOMBRE) console.warn('[config] PROTEGIDO_NOMBRE no está: uso "la persona protegida".');
   if ([config.alertThreshold, config.classifierTimeoutMs, config.classifierBudgetMs].some(Number.isNaN)) {

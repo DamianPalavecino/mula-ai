@@ -250,7 +250,8 @@ process.on('uncaughtException', (e) => log('[uncaughtException]', e));
 log(`[mula] worker arrancando · AUTH_DIR=${config.authDir} · modelo=${config.classifierModel} · protegido="${config.protegidoNombre}"`);
 iniciarHttp({
   estadoWhatsapp: () => estadoWa,
-  tokenEnvio: process.env.HTTP_TOKEN_ENVIO || undefined,
+  token: config.mulaToken,
+  origenWeb: config.webOrigin,
   analizar: ({ texto, remitente, enviar_whatsapp }) =>
     pipeline({
       texto,

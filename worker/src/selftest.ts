@@ -295,22 +295,31 @@ check('http: IP sin X-Forwarded-For', ipCliente(undefined, '::ffff:127.0.0.1') =
       return procesarMensaje({ texto, remitente: null }, deps);
     },
     estadoWhatsapp: () => 'qr',
-    limiter: new RateLimiter(7, 60_000),
-    tokenEnvio: 'secreto',
+    limiter: new RateLimiter(9, 60_000),
+    token: 'secreto',
+    origenWeb: 'https://mula-ai.vercel.app',
   });
   await new Promise<void>((res) => server.listen(0, '127.0.0.1', res));
   const base = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
-  const post = (body: string, token?: string) =>
+  const post = (body: string, token: string | null = 'secreto') =>
     fetch(`${base}/analizar`, { method: 'POST', headers: { 'content-type': 'application/json', ...(token ? { 'x-mula-token': token } : {}) }, body });
   try {
     const h = await fetch(`${base}/health`);
     const hj = (await h.json()) as any;
     check('http: GET /health', h.status === 200 && hj.ok === true && hj.whatsapp === 'qr', hj);
-    check('http: CORS *', h.headers.get('access-control-allow-origin') === '*');
-    const o = await fetch(`${base}/analizar`, { method: 'OPTIONS' });
-    check('http: OPTIONS 204 con CORS', o.status === 204 && !!o.headers.get('access-control-allow-methods'), o.status);
-    const sinToken = await post(JSON.stringify({ texto: DEMO, enviar_whatsapp: true }), 'otro');
-    check('http: enviar_whatsapp sin token válido → 403', sinToken.status === 403 && enviarPedido === null, sinToken.status);
+    check('http: CORS ya no es * (sin Origin → sin Allow-Origin)', h.headers.get('access-control-allow-origin') === null, h.headers.get('access-control-allow-origin'));
+    const hOtro = await fetch(`${base}/health`, { headers: { origin: 'https://evil.example' } });
+    check('http: CORS origen ajeno → sin Allow-Origin', hOtro.headers.get('access-control-allow-origin') === null);
+    const o = await fetch(`${base}/analizar`, { method: 'OPTIONS', headers: { origin: 'https://mula-ai.vercel.app' } });
+    check(
+      'http: OPTIONS 204 con CORS solo para WEB_ORIGIN',
+      o.status === 204 && o.headers.get('access-control-allow-origin') === 'https://mula-ai.vercel.app' && !!o.headers.get('access-control-allow-methods'),
+      o.status,
+    );
+    const sinToken = await post(JSON.stringify({ texto: DEMO }), null);
+    check('http: /analizar sin X-Mula-Token → 401', sinToken.status === 401 && enviarPedido === null, sinToken.status);
+    const malToken = await post(JSON.stringify({ texto: DEMO, enviar_whatsapp: true }), 'otro');
+    check('http: /analizar con token equivocado → 401', malToken.status === 401 && enviarPedido === null, malToken.status);
     const a = await post(JSON.stringify({ texto: DEMO, enviar_whatsapp: true }), 'secreto');
     const aj = (await a.json()) as any;
     const claves = ['es_sospechoso', 'riesgo', 'modalidad', 'senales', 'suplanta_a', 'entidades', 'alerta_persona', 'alerta_familia', 'reporte_id', 'alerta_id', 'enviada_a', 'fuente_clasificacion'];
@@ -323,11 +332,29 @@ check('http: IP sin X-Forwarded-For', ipCliente(undefined, '::ffff:127.0.0.1') =
     const e = await post(JSON.stringify({ texto: 'explota' }));
     check('http: error interno → 500 con {error}', e.status === 500 && typeof ((await e.json()) as any).error === 'string');
     check('http: ruta desconocida → 404', (await fetch(`${base}/nada`)).status === 404);
-    // ya van 6 POST de 7 permitidos
+    // ya van 8 POST de 9 permitidos
     await post(JSON.stringify({ texto: 'hola' }));
     await post(JSON.stringify({ texto: 'hola' }));
     const lim = await post(JSON.stringify({ texto: 'hola' }));
     check('http: rate limit → 429', lim.status === 429 && typeof ((await lim.json()) as any).error === 'string', lim.status);
+  } finally {
+    server.close();
+  }
+}
+{
+  // sin MULA_TOKEN configurado el worker no analiza nada por HTTP (pero /health sigue)
+  const server = crearServidorHttp({
+    analizar: async () => {
+      throw new Error('no debería llamarse');
+    },
+    estadoWhatsapp: () => 'conectado',
+  });
+  await new Promise<void>((res) => server.listen(0, '127.0.0.1', res));
+  const base = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
+  try {
+    const r = await fetch(`${base}/analizar`, { method: 'POST', headers: { 'content-type': 'application/json', 'x-mula-token': '' }, body: JSON.stringify({ texto: DEMO }) });
+    check('http: sin MULA_TOKEN configurado → 401 siempre', r.status === 401, r.status);
+    check('http: sin MULA_TOKEN /health sigue público', (await fetch(`${base}/health`)).status === 200);
   } finally {
     server.close();
   }

@@ -20,7 +20,7 @@ Ese pipeline vive en `src/pipeline.ts` y lo comparte el HTTP (`src/http.ts`), qu
 
 ```bash
 curl localhost:8080/health                     # {"ok":true,"whatsapp":"conectado"|"desconectado"|"qr"}
-curl -X POST localhost:8080/analizar -H 'content-type: application/json'   -d '{"texto":"hola abu, soy Juli, cambié de número, mandá a juli.martinez.mp","enviar_whatsapp":false}'
+curl -X POST localhost:8080/analizar -H 'content-type: application/json' -H "X-Mula-Token: $MULA_TOKEN" -d '{"texto":"hola abu, soy Juli, cambié de número, mandá a juli.martinez.mp","enviar_whatsapp":false}'
 ```
 Contrato de respuesta en `CLAUDE.md` (Detalles de implementación). Con `enviar_whatsapp: true` y WhatsApp conectado manda las alertas reales; el remitente nunca recibe nada.
 
@@ -69,6 +69,8 @@ Para volver a vincular: borrá la carpeta de `AUTH_DIR` y reiniciá. Si se desvi
 | `CLASSIFIER_BUDGET_MS` | no | default 3500. Si el LLM no contestó en ese tiempo y la heurística ya supera `ALERT_THRESHOLD`, alerta con la heurística (la alerta tiene que salir en < 5 s) |
 | `BAILEYS_LOG_LEVEL` | no | default `warn` |
 | `PORT` | no | puerto del HTTP (default `8080`) |
+| `MULA_TOKEN` | sí, para `/analizar` | header `X-Mula-Token` que exige `POST /analizar` (sin él → 401 siempre). Mismo valor que `MULA_TOKEN` de la web |
+| `WEB_ORIGIN` | no | único origen con CORS (ej. `https://mula-ai.vercel.app`) |
 | `NEXT_PUBLIC_WORKER_URL` | (web) | URL pública del worker; la usa la web para `/simulador` |
 
 ## Scripts
