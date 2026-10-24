@@ -12,20 +12,17 @@ Tarea original: `docs/agentes/03-web-simulador.md`. Toca solo `web/` (menos `/me
 - 12:59: restaurado el simulador que había borrado `ea0610f` (/me-estafaron commiteó desde un árbol viejo). Commit `96675b2`.
 
 ## En curso (exactamente dónde quedó: archivo, comando, qué faltaba)
-- **14:15 hecho: grafo de /admin se refresca solo.** `web/components/AdminRed.tsx`: `setInterval` propio cada 15 s (`GRAFO_MS`) con `cargarGrafo()`; los nodos nuevos (reportes y entidades) pulsan en rojo 8 s y la cámara va al primero. Si entra una alerta, se destacan sus entidades + lo nuevo. `fusionar()` pasó a `web/lib/red.ts` (devuelve `{grafo, nuevos}`; primera carga no marca nada) con 3 tests en `web/lib/red.test.ts`. `npm run check web` verde. cuit/link: color y leyenda ya consistentes (`colores.ts`, leyendas de `AdminRed` y `RedView`).
-- **Falta probar a mano (necesita login admin de Clerk, el agente no tiene credenciales):** abrir `/admin`, sumar un caso sin alerta (`/app/me-estafaron` → "Sumar mi caso a la red") y ver que en ≤15 s aparece el nodo nuevo pulsando, sin recargar.
-- **FRENADO 14:0x por orden del humano** (plan 06: sin rutas públicas viejas; web/ la toca el orquestador). Esperando instrucciones. No pushear nada de esto sobre landing, Header, /app ni /admin.
-- Rediseño de verificar hecho y probado (tests + build verdes, capturas ok), **sin pushear**: commit local `6d9e2f5` en la rama local `wip-verificar-ux` de este worktree (`git show wip-verificar-ux --stat`). Para portar:
-  - `web/lib/verificar.ts` + `web/lib/verificar.test.ts`: `validarValor(v)` → `{ok, tipo}` o `{ok:false, error}` (alias 6–20, CBU/CVU 22 dígitos, teléfono 8–13, CUIT 11 con prefijo, link; vacío = sin mensaje) y `EJEMPLOS_VERIFICAR` (reales de prod: juli.martinez.mp 28, CBU 0110599540000123456782 9, tel 1167891234 16, limpio maria.lopez.ok 0). 4 tests en `npm test`.
-  - `web/components/VerificarForm.tsx` (client): input grande con ícono y badge del tipo detectado, botón deshabilitado hasta que sea válido, error inline corto, spinner, chips rojos/verde de un clic que consultan solos. Props `base` (`/app/verificar` o `/admin/verificar`) e `inicial`; navega a `${base}?valor=` (la página server-side consulta).
-  - `web/components/ResumenCard.tsx` (mismas props): rojo con número gigante + chips de provincias/modalidades con íconos + monto/último; verde "Sin reportes". Sirve en /app, /admin y el panel del grafo (`compacto`).
-  - `web/components/iconos.tsx`: SVG inline (peligro, ok, buscar, ubicación, plata, reloj, guion, spinner).
-  - `web/app/globals.css`: tokens `--color-seguro`, `--color-seguro-fondo`, `--color-seguro-linea`.
-  - Uso en páginas (en la rama wip): en `app/app/verificar/page.tsx` y `app/admin/verificar/page.tsx`, reemplazar el `<form method="GET">` por `<VerificarForm key={valor} base="..." inicial={valor} />`, título "Verificá antes de pagar", sin párrafo.
+- **Líder del rediseño: panel único en `/app`** (base: prototipo `docs/design/` + skills Emil/Jakub). Pusheado:
+  1. `8cf6a00` tokens (`globals.css`: seguro, bosque, lima, papel, `--ease-salida`, `.presionable`), `components/iconos.tsx`, `lib/verificar.ts` (+test), `ResumenCard` nueva.
+  2. `e1df11e` `components/Panel.tsx` (client, pestañas inicio/probar/verificar/me-estafaron/red/ajustes, `?tab=` con `history.replaceState`, pestañas visitadas quedan montadas) + `components/VerificarPanel.tsx` (consulta `/admin/api/resumen`) + `app/app/page.tsx` (carga todo server-side: requireUser, misProtegidos/misAlertas por owner, grafo, stats).
+  3. `5f23d51` redirects: `/app/verificar`, `/admin/verificar` → `?tab=verificar`; `/app/me-estafaron` → `?tab=me-estafaron`; `/app/setup` → `?tab=ajustes` (la action sigue en `app/app/setup/actions.ts`); `/admin` → `?tab=red`. APIs de `/app/api` y `/admin/api` intactas.
+- Ojo: `qrcode` es dependencia nueva (de `/app/vincular`): `cd web && npm install` antes de buildear.
+- Capturas sin login: ruta temporal `app/preview-panel/page.tsx` (NO commitear) que renderiza `<Panel>` con datos fijos dentro de `<Suspense>` + `await connection()`; mirar con el navegador de Orca.
 
 ## Próximo paso
-- Esperar instrucciones. Si dicen portar: `git checkout wip-verificar-ux -- web/lib/verificar.ts web/lib/verificar.test.ts web/components/VerificarForm.tsx web/components/iconos.tsx` (+ ResumenCard/globals.css mirando el diff contra main, que cambió), `npm run check web`, push.
-- El simulador público y `/red` ya no existen (plan 06); lo de NEXT_PUBLIC_WORKER_URL quedó obsoleto.
+- Header (`components/Header.tsx`): links a pestañas del panel en vez de rutas viejas.
+- Pulir pestañas: alertas (AppAlertas) con el look del prototipo, probar mensaje con chips de un clic, mobile 375.
+- Probar con login real en prod (Vercel) todas las pestañas.
 
 ## Bloqueos / qué necesita del humano
 - URL HTTPS pública del worker en el VPS → `NEXT_PUBLIC_WORKER_URL` en Vercel. Con `http://` el navegador lo bloquea desde Vercel y cae al mock sin avisar.
