@@ -10,7 +10,7 @@ const FEATURES = {
   worker: { paths: ['worker/'], cwd: 'worker', cmds: ['npm run typecheck', 'npm run selftest'] },
   // pega a OpenRouter (cuesta tokens); sin OPENROUTER_API_KEY prueba solo la heurística
   classify: { paths: ['worker/src/classify'], cwd: 'worker', cmds: ['npm run test:classify'] },
-  web: { paths: ['web/'], cwd: 'web', cmds: ['npm test', 'npm run build'] },
+  web: { paths: ['web/', 'DESIGN.md'], cwd: 'web', cmds: ['npm test', 'npm run build'] },
   // manual: re-siembra la base del entorno (borra solo lo sintético) y falla si juli.martinez.mp no da 23/5
   supabase: { paths: ['supabase/'], cwd: '.', cmds: ['npm run seed'], manual: true },
   // manual: lee la base real con la anon key (tablas, demo, grafo, último caso de WhatsApp + alerta, Realtime)
