@@ -10,6 +10,9 @@ Lo actualiza el agente después de cada paso (commit + push). Si se corta, el si
 
 - Velocidad (commit `0b2352a`): el LLM solo extrae (esquema chico, `max_tokens` 1500, `sort: latency`, `reasoning: minimal`, timeout 20 s, default `google/gemini-3.5-flash-lite`); denuncia, pedido y pasos salen de `armarTextos()` en `web/lib/meEstafaron.ts` (con tests). Medido desde esta PC con las 2 capturas de demo (mismo request que la ruta, script en el scratchpad): LLM 3,0–4,2 s + red 0,3–0,9 s = 3,2–5,1 s. Lee bien alias, CVU, teléfono y $180.000. La cronología viene vacía y la UI ya la oculta.
 
+- Grafo de la red (commit `ff50a93`): `web/components/Graph.tsx`, `web/components/colores.ts`, `web/lib/riesgo.ts` (+ test). Color por riesgo según reportes (1 neutro, 2–4 ámbar `#d99a00`, 5–9 naranja `#e8590c`, 10+ `--color-alerta`); ícono del tipo dentro del nodo (trazos en `ICONOS_TIPO`, compartidos con la leyenda); reportes chicos y grises; tamaño por reportes; label "valor · N" fijo para el top 8; ranking "Más denunciados" superpuesto arriba a la izquierda (clic = centra + `onSeleccionar`; cerrado de entrada en < 640 px); líneas por riesgo, resaltadas en hover/selección con el resto atenuado; fondo de puntos + gradiente; leyenda chica abajo a la izquierda. Saqué la leyenda por tipo de `AdminRed.tsx` (era la del grafo). Capturas a 1920×1080 y 500 px revisadas.
+- Ámbar y naranja no son tokens de DESIGN.md: si el simulador quiere, que los sume (`--color-riesgo-medio`, `--color-riesgo-alto`) y apunto `RIESGO` en `colores.ts` a esos tokens.
+
 ## Cómo montar la sección en el dashboard (para el simulador)
 - Ya está montada: `components/Panel.tsx` (pestaña `me-estafaron`) usa `<MeEstafaronForm />`; `/app/me-estafaron` redirige a `/app?tab=me-estafaron`. Anda así: el formulario trae su propio scope de colores (`me-panel`).
 - Alternativa con título e ícono propios: `<MeEstafaronPanel />` (o `titulo={false}`), y en un drawer `<MeEstafaronPanel onCerrar={…} />`.
