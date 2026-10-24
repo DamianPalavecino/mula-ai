@@ -24,7 +24,7 @@ Entrega 16:00 · submit 15:45 · freeze 14:30.
 |---|---|---|---|---|---|
 | `classify` | `npm run test:classify` | ✅ | 66s | 24/10/2026, 12:28:29 | c6d5a8f |
 | `e2e` | `npm run e2e` | ✅ | 3s | 24/10/2026, 12:49:18 | 11979d5 |
-| `prod` | `node --env-file-if-exists=.env scripts/smoke-prod.mjs` | ✅ | 2s | 24/10/2026, 12:51:43 | c1f0466 |
+| `prod` | `node --env-file-if-exists=.env scripts/smoke-prod.mjs` | ✅ | 1s | 24/10/2026, 12:52:39 | 833c037 |
 | `prod` | `node scripts/smoke-prod.mjs` | ⏭️ omitido | 0s | 24/10/2026, 12:28:39 | c6d5a8f |
 | `web` | `npm run build` | ✅ | 17s | 24/10/2026, 12:36:34 | dcb8616 |
 | `web` | `npm test` | ✅ | 1s | 24/10/2026, 12:36:34 | dcb8616 |
@@ -37,8 +37,9 @@ Marcá `[x]` con hora y quién.
 
 **Base y deploy**
 - [x] 12:35 deploy — `docs/deploy.md` con pasos y variables por servicio; `scripts/smoke-prod.mjs` probado (sin vars → omitido, URL caída → 9 FAIL)
-- [ ] Supabase prod: `schema.sql` + `functions.sql` aplicados, `npm run check supabase` verde
-- [ ] `npm run check prod` verde contra Supabase prod (y con `WEB_URL` contra Vercel)
+- [x] 12:5x Damian / 12:55 deploy — Supabase prod: `schema.sql` + `functions.sql` aplicados y sembrado
+- [x] 12:55 deploy — `npm run check prod` 6/6 contra Supabase prod (juli 24/5, grafo 306/281, anon no escribe)
+- [ ] `npm run check prod` con `WEB_URL` contra Vercel
 - [ ] Realtime activo en `alertas` (un INSERT aparece en el feed de `/red`)
 - [ ] Web en Vercel: `/`, `/verificar?valor=juli.martinez.mp` (23 reportes, en rojo) y `/red` en incógnito
 - [x] 12:45 worker — en el VPS. systemd `mula-worker` en `contabo-vps`, `[wa] conectado como 5493436612270`; tras `restart` reconecta en 1 s sin QR, `/health` → `{"ok":true,"whatsapp":"conectado"}`. Sesión en `~/mula-data/auth_info`, vars en `~/.config/mula-ai/worker.conf`. Operar con `worker/scripts/vps.sh deploy|qr|logs|status`
@@ -77,6 +78,6 @@ Marcá `[x]` con hora y quién.
 ## Próximo paso
 - me-estafaron: listo en main. Falta cargar en Vercel `OPENROUTER_API_KEY` (y opcional `SUPABASE_SERVICE_ROLE_KEY`, ambas sin `NEXT_PUBLIC_`) y sumar el link en el header.
 - Demo: kit listo en `docs/demo/` (guion, mensajes, jurado, checklist, capturas). Falta: conseguir celulares y número del estafador, `npm run reset-demo`, toma de respaldo (el worker ya anda en el VPS).
-- Damian: crear Supabase prod y seguir `docs/deploy.md` §1 (no hay CLIs de supabase/vercel en la PC: es por clics). Después `npm run check supabase` y `npm run check prod`.
+- Supabase prod listo (12:55, `check prod` 6/6).
 - Después Vercel (§2); el worker ya está en el VPS (§3). Completar las URLs arriba de `docs/deploy.md`.
 - Worker: `POST /analizar` está en main y el worker corre en el VPS. Falta: URL pública (Funnel) → `NEXT_PUBLIC_WORKER_URL` en Vercel (agente `deploy`/`simulador`). Después, Tarea 2 del worker: el LLM tarda 4–6 s por mensaje y la alerta tiene que llegar en menos de 5 s.
