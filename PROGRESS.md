@@ -46,7 +46,7 @@ Marcá `[x]` con hora y quién.
 
 **Worker / WhatsApp**
 - [x] 12:33 worker — vinculado local (número de Damian 5493436612270, lid 44066381295863, `ANALIZAR_SOLO` con 2 números de prueba). Demo desde 3413950428 → `[clasif:llm] riesgo=85 familiar_numero_nuevo alias:juli.martinez.mp` → alerta al chat propio 4 s después del mensaje. `registrar_reporte` falló: la función no existe todavía en Supabase (pendiente el schema)
-- [ ] Un mensaje de estafa desde un número desconocido → alerta al chat propio en menos de 5 s — 12:48 worker VPS: msg 48:46 → alerta #1 registrada 48:51 (~5 s, LLM 4.5 s); falta que Damian confirme que la vio en el chat propio
+- [x] Un mensaje de estafa desde un número desconocido → alerta al chat propio en menos de 5 s — 12:48 worker VPS: msg 48:46 → alerta #1 registrada 48:51 (~5 s, LLM 4.5 s, al límite); Damian la vio en el chat propio. 12:57 `/red` de Vercel muestra la alerta en el feed "En vivo" (desktop + mobile)
 - [ ] La misma alerta llega al grupo familiar
 - [ ] El mensaje de un contacto de confianza no se procesa (no aparece en los logs)
 - [ ] Un mensaje normal de un desconocido no alerta
