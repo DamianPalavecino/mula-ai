@@ -78,16 +78,16 @@ function Pasos({ actual }: { actual: number }) {
           <span
             className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-colors ${
               i < actual
-                ? "bg-tinta text-white"
+                ? "bg-[var(--me-forest)] text-white"
                 : i === actual
-                  ? "bg-alerta text-white ring-4 ring-alerta-fondo"
-                  : "bg-panel text-suave"
+                  ? "bg-[var(--me-danger)] text-white ring-4 ring-[var(--me-danger-soft)]"
+                  : "bg-[var(--me-paper-2)] text-[var(--me-muted)]"
             }`}
           >
             <Icono className="h-4 w-4" />
           </span>
           {i < pasos.length - 1 && (
-            <span className={`mx-2 h-0.5 flex-1 rounded ${i < actual ? "bg-tinta" : "bg-linea"}`} />
+            <span className={`mx-2 h-0.5 flex-1 rounded ${i < actual ? "bg-[var(--me-forest)]" : "bg-[var(--me-rule)]"}`} />
           )}
         </li>
       ))}
@@ -107,7 +107,7 @@ function Analizando({ capturas }: { capturas: Captura[] }) {
 
   return (
     <div
-      className="flex flex-col items-center gap-6 rounded-2xl bg-tinta px-5 py-10 text-center text-white sm:py-14"
+      className="flex flex-col items-center gap-6 rounded-2xl bg-[var(--me-forest)] px-5 py-10 text-center text-white sm:py-14"
       role="status"
       aria-live="polite"
     >
@@ -118,7 +118,7 @@ function Analizando({ capturas }: { capturas: Captura[] }) {
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={c.url} alt={`Captura ${i + 1}`} className="h-full w-full object-cover object-top opacity-50" />
               <span
-                className="absolute inset-x-0 h-1 bg-alerta shadow-[0_0_12px_4px] shadow-alerta/70"
+                className="absolute inset-x-0 h-1 bg-[var(--me-danger)] shadow-[0_0_12px_4px] shadow-[var(--me-danger)]"
                 style={{ top: `${(segundos * 23 + i * 30) % 100}%`, transition: "top 1s linear" }}
               />
             </div>
@@ -130,7 +130,7 @@ function Analizando({ capturas }: { capturas: Captura[] }) {
           <li
             key={e.texto}
             className={`flex h-11 w-11 items-center justify-center rounded-full transition-all ${
-              i < etapa ? "bg-white/20 text-white" : i === etapa ? "scale-110 bg-alerta text-white" : "bg-white/5 text-white/30"
+              i < etapa ? "bg-white/20 text-white" : i === etapa ? "scale-110 bg-[var(--me-danger)] text-white" : "bg-white/5 text-white/30"
             }`}
           >
             {i < etapa ? <IconoCheck className="h-5 w-5" /> : <e.icono className="h-5 w-5" />}
@@ -143,7 +143,7 @@ function Analizando({ capturas }: { capturas: Captura[] }) {
       </div>
       <div className="h-1.5 w-full max-w-xs overflow-hidden rounded-full bg-white/15">
         <div
-          className="h-full rounded-full bg-alerta transition-[width] duration-1000 ease-linear"
+          className="h-full rounded-full bg-[var(--me-danger)] transition-[width] duration-1000 ease-linear"
           style={{ width: `${progreso}%` }}
         />
       </div>
@@ -273,7 +273,7 @@ export default function MeEstafaronForm() {
           <button
             type="button"
             onClick={reiniciar}
-            className="inline-flex h-12 cursor-pointer items-center justify-center gap-2 rounded-xl border border-linea px-6 text-base font-medium text-tinta hover:bg-panel"
+            className="inline-flex h-12 cursor-pointer items-center justify-center gap-2 rounded-xl border border-[var(--me-rule)] px-6 text-base font-medium text-[var(--me-ink)] hover:bg-[var(--me-paper-2)]"
           >
             <IconoReiniciar className="h-4 w-4" />
             Otro caso
@@ -302,7 +302,7 @@ export default function MeEstafaronForm() {
               agregar(e.dataTransfer.files);
             }}
             className={`rounded-2xl border-2 border-dashed transition-colors ${
-              arrastrando ? "border-alerta bg-alerta-fondo" : "border-linea bg-panel"
+              arrastrando ? "border-[var(--me-danger)] bg-[var(--me-danger-soft)]" : "border-[var(--me-rule)] bg-[var(--me-paper-2)]"
             }`}
           >
             {capturas.length === 0 ? (
@@ -311,13 +311,13 @@ export default function MeEstafaronForm() {
                 onClick={() => inputRef.current?.click()}
                 className="group flex min-h-60 w-full cursor-pointer flex-col items-center justify-center gap-4 rounded-2xl px-6 py-10 text-center"
               >
-                <span className="flex h-16 w-16 items-center justify-center rounded-2xl bg-tinta text-white transition-transform group-hover:scale-105">
+                <span className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[var(--me-forest)] text-white transition-transform group-hover:scale-105">
                   <IconoSubir className="h-8 w-8" />
                 </span>
-                <span className="text-xl font-semibold text-tinta">Subí las capturas</span>
-                <span className="flex items-center gap-3 text-sm text-suave">
-                  <span className="rounded-full bg-fondo px-3 py-1">Chat</span>
-                  <span className="rounded-full bg-fondo px-3 py-1">Comprobante</span>
+                <span className="text-xl font-semibold text-[var(--me-ink)]">Subí las capturas</span>
+                <span className="flex items-center gap-3 text-sm text-[var(--me-muted)]">
+                  <span className="rounded-full bg-[var(--me-paper)] px-3 py-1">Chat</span>
+                  <span className="rounded-full bg-[var(--me-paper)] px-3 py-1">Comprobante</span>
                   <span>PNG · JPG</span>
                 </span>
               </button>
@@ -329,16 +329,16 @@ export default function MeEstafaronForm() {
                     <img
                       src={c.url}
                       alt={`Captura ${i + 1}`}
-                      className="aspect-[3/5] w-full rounded-xl border border-linea bg-fondo object-cover object-top"
+                      className="aspect-[3/5] w-full rounded-xl border border-[var(--me-rule)] bg-[var(--me-paper)] object-cover object-top"
                     />
-                    <span className="absolute bottom-2 left-2 flex h-6 w-6 items-center justify-center rounded-full bg-[#15803d] text-white">
+                    <span className="absolute bottom-2 left-2 flex h-6 w-6 items-center justify-center rounded-full bg-[var(--me-accent)] text-white">
                       <IconoCheck className="h-3.5 w-3.5" />
                     </span>
                     <button
                       type="button"
                       onClick={() => quitar(c.id)}
                       aria-label={`Quitar captura ${i + 1}`}
-                      className="absolute top-1.5 right-1.5 flex h-9 w-9 cursor-pointer items-center justify-center rounded-full bg-fondo/95 text-tinta shadow hover:bg-alerta hover:text-white"
+                      className="absolute top-1.5 right-1.5 flex h-9 w-9 cursor-pointer items-center justify-center rounded-full bg-[var(--me-paper)]/95 text-[var(--me-ink)] shadow hover:bg-[var(--me-danger)] hover:text-white"
                     >
                       <IconoX className="h-4 w-4" />
                     </button>
@@ -350,7 +350,7 @@ export default function MeEstafaronForm() {
                       type="button"
                       onClick={() => inputRef.current?.click()}
                       aria-label="Agregar captura"
-                      className="flex aspect-[3/5] w-full cursor-pointer items-center justify-center rounded-xl border-2 border-dashed border-linea bg-fondo text-suave hover:border-tinta hover:text-tinta"
+                      className="flex aspect-[3/5] w-full cursor-pointer items-center justify-center rounded-xl border-2 border-dashed border-[var(--me-rule)] bg-[var(--me-paper)] text-[var(--me-muted)] hover:border-[var(--me-forest)] hover:text-[var(--me-ink)]"
                     >
                       <IconoMas className="h-8 w-8" />
                     </button>
@@ -374,7 +374,7 @@ export default function MeEstafaronForm() {
           {rechazos.length > 0 && (
             <ul className="flex flex-col gap-1" role="alert">
               {rechazos.map((r) => (
-                <li key={r} className="flex items-center gap-2 text-sm text-alerta">
+                <li key={r} className="flex items-center gap-2 text-sm text-[var(--me-danger)]">
                   <IconoAlerta className="h-4 w-4 shrink-0" />
                   <span className="truncate">{r}</span>
                 </li>
@@ -386,7 +386,7 @@ export default function MeEstafaronForm() {
             <button
               type="button"
               onClick={usarEjemplo}
-              className="inline-flex h-12 cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-alerta-linea bg-alerta-fondo px-5 text-base font-semibold text-alerta hover:border-alerta"
+              className="inline-flex h-12 cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-[var(--me-danger-line)] bg-[var(--me-danger-soft)] px-5 text-base font-semibold text-[var(--me-danger)] hover:border-[var(--me-danger)]"
             >
               <IconoMagia className="h-5 w-5" />
               Usar capturas de ejemplo
@@ -399,7 +399,7 @@ export default function MeEstafaronForm() {
               aria-label="Provincia"
               value={provincia}
               onChange={(e) => setProvincia(e.target.value)}
-              className="h-12 w-full rounded-xl border border-linea bg-fondo px-3 text-base text-tinta focus:border-tinta focus:outline-none sm:w-64"
+              className="h-12 w-full rounded-xl border border-[var(--me-rule)] bg-[var(--me-paper)] px-3 text-base text-[var(--me-ink)] focus:border-[var(--me-forest)] focus:outline-none sm:w-64"
             >
               <option value="">Provincia</option>
               {PROVINCIAS.map((p) => (
@@ -412,7 +412,7 @@ export default function MeEstafaronForm() {
               <button
                 type="button"
                 onClick={() => setVerRelato(true)}
-                className="inline-flex h-12 cursor-pointer items-center justify-center gap-2 rounded-xl border border-linea px-4 text-sm font-medium text-texto hover:bg-panel"
+                className="inline-flex h-12 cursor-pointer items-center justify-center gap-2 rounded-xl border border-[var(--me-rule)] px-4 text-sm font-medium text-[var(--me-ink-2)] hover:bg-[var(--me-paper-2)]"
               >
                 <IconoMas className="h-4 w-4" />
                 Sin capturas: contalo
@@ -429,12 +429,12 @@ export default function MeEstafaronForm() {
               maxLength={8000}
               autoFocus
               placeholder="Quién te escribió, a qué alias transferiste, cuánto y cuándo."
-              className="w-full rounded-xl border border-linea bg-fondo p-4 text-base leading-relaxed text-tinta placeholder:text-suave focus:border-tinta focus:outline-none"
+              className="w-full rounded-xl border border-[var(--me-rule)] bg-[var(--me-paper)] p-4 text-base leading-relaxed text-[var(--me-ink)] placeholder:text-[var(--me-muted)] focus:border-[var(--me-forest)] focus:outline-none"
             />
           )}
 
           {paso.error && (
-            <p className="flex items-center gap-2 rounded-xl bg-alerta-fondo p-3 text-sm font-medium text-alerta" role="alert">
+            <p className="flex items-center gap-2 rounded-xl bg-[var(--me-danger-soft)] p-3 text-sm font-medium text-[var(--me-danger)]" role="alert">
               <IconoAlerta className="h-4 w-4 shrink-0" />
               {paso.error}
             </p>
@@ -443,7 +443,7 @@ export default function MeEstafaronForm() {
           <button
             type="submit"
             disabled={!valido}
-            className="inline-flex h-14 w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-alerta px-6 text-lg font-semibold text-white shadow-sm hover:brightness-110 disabled:cursor-not-allowed disabled:bg-linea disabled:text-suave disabled:shadow-none"
+            className="inline-flex h-14 w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-[var(--me-danger)] px-6 text-lg font-semibold text-white shadow-sm hover:brightness-110 disabled:cursor-not-allowed disabled:bg-[var(--me-rule)] disabled:text-[var(--me-muted)] disabled:shadow-none"
           >
             <IconoMagia className="h-5 w-5" />
             Analizar

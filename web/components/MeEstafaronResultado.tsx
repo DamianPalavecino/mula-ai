@@ -20,7 +20,7 @@ import {
   IconoTelefono,
 } from "@/components/MeEstafaronIconos";
 
-const VERDE = "bg-[#15803d]";
+const VERDE = "bg-[var(--me-accent)]";
 
 const ROLES: Record<RolEntidad, string> = {
   destino_plata: "Destino de la plata",
@@ -97,24 +97,24 @@ function Documento({
 }) {
   const [abierto, setAbierto] = useState(false);
   const secundario =
-    "inline-flex h-10 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-linea px-3 text-sm font-medium text-tinta hover:bg-panel sm:flex-none";
+    "inline-flex h-10 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-[var(--me-rule)] px-3 text-sm font-medium text-[var(--me-ink)] hover:bg-[var(--me-paper-2)] sm:flex-none";
   return (
-    <section id={id} className="scroll-mt-20 rounded-2xl border border-linea bg-fondo p-4 sm:p-5">
+    <section id={id} className="scroll-mt-20 rounded-2xl border border-[var(--me-rule)] bg-[var(--me-paper)] p-4 sm:p-5">
       <div className="flex flex-col gap-4">
         <div className="flex items-center gap-3">
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-alerta-fondo text-alerta">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--me-danger-soft)] text-[var(--me-danger)]">
             <Icono className="h-5 w-5" />
           </span>
           <div className="min-w-0">
-            <h3 className="text-lg font-semibold text-tinta">{titulo}</h3>
-            <p className="text-sm text-suave">{ayuda}</p>
+            <h3 className="text-lg font-semibold text-[var(--me-ink)]">{titulo}</h3>
+            <p className="text-sm text-[var(--me-muted)]">{ayuda}</p>
           </div>
         </div>
         <button
           type="button"
           onClick={onCopiar}
           className={`inline-flex h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-xl text-base font-semibold text-white transition-colors ${
-            copiado ? VERDE : "bg-tinta hover:bg-black"
+            copiado ? VERDE : "bg-[var(--me-forest)] hover:bg-[var(--me-ink)]"
           }`}
         >
           {copiado ? <IconoCheck className="h-5 w-5" /> : <IconoCopiar className="h-5 w-5" />}
@@ -122,14 +122,14 @@ function Documento({
         </button>
         <div className="relative">
           <pre
-            className={`overflow-hidden rounded-xl bg-panel p-4 font-sans text-sm leading-relaxed whitespace-pre-wrap text-texto ${
+            className={`overflow-hidden rounded-xl bg-[var(--me-paper-2)] p-4 font-sans text-sm leading-relaxed whitespace-pre-wrap text-[var(--me-ink-2)] ${
               abierto ? "" : "max-h-36"
             }`}
           >
             {texto}
           </pre>
           {!abierto && (
-            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 rounded-b-xl bg-gradient-to-t from-panel to-transparent" />
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 rounded-b-xl bg-gradient-to-t from-[var(--me-paper-2)] to-transparent" />
           )}
         </div>
         <div className="flex gap-2">
@@ -158,47 +158,47 @@ function Cuenta({ item }: { item: EntidadEnRed }) {
   return (
     <li
       className={`flex flex-col gap-3 rounded-2xl border-2 p-4 sm:p-5 ${
-        rojo ? "border-alerta bg-alerta-fondo" : "border-linea bg-panel"
+        rojo ? "border-[var(--me-danger)] bg-[var(--me-danger-soft)]" : "border-[var(--me-rule)] bg-[var(--me-paper-2)]"
       }`}
     >
       <div className="flex min-w-0 items-start gap-3">
         <span
           className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${
-            rojo ? "bg-alerta text-white" : "bg-fondo text-suave"
+            rojo ? "bg-[var(--me-danger)] text-white" : "bg-[var(--me-paper)] text-[var(--me-muted)]"
           }`}
         >
           {entidad.tipo === "telefono" ? <IconoTelefono className="h-5 w-5" /> : <IconoBilletera className="h-5 w-5" />}
         </span>
         <div className="min-w-0">
-          <p className="text-xs font-medium tracking-wide text-suave uppercase">
+          <p className="text-xs font-medium tracking-wide text-[var(--me-muted)] uppercase">
             {TIPOS_ENTIDAD[entidad.tipo]} · {ROLES[entidad.rol] ?? ROLES.otro}
           </p>
-          <p className="mt-0.5 font-mono text-base font-semibold break-all text-tinta sm:text-lg">{entidad.valor}</p>
+          <p className="mt-0.5 font-mono text-base font-semibold break-all text-[var(--me-ink)] sm:text-lg">{entidad.valor}</p>
         </div>
       </div>
       {!resumen ? (
-        <p className="text-sm text-suave">Red no disponible</p>
+        <p className="text-sm text-[var(--me-muted)]">Red no disponible</p>
       ) : rojo ? (
         <>
           <div className="flex items-end justify-between gap-3">
             <div>
-              <p className="text-5xl leading-none font-bold tracking-tight text-alerta">{reportes}</p>
-              <p className="mt-1 text-sm font-semibold text-alerta">
+              <p className="text-5xl leading-none font-bold tracking-tight text-[var(--me-danger)]">{reportes}</p>
+              <p className="mt-1 text-sm font-semibold text-[var(--me-danger)]">
                 {reportes === 1 ? "reporte" : "reportes"}
                 {provincias.length > 0 && ` · ${plural(provincias.length, "provincia", "provincias")}`}
               </p>
             </div>
             {resumen.monto_total ? (
-              <p className="text-right text-sm text-texto">
-                <span className="block text-suave">robado</span>
-                <span className="font-semibold text-tinta">{monto(resumen.monto_total)}</span>
+              <p className="text-right text-sm text-[var(--me-ink-2)]">
+                <span className="block text-[var(--me-muted)]">robado</span>
+                <span className="font-semibold text-[var(--me-ink)]">{monto(resumen.monto_total)}</span>
               </p>
             ) : null}
           </div>
           {provincias.length > 0 && (
             <ul className="flex flex-wrap gap-1.5">
               {provincias.map((p) => (
-                <li key={p} className="rounded-full bg-fondo px-2.5 py-0.5 text-xs font-medium text-tinta">
+                <li key={p} className="rounded-full bg-[var(--me-paper)] px-2.5 py-0.5 text-xs font-medium text-[var(--me-ink)]">
                   {p}
                 </li>
               ))}
@@ -206,7 +206,7 @@ function Cuenta({ item }: { item: EntidadEnRed }) {
           )}
         </>
       ) : (
-        <p className="flex items-center gap-1.5 text-sm text-suave">
+        <p className="flex items-center gap-1.5 text-sm text-[var(--me-muted)]">
           <IconoCheck className="h-4 w-4" />
           Sin reportes previos
         </p>
@@ -267,7 +267,7 @@ export default function MeEstafaronResultado({
   return (
     <div className="flex animate-entrada flex-col gap-8">
       {/* 1. Lo que pasó, en una mirada */}
-      <div className={`overflow-hidden rounded-2xl text-white ${peor ? "bg-alerta" : "bg-tinta"}`}>
+      <div className={`overflow-hidden rounded-2xl text-white ${peor ? "bg-[var(--me-danger)]" : "bg-[var(--me-forest)]"}`}>
         <div className="flex flex-col gap-3 p-5 sm:p-7">
           <div className="flex flex-wrap gap-2 text-sm font-medium">
             <span className="rounded-full bg-white/15 px-3 py-1">{labelModalidad(x.modalidad)}</span>
@@ -301,9 +301,9 @@ export default function MeEstafaronResultado({
 
       {/* 2. Las cuentas y sus reportes */}
       <section className="flex flex-col gap-3">
-        <h2 className="text-xl font-semibold tracking-tight text-tinta">Cuentas del caso</h2>
+        <h2 className="text-xl font-semibold tracking-tight text-[var(--me-ink)]">Cuentas del caso</h2>
         {cuentas.length === 0 ? (
-          <p className="rounded-2xl border border-linea bg-panel p-4 text-base text-texto">
+          <p className="rounded-2xl border border-[var(--me-rule)] bg-[var(--me-paper-2)] p-4 text-base text-[var(--me-ink-2)]">
             No encontramos alias, CBU, teléfonos, CUIT ni links legibles.
           </p>
         ) : (
@@ -317,7 +317,7 @@ export default function MeEstafaronResultado({
 
       {/* 3. Los dos textos, listos para copiar */}
       <section className="flex flex-col gap-3">
-        <h2 className="text-xl font-semibold tracking-tight text-tinta">Hacé esto ahora</h2>
+        <h2 className="text-xl font-semibold tracking-tight text-[var(--me-ink)]">Hacé esto ahora</h2>
         <Documento
           id="pedido-bloqueo"
           icono={IconoBanco}
@@ -338,20 +338,20 @@ export default function MeEstafaronResultado({
           copiado={copiado === "denuncia"}
           onCopiar={() => copiar("denuncia", x.denuncia)}
         />
-        <p className="text-sm text-suave">Completá lo que está entre [corchetes].</p>
+        <p className="text-sm text-[var(--me-muted)]">Completá lo que está entre [corchetes].</p>
       </section>
 
       {/* 4. Pasos */}
       {x.pasos.length > 0 && (
         <section className="flex flex-col gap-3">
-          <h2 className="text-xl font-semibold tracking-tight text-tinta">Próximas horas</h2>
-          <ol className="flex flex-col divide-y divide-linea rounded-2xl border border-linea">
+          <h2 className="text-xl font-semibold tracking-tight text-[var(--me-ink)]">Próximas horas</h2>
+          <ol className="flex flex-col divide-y divide-[var(--me-rule)] rounded-2xl border border-[var(--me-rule)]">
             {x.pasos.map((p, i) => (
               <li key={i} className="flex gap-3 p-4">
-                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-tinta text-xs font-semibold text-white">
+                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[var(--me-forest)] text-xs font-semibold text-white">
                   {i + 1}
                 </span>
-                <span className="text-base leading-relaxed text-tinta">{p}</span>
+                <span className="text-base leading-relaxed text-[var(--me-ink)]">{p}</span>
               </li>
             ))}
           </ol>
@@ -360,19 +360,19 @@ export default function MeEstafaronResultado({
 
       {/* 5. Sumar a la red */}
       {red.length > 0 && (
-        <section className="rounded-2xl border border-linea bg-panel p-5 sm:p-6">
+        <section className="rounded-2xl border border-[var(--me-rule)] bg-[var(--me-paper-2)] p-5 sm:p-6">
           {registro.tipo === "listo" ? (
             <div className="flex flex-col gap-3">
-              <p className="flex items-center gap-2 text-lg font-semibold text-tinta">
-                <IconoEscudo className="h-6 w-6 text-[#15803d]" />
+              <p className="flex items-center gap-2 text-lg font-semibold text-[var(--me-ink)]">
+                <IconoEscudo className="h-6 w-6 text-[var(--me-accent)]" />
                 Tu caso ya protege al próximo
               </p>
-              <ul className="flex flex-col gap-1 text-base text-texto">
+              <ul className="flex flex-col gap-1 text-base text-[var(--me-ink-2)]">
                 {registro.entidades
                   .filter((e) => e.encontrada)
                   .map((e) => (
                     <li key={`${e.tipo}:${e.valor_normalizado}`}>
-                      <span className="font-mono break-all text-tinta">{e.valor_normalizado}</span> ·{" "}
+                      <span className="font-mono break-all text-[var(--me-ink)]">{e.valor_normalizado}</span> ·{" "}
                       {plural(e.reportes, "reporte", "reportes")}
                     </li>
                   ))}
@@ -381,7 +381,7 @@ export default function MeEstafaronResultado({
                 {destino && (
                   <Link
                     href={`/app/verificar?valor=${encodeURIComponent(destino)}`}
-                    className="text-tinta underline underline-offset-4"
+                    className="text-[var(--me-ink)] underline underline-offset-4"
                   >
                     Verificar {destino}
                   </Link>
@@ -391,29 +391,29 @@ export default function MeEstafaronResultado({
           ) : (
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-center gap-3">
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-tinta text-white">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--me-forest)] text-white">
                   <IconoEscudo className="h-5 w-5" />
                 </span>
                 <div>
-                  <p className="text-lg font-semibold text-tinta">Protegé al próximo</p>
-                  <p className="text-sm text-suave">Solo las cuentas, nunca tu nombre.</p>
+                  <p className="text-lg font-semibold text-[var(--me-ink)]">Protegé al próximo</p>
+                  <p className="text-sm text-[var(--me-muted)]">Solo las cuentas, nunca tu nombre.</p>
                 </div>
               </div>
               <button
                 type="button"
                 onClick={sumarALaRed}
                 disabled={!puede_registrar || registro.tipo === "enviando"}
-                className="h-12 w-full shrink-0 cursor-pointer rounded-xl bg-tinta px-6 text-base font-semibold text-white hover:bg-black disabled:cursor-not-allowed disabled:opacity-40 sm:w-auto"
+                className="h-12 w-full shrink-0 cursor-pointer rounded-xl bg-[var(--me-forest)] px-6 text-base font-semibold text-white hover:bg-[var(--me-ink)] disabled:cursor-not-allowed disabled:opacity-40 sm:w-auto"
               >
                 {registro.tipo === "enviando" ? "Sumando…" : "Sumar a la red"}
               </button>
             </div>
           )}
           {!puede_registrar && registro.tipo !== "listo" && (
-            <p className="mt-3 text-sm text-suave">No habilitado en este servidor.</p>
+            <p className="mt-3 text-sm text-[var(--me-muted)]">No habilitado en este servidor.</p>
           )}
           {registro.tipo === "error" && (
-            <p className="mt-3 flex items-center gap-2 text-sm text-alerta" role="alert">
+            <p className="mt-3 flex items-center gap-2 text-sm text-[var(--me-danger)]" role="alert">
               <IconoAlerta className="h-4 w-4 shrink-0" />
               {registro.mensaje}
             </p>
@@ -423,19 +423,19 @@ export default function MeEstafaronResultado({
 
       {/* 6. Detalle, plegado */}
       {(x.transferencias.length > 0 || x.cronologia.length > 0) && (
-        <details className="group rounded-2xl border border-linea">
-          <summary className="flex cursor-pointer list-none items-center justify-between p-4 text-base font-medium text-tinta">
+        <details className="group rounded-2xl border border-[var(--me-rule)]">
+          <summary className="flex cursor-pointer list-none items-center justify-between p-4 text-base font-medium text-[var(--me-ink)]">
             Detalle
-            <IconoExpandir className="h-4 w-4 text-suave transition-transform group-open:rotate-180" />
+            <IconoExpandir className="h-4 w-4 text-[var(--me-muted)] transition-transform group-open:rotate-180" />
           </summary>
-          <div className="flex flex-col gap-5 border-t border-linea p-4">
+          <div className="flex flex-col gap-5 border-t border-[var(--me-rule)] p-4">
             {x.transferencias.length > 0 && (
               <ul className="flex flex-col gap-3">
                 {x.transferencias.map((t, i) => (
-                  <li key={i} className="rounded-xl bg-panel p-3 text-sm text-texto">
-                    <p className="text-base font-semibold text-tinta">
+                  <li key={i} className="rounded-xl bg-[var(--me-paper-2)] p-3 text-sm text-[var(--me-ink-2)]">
+                    <p className="text-base font-semibold text-[var(--me-ink)]">
                       {t.monto != null ? monto(t.monto) : "—"}
-                      <span className="font-normal text-suave">
+                      <span className="font-normal text-[var(--me-muted)]">
                         {" · "}
                         {t.fecha && /^\d{4}-\d{2}-\d{2}$/.test(t.fecha)
                           ? fechaCorta(`${t.fecha}T12:00:00`)
@@ -450,9 +450,9 @@ export default function MeEstafaronResultado({
               </ul>
             )}
             {x.cronologia.length > 0 && (
-              <ol className="flex flex-col gap-2 border-l-2 border-linea pl-4">
+              <ol className="flex flex-col gap-2 border-l-2 border-[var(--me-rule)] pl-4">
                 {x.cronologia.map((c, i) => (
-                  <li key={i} className="text-sm leading-relaxed text-texto">
+                  <li key={i} className="text-sm leading-relaxed text-[var(--me-ink-2)]">
                     {c}
                   </li>
                 ))}
@@ -463,12 +463,12 @@ export default function MeEstafaronResultado({
       )}
 
       {/* Barra fija en el celu: los dos textos siempre a mano */}
-      <div className="sticky bottom-0 z-10 -mx-4 flex gap-2 border-t border-linea bg-fondo/95 px-4 py-3 backdrop-blur sm:hidden">
+      <div className="sticky bottom-0 z-10 -mx-4 flex gap-2 border-t border-[var(--me-rule)] bg-[var(--me-paper)]/95 px-4 py-3 backdrop-blur sm:hidden">
         <button
           type="button"
           onClick={() => copiar("bloqueo", x.pedido_bloqueo)}
           className={`inline-flex h-11 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-xl text-sm font-semibold text-white ${
-            copiado === "bloqueo" ? VERDE : "bg-tinta"
+            copiado === "bloqueo" ? VERDE : "bg-[var(--me-forest)]"
           }`}
         >
           {copiado === "bloqueo" ? <IconoCheck className="h-4 w-4" /> : <IconoCopiar className="h-4 w-4" />}
@@ -478,7 +478,7 @@ export default function MeEstafaronResultado({
           type="button"
           onClick={() => copiar("denuncia", x.denuncia)}
           className={`inline-flex h-11 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-xl text-sm font-semibold ${
-            copiado === "denuncia" ? `${VERDE} text-white` : "border border-tinta text-tinta"
+            copiado === "denuncia" ? `${VERDE} text-white` : "border border-[var(--me-forest)] text-[var(--me-ink)]"
           }`}
         >
           {copiado === "denuncia" ? <IconoCheck className="h-4 w-4" /> : <IconoCopiar className="h-4 w-4" />}

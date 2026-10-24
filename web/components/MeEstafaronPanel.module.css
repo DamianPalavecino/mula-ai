@@ -1,0 +1,114 @@
+/* Panel "Me estafaron": autocontenido para montarlo en el dashboard de /app.
+   Colores: semántica del prototipo (docs/design/tokens.css). Si el dashboard define esos tokens
+   (--color-forest, --color-danger, ...), el panel los toma; si no, usa los valores del prototipo. */
+.panel {
+  --me-paper: var(--color-paper, #fbfcf8);
+  --me-paper-2: var(--color-paper-2, #f0f3ea);
+  --me-paper-3: var(--color-paper-3, #e7ecdf);
+  --me-ink: var(--color-ink, #173b28);
+  --me-ink-2: var(--color-ink-2, #34503e);
+  --me-muted: var(--color-muted, #586958);
+  --me-rule: var(--color-rule, #d1dbc9);
+  --me-accent: var(--color-accent, #187647);
+  --me-accent-soft: var(--color-accent-soft, #d8eddc);
+  --me-forest: var(--color-forest, #164d32);
+  --me-forest-ink: var(--color-forest-ink, #f0f7e7);
+  --me-field: var(--color-field, #d9ed87);
+  --me-danger: var(--color-danger, #9f2d26);
+  --me-danger-soft: var(--color-danger-soft, #ffded3);
+  --me-danger-line: var(--color-danger-line, #e9b0a2);
+  --me-danger-ink: var(--color-coral-ink, #542a22);
+  --me-ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --me-ease-icon: cubic-bezier(0.2, 0, 0, 1);
+
+  color: var(--me-ink);
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Elevación con sombra, no con borde (el borde transparente queda para forced-colors). */
+.card {
+  border: 1px solid transparent;
+  box-shadow:
+    0 0 0 1px rgb(23 59 40 / 0.07),
+    0 1px 2px rgb(23 59 40 / 0.06),
+    0 10px 24px -12px rgb(23 59 40 / 0.18);
+}
+
+/* Botones: se hunden a 0.96 al presionar; deshabilitados no. */
+.press {
+  transition-property: scale, background-color, color, opacity;
+  transition-duration: 150ms;
+  transition-timing-function: var(--me-ease-out);
+}
+.press:not(:disabled):active {
+  scale: 0.96;
+}
+
+/* Entradas poco frecuentes (cambio de paso, resultado): escalonadas de a 100 ms. */
+.entra {
+  animation: fundido 300ms var(--me-ease-out) both;
+  animation-delay: calc(var(--i, 0) * 100ms);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .entra {
+    animation-name: entra;
+  }
+}
+@keyframes entra {
+  from {
+    opacity: 0;
+    filter: blur(4px);
+    translate: 0 12px;
+  }
+}
+@keyframes fundido {
+  from {
+    opacity: 0;
+  }
+}
+
+/* Ícono que cambia (copiar → copiado): los dos en el DOM, fundido cruzado. */
+.swap {
+  display: inline-grid;
+}
+.swap > * {
+  grid-area: 1 / 1;
+  transition-property: opacity, scale, filter;
+  transition-duration: 300ms;
+  transition-timing-function: var(--me-ease-icon);
+}
+.swap > [data-visible="false"] {
+  opacity: 0;
+  scale: 0.25;
+  filter: blur(4px);
+}
+@media (prefers-reduced-motion: reduce) {
+  .swap > * {
+    transition-property: opacity;
+  }
+  .swap > [data-visible="false"] {
+    scale: 1;
+    filter: none;
+  }
+}
+
+/* Barra de progreso: escala en X (transform), no ancho. */
+.progreso {
+  transform-origin: left;
+  transition: scale 1000ms linear;
+}
+
+/* Línea de escaneo sobre las capturas mientras analiza. */
+@media (prefers-reduced-motion: no-preference) {
+  .escaneo {
+    animation: escaneo 1.4s var(--me-ease-out) infinite;
+  }
+}
+@keyframes escaneo {
+  from {
+    translate: 0 -100%;
+  }
+  to {
+    translate: 0 700%;
+  }
+}
