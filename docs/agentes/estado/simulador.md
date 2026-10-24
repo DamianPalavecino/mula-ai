@@ -12,19 +12,18 @@ Tarea original: `docs/agentes/03-web-simulador.md`. Toca solo `web/` (menos `/me
 - 12:59: restaurado el simulador que había borrado `ea0610f` (/me-estafaron commiteó desde un árbol viejo). Commit `96675b2`.
 
 ## En curso (exactamente dónde quedó: archivo, comando, qué faltaba)
-- **Tarea nueva (13:20, hasta freeze 14:30): rediseño UX** de landing, Header, /simulador, /verificar y /red (criterios en el pedido: 1 acción por pantalla, menos texto, rojo=peligro/verde=seguro, mobile 375 + 1080p). Plan en pasos, cada uno con check + push:
-  1. [ ] tokens (`web/app/globals.css`: color `seguro`) + `Header.tsx` (link `/me-estafaron`) + landing (`web/app/page.tsx`: hero corto, CTA simulador / verificar alias, sin párrafos).
-  2. [ ] /verificar (`VerifyForm.tsx`, `ResumenCard.tsx`): resultado grande, rojo/verde, cargando/error lindos.
-  3. [ ] simulador (`Simulador.tsx`): más WhatsApp (status bar, fondo, ticks) + alerta que impacte (banner + sacudida).
-  4. [ ] /red (`Graph.tsx`, `colores.ts`, `RedView.tsx`, `AlertFeed.tsx`): colores por riesgo como /verificar, leyenda simple, feed claro.
-- Capturas: script CDP en el scratchpad del agente (no está en el repo); alternativa: abrir `next start` y mirar a mano en 375 px y 1920x1080.
+- **FRENADO 14:0x por orden del humano** (plan 06: sin rutas públicas viejas; web/ la toca el orquestador). Esperando instrucciones. No pushear nada de esto sobre landing, Header, /app ni /admin.
+- Rediseño de verificar hecho y probado (tests + build verdes, capturas ok), **sin pushear**: commit local `6d9e2f5` en la rama local `wip-verificar-ux` de este worktree (`git show wip-verificar-ux --stat`). Para portar:
+  - `web/lib/verificar.ts` + `web/lib/verificar.test.ts`: `validarValor(v)` → `{ok, tipo}` o `{ok:false, error}` (alias 6–20, CBU/CVU 22 dígitos, teléfono 8–13, CUIT 11 con prefijo, link; vacío = sin mensaje) y `EJEMPLOS_VERIFICAR` (reales de prod: juli.martinez.mp 28, CBU 0110599540000123456782 9, tel 1167891234 16, limpio maria.lopez.ok 0). 4 tests en `npm test`.
+  - `web/components/VerificarForm.tsx` (client): input grande con ícono y badge del tipo detectado, botón deshabilitado hasta que sea válido, error inline corto, spinner, chips rojos/verde de un clic que consultan solos. Props `base` (`/app/verificar` o `/admin/verificar`) e `inicial`; navega a `${base}?valor=` (la página server-side consulta).
+  - `web/components/ResumenCard.tsx` (mismas props): rojo con número gigante + chips de provincias/modalidades con íconos + monto/último; verde "Sin reportes". Sirve en /app, /admin y el panel del grafo (`compacto`).
+  - `web/components/iconos.tsx`: SVG inline (peligro, ok, buscar, ubicación, plata, reloj, guion, spinner).
+  - `web/app/globals.css`: tokens `--color-seguro`, `--color-seguro-fondo`, `--color-seguro-linea`.
+  - Uso en páginas (en la rama wip): en `app/app/verificar/page.tsx` y `app/admin/verificar/page.tsx`, reemplazar el `<form method="GET">` por `<VerificarForm key={valor} base="..." inicial={valor} />`, título "Verificá antes de pagar", sin párrafo.
 
 ## Próximo paso
-1. Cuando el worker del VPS tenga URL **HTTPS**: cargar `NEXT_PUBLIC_WORKER_URL` en Vercel (sin `/analizar`) y redeployar (se embebe en el build). Probar `/simulador` en la URL de Vercel: no debe decir "modo demo".
-2. Mirar a ojo en `/red` que el nodo de la alerta nueva pulse en rojo y el grafo haga zoom (las capturas del navegador de Orca no muestran bien el canvas).
-3. Si sobra tiempo: pulido de la landing (Tarea 3 de `03-web-simulador.md`).
-
-Para probar en local sin tocar `.env*`: `cd worker && AUTH_DIR=<carpeta vacía> PORT=8080 npx tsx src/index.ts` (carpeta vacía para no patear la sesión real de WhatsApp) y `cd web && NEXT_PUBLIC_WORKER_URL=http://localhost:8080 npm run build && npx next start -p 3107`.
+- Esperar instrucciones. Si dicen portar: `git checkout wip-verificar-ux -- web/lib/verificar.ts web/lib/verificar.test.ts web/components/VerificarForm.tsx web/components/iconos.tsx` (+ ResumenCard/globals.css mirando el diff contra main, que cambió), `npm run check web`, push.
+- El simulador público y `/red` ya no existen (plan 06); lo de NEXT_PUBLIC_WORKER_URL quedó obsoleto.
 
 ## Bloqueos / qué necesita del humano
 - URL HTTPS pública del worker en el VPS → `NEXT_PUBLIC_WORKER_URL` en Vercel. Con `http://` el navegador lo bloquea desde Vercel y cae al mock sin avisar.
