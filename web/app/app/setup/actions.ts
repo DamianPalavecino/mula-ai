@@ -10,11 +10,21 @@ import { validarSetup, type ErroresSetup } from "@/lib/setup";
 export interface EstadoSetup {
   errores?: ErroresSetup;
   error?: string;
+  // Lo que cargó el usuario: React resetea el form tras la action, así no se pierde.
+  valores?: Record<"nombre" | "telefono" | "provincia" | "contactos" | "familiares", string>;
 }
 
 // Una fila de protegidos por usuario (demo): update si existe, insert si no.
 export async function guardarProtegido(_prev: EstadoSetup, form: FormData): Promise<EstadoSetup> {
   const sesion = await requireUser();
+  const campo = (k: string) => String(form.get(k) ?? "");
+  const valores = {
+    nombre: campo("nombre"),
+    telefono: campo("telefono"),
+    provincia: campo("provincia"),
+    contactos: campo("contactos"),
+    familiares: campo("familiares"),
+  };
   const r = validarSetup(
     {
       nombre: form.get("nombre"),
@@ -25,7 +35,7 @@ export async function guardarProtegido(_prev: EstadoSetup, form: FormData): Prom
     },
     PROVINCIAS,
   );
-  if (!r.ok) return { errores: r.errores };
+  if (!r.ok) return { errores: r.errores, valores };
 
   const sb = supabaseAdmin();
   const normalizar = async (valor: string) => {
@@ -57,7 +67,7 @@ export async function guardarProtegido(_prev: EstadoSetup, form: FormData): Prom
     if (error) throw new Error(error.message);
   } catch (e) {
     console.error("[app/setup]", (e as Error).message);
-    return { error: "No pudimos guardar. Probá de nuevo en unos segundos." };
+    return { error: "No pudimos guardar. Probá de nuevo en unos segundos.", valores };
   }
 
   revalidatePath("/app");

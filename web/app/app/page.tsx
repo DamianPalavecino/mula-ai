@@ -60,17 +60,22 @@ export default async function AppPage() {
         </div>
       ) : (
         <>
-          <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-baseline sm:justify-between">
-            <h1 className="text-2xl font-semibold tracking-tight text-tinta sm:text-3xl">
-              Protegés a {p.nombre}
-            </h1>
-            <Link href="/app/setup" className="text-sm font-medium text-tinta underline underline-offset-2 hover:text-black">
+          <div className="mt-3 flex items-start justify-between gap-4">
+            <div>
+              <h1 className="text-2xl font-semibold tracking-tight text-tinta sm:text-3xl">
+                Protegés a {p.nombre}
+              </h1>
+              <p className="mt-1 text-base text-suave">
+                {[formatearTelefono(p.telefono), p.provincia].filter(Boolean).join(" · ")}
+              </p>
+            </div>
+            <Link
+              href="/app/setup"
+              className="mt-1.5 shrink-0 text-sm font-medium text-tinta underline underline-offset-2 hover:text-black"
+            >
               Editar
             </Link>
           </div>
-          <p className="mt-1 text-base text-suave">
-            {[formatearTelefono(p.telefono), p.provincia].filter(Boolean).join(" · ")}
-          </p>
           <div className="mt-6">
             <AppAlertas iniciales={alertas} nombre={p.nombre ?? "tu familiar"} />
           </div>
