@@ -14,7 +14,7 @@ import type { AddressInfo } from 'node:net';
 import { crearServidorHttp, ipCliente, RateLimiter, validarAnalizar } from './http.js';
 import type { AlertaPayload, ResumenEntidad } from './network.js';
 import { procesarMensaje, type DepsPipeline } from './pipeline.js';
-import { enviadorWhatsapp } from './alerts.js';
+import { enviadorKapso, enviadorWhatsapp } from './alerts.js';
 import { GestorSesiones, jidDeTelefono, rutaSesion, type EventosSesion } from './sesiones.js';
 
 let ok = 0;
@@ -539,9 +539,43 @@ check('sesiones: ruta inválida → null', rutaSesion('/sesiones/abc') === null 
 {
   const mandados: string[] = [];
   const sock = { user: { id: '5493410000000:3@s.whatsapp.net' }, sendMessage: async (jid: string) => void mandados.push(jid) } as any;
-  const env = await enviadorWhatsapp(sock, ['5493415551234@s.whatsapp.net', '5491122223333@s.whatsapp.net', '5493410000000@s.whatsapp.net'])({ persona: 'p', familia: 'f' });
+  const env = await enviadorWhatsapp(sock, ['5493415551234@s.whatsapp.net', '5491122223333@s.whatsapp.net', '5493410000000@s.whatsapp.net'], null)({ persona: 'p', familia: 'f' });
   check('alerts: manda a propio + cada familiar (sin repetir el propio)', JSON.stringify(mandados) === JSON.stringify(['5493410000000@s.whatsapp.net', '5493415551234@s.whatsapp.net', '5491122223333@s.whatsapp.net']), mandados);
   check('alerts: destinos etiquetados', env.filter((e) => e.destino === 'familia').length === 2, env);
+}
+{
+  // Con Kapso: los números salen del número de Kapso; los grupos (Cloud API no puede) y los fallos, por Baileys.
+  const porSock: string[] = [];
+  const porKapso: Array<[string, string]> = [];
+  const sock = { user: { id: '5493410000000:3@s.whatsapp.net' }, sendMessage: async (jid: string) => void porSock.push(jid) } as any;
+  const kapso = async (numero: string, text: string) => {
+    if (numero === '5491199999999') throw new Error('fuera de la ventana de 24 h');
+    porKapso.push([numero, text]);
+  };
+  const env = await enviadorWhatsapp(sock, ['5493415551234@s.whatsapp.net', '123@g.us', '5491199999999@s.whatsapp.net'], kapso)({ persona: 'p', familia: 'f' });
+  check('alerts kapso: propio y familiar por Kapso', JSON.stringify(porKapso) === JSON.stringify([['5493410000000', 'p'], ['5493415551234', 'f']]), porKapso);
+  check('alerts kapso: grupo y fallo de Kapso → Baileys', JSON.stringify(porSock) === JSON.stringify(['123@g.us', '5491199999999@s.whatsapp.net']), porSock);
+  check('alerts kapso: los 4 destinos cuentan como enviados', env.length === 4, env);
+
+  const pedidos: Array<{ url: string; init: any }> = [];
+  const fakeFetch = (async (url: string, init: any) => {
+    pedidos.push({ url, init });
+    return new Response('{"messages":[{"id":"wamid.x"}]}', { status: 200 });
+  }) as typeof fetch;
+  await enviadorKapso('KEY', '1416697921521182', fakeFetch)('5493415551234', 'hola');
+  const pe = pedidos[0];
+  check('kapso: POST al proxy de Meta con el phone_number_id', pe?.url === 'https://api.kapso.ai/meta/whatsapp/v23.0/1416697921521182/messages' && pe.init.method === 'POST', pe?.url);
+  check('kapso: header X-API-Key', pe?.init.headers['X-API-Key'] === 'KEY', pe?.init.headers);
+  const body = JSON.parse(pe?.init.body ?? '{}');
+  check('kapso: body de texto', body.messaging_product === 'whatsapp' && body.to === '5493415551234' && body.type === 'text' && body.text.body === 'hola', body);
+  const falla = (async () => new Response('{"error":{"message":"Re-engagement message"}}', { status: 400 })) as unknown as typeof fetch;
+  let tiro = false;
+  try {
+    await enviadorKapso('KEY', '1', falla)('549', 'x');
+  } catch (e) {
+    tiro = /400/.test(String(e));
+  }
+  check('kapso: status no-2xx tira error', tiro);
 }
 {
   const asociadas: Array<[number, number]> = [];

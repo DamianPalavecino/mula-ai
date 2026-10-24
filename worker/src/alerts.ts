@@ -104,14 +104,37 @@ export function armarAlertas(
   return { persona: p.join(' '), familia };
 }
 
+/** Manda un texto a un número (549…, sin @). Tira si no se pudo. */
+export type EnviarTexto = (numero: string, text: string) => Promise<void>;
+
+/**
+ * Envío por el número de Kapso (WhatsApp Cloud API vía su proxy de Meta). Texto libre: solo llega
+ * si el destinatario le escribió a ese número en las últimas 24 h (sin templates).
+ */
+export function enviadorKapso(apiKey: string, phoneNumberId: string, f: typeof fetch = fetch): EnviarTexto {
+  return async (numero, text) => {
+    const res = await f(`https://api.kapso.ai/meta/whatsapp/v23.0/${phoneNumberId}/messages`, {
+      method: 'POST',
+      headers: { 'X-API-Key': apiKey, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messaging_product: 'whatsapp', to: numero, type: 'text', text: { body: text } }),
+    });
+    if (!res.ok) throw new Error(`kapso ${res.status}: ${(await res.text()).slice(0, 300)}`);
+  };
+}
+
+const kapsoConfig: EnviarTexto | null =
+  config.kapsoApiKey && config.kapsoPhoneNumberId ? enviadorKapso(config.kapsoApiKey, config.kapsoPhoneNumberId) : null;
+
 /**
  * Enviador de WhatsApp para el pipeline: manda al chat propio y a la familia (por defecto el
  * grupo FAMILY_GROUP_JID; en las sesiones por protegido, el chat de cada familiar). Nunca le
- * manda nada al remitente. Un destino que falla no corta el otro.
+ * manda nada al remitente. Un destino que falla no corta el otro. Con Kapso configurado, los
+ * números (no los grupos) reciben el aviso desde el número de Kapso; si Kapso falla, por Baileys.
  */
 export function enviadorWhatsapp(
   sock: WASocket,
   familia: string[] = config.familyGroupJid ? [config.familyGroupJid] : [],
+  kapso: EnviarTexto | null = kapsoConfig,
 ): Enviador {
   return async (textos) => {
     const enviados: Array<{ destino: Destino; jid: string }> = [];
@@ -122,6 +145,15 @@ export function enviadorWhatsapp(
     ];
     for (const [destino, jid, text] of destinos) {
       if (!jid) continue;
+      if (kapso && jid.endsWith('@s.whatsapp.net')) {
+        try {
+          await kapso(jid.split('@')[0]!, text);
+          enviados.push({ destino, jid });
+          continue;
+        } catch (err) {
+          console.error(`[alerts] Kapso no pudo mandar a ${destino}, voy por Baileys:`, err);
+        }
+      }
       try {
         await sock.sendMessage(jid, { text });
         enviados.push({ destino, jid });

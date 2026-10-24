@@ -46,6 +46,9 @@ export const config = {
   webOrigin: env('WEB_ORIGIN'),
   /** Riesgo mínimo (0-100) para mandar alerta. */
   alertThreshold: Number(env('ALERT_THRESHOLD') ?? 60),
+  /** Si están los dos, las alertas salen del número de Kapso (Cloud API) en vez del propio. */
+  kapsoApiKey: env('KAPSO_API_KEY'),
+  kapsoPhoneNumberId: env('KAPSO_PHONE_NUMBER_ID'),
 };
 
 export type Config = typeof config;
@@ -76,6 +79,8 @@ export function validarConfig(): void {
     console.warn(`[config] ANALIZAR_SOLO activo: solo se analizan ${config.analizarSolo.size} número(s); el resto se ignora.`);
   if (!config.mulaToken)
     console.warn('[config] MULA_TOKEN no está: POST /analizar rechaza todo con 401 (solo /health responde).');
+  if (config.kapsoApiKey && config.kapsoPhoneNumberId)
+    console.warn(`[config] Alertas por Kapso (phone_number_id ${config.kapsoPhoneNumberId}); grupos y fallos van por Baileys.`);
   if (!config.openaiApiKey) console.warn('[config] OPENAI_API_KEY no está: los audios no se transcriben.');
   if (!process.env.PROTEGIDO_NOMBRE) console.warn('[config] PROTEGIDO_NOMBRE no está: uso "la persona protegida".');
   if ([config.alertThreshold, config.classifierTimeoutMs, config.classifierBudgetMs].some(Number.isNaN)) {
