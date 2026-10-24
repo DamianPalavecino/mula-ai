@@ -42,6 +42,10 @@ supabase.exe db query --linked "select fuente, count(*) from reportes group by 1
    | `WORKER_URL` | URL pública del worker (§3), **server-only**: la llama el server de Vercel, nunca el browser. No usar `NEXT_PUBLIC_WORKER_URL` |
    | `MULA_TOKEN` | mismo valor que en `worker.conf` del VPS; server-only (header `X-Mula-Token` en `POST /analizar`) |
    | `OPENROUTER_API_KEY` (y opcional `SUPABASE_SERVICE_ROLE_KEY`, `EXTRACTOR_MODEL`) | para `/me-estafaron`; server-only, **sin** `NEXT_PUBLIC_` |
+   | `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY` | auth (Clerk). `NEXT_PUBLIC_CLERK_SIGN_IN_URL=/entrar`, `NEXT_PUBLIC_CLERK_SIGN_UP_URL=/registro` para que el login sea el nuestro y no el Account Portal de Clerk |
+   | `ADMIN_EMAILS` | emails con rol gobierno (`/admin`), separados por coma; server-only |
+   | `SUPABASE_SERVICE_ROLE_KEY` | obligatoria: toda la web lee server-side con service role (anon está cerrado) |
+   | `WORKER_URL`, `MULA_TOKEN` | el server de la web llama al worker (`/app/api/analizar`); server-only |
 4. Deploy. Cada vez que cambies una `NEXT_PUBLIC_*` → Redeploy (se embeben en el build).
 5. Smoke: `$env:WEB_URL="https://<proyecto>.vercel.app"; npm run check prod` (prueba `/`, `/verificar?valor=juli.martinez.mp` y `/red`). Después abrilos en incógnito.
 
