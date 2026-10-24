@@ -111,7 +111,7 @@ export function AppSidebar({
                   <Icono />
                   <span>{titulo}</span>
                 </SidebarMenuButton>
-                {id === "inicio" && alertas > 0 && (
+                {id === "alertas" && alertas > 0 && (
                   <SidebarMenuBadge className="rounded-full bg-alerta text-white peer-hover/menu-button:text-white">
                     {alertas}
                   </SidebarMenuBadge>

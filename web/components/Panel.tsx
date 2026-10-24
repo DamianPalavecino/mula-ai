@@ -5,8 +5,6 @@ import { BellIcon, FileWarningIcon, MapPinIcon, NetworkIcon } from "lucide-react
 import type { Alerta, Grafo } from "@/lib/tipos";
 import type { Conteo } from "@/lib/adminStats";
 import type { Tab } from "@/lib/panel";
-import { labelModalidad } from "@/lib/tipos";
-import { fechaRelativa } from "@/lib/formato";
 import type { ValoresSetup } from "@/components/AppSetupForm";
 import AppAlertas from "@/components/AppAlertas";
 import AppProbarMensaje from "@/components/AppProbarMensaje";
@@ -15,6 +13,7 @@ import MeEstafaronForm from "@/components/MeEstafaronForm";
 import AdminRed from "@/components/AdminRed";
 import VerificarPanel from "@/components/VerificarPanel";
 import { AppShell } from "@/components/app-shell";
+import InicioChat from "@/components/InicioChat";
 
 export interface DatosPanel {
   tabInicial: Tab;
@@ -72,41 +71,6 @@ function Barras({ titulo, items }: { titulo: string; items: Conteo[] }) {
   );
 }
 
-// Alertas de toda la red (alertaParaRol ya sacó los datos personales para usuarios).
-function AlertasRed({ alertas, onVer }: { alertas: Alerta[]; onVer: () => void }) {
-  if (alertas.length === 0) {
-    return (
-      <div className="flex flex-col items-center gap-2 rounded-tarjeta border border-dashed border-linea p-10 text-center">
-        <BellIcon className="size-8 text-seguro" />
-        <p className="font-semibold text-tinta">Sin alertas en la red</p>
-      </div>
-    );
-  }
-  return (
-    <ul className="divide-y divide-linea overflow-hidden rounded-tarjeta border border-linea bg-fondo">
-      {alertas.map((a) => {
-        const alto = (a.riesgo ?? 0) >= 70;
-        return (
-          <li key={a.id}>
-            <button type="button" onClick={onVer} className="flex min-h-11 w-full cursor-pointer items-center gap-3 px-4 py-3 text-left hover:bg-panel">
-              <span className={`size-2.5 shrink-0 rounded-full ${alto ? "bg-alerta" : "bg-suave"}`} aria-hidden />
-              <span className="min-w-0 flex-1">
-                <span className="block truncate font-semibold text-tinta">{labelModalidad(a.modalidad)}</span>
-                <span className="block text-sm text-suave">{fechaRelativa(a.created_at)}</span>
-              </span>
-              {a.riesgo != null && (
-                <span className={`shrink-0 rounded-control px-2 py-0.5 text-sm font-semibold tabular-nums ${alto ? "bg-alerta text-white" : "bg-panel text-tinta"}`}>
-                  {a.riesgo}
-                </span>
-              )}
-            </button>
-          </li>
-        );
-      })}
-    </ul>
-  );
-}
-
 // Panel único de /app: shell de Efferd (sidebar) + una sección a la vez, sin recargar (?tab=).
 export default function Panel(d: DatosPanel) {
   const [tab, setTab] = useState<Tab>(d.tabInicial);
@@ -141,32 +105,35 @@ export default function Panel(d: DatosPanel) {
 
       {seccion(
         "inicio",
-        <div className="flex flex-col gap-6">
-          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <div className="flex h-[calc(100dvh-7.5rem)] min-h-[480px] flex-col gap-4 md:h-[calc(100dvh-9rem)]">
+          <div className="grid shrink-0 grid-cols-2 gap-3 lg:grid-cols-4">
             <Stat label="Alertas" valor={d.misAlertas.length} Icono={BellIcon} tono={d.misAlertas.length ? "alerta" : "neutro"} />
             <Stat label="Reportes en la red" valor={d.stats.reportes} Icono={FileWarningIcon} />
             <Stat label="Cuentas y números" valor={d.stats.cuentas} Icono={NetworkIcon} />
             <Stat label="Provincias" valor={d.stats.provincias} Icono={MapPinIcon} />
           </div>
-          {d.protegido ? (
-            <AppAlertas iniciales={d.misAlertas} nombre={d.protegido.nombre} />
-          ) : (
-            <button
-              type="button"
-              onClick={() => ir("ajustes")}
-              className="presionable flex min-h-11 cursor-pointer flex-col items-center gap-2 rounded-tarjeta border border-dashed border-seguro-linea bg-seguro-fondo p-10 text-center text-bosque"
-            >
-              <BellIcon className="size-8 text-seguro" />
-              <span className="text-lg font-bold">Cargá a quién cuidás</span>
-            </button>
-          )}
+          {/* Contenido principal: el chat con IA (contrato en docs/agentes/estado/chat.md). */}
+          <div className="min-h-0 flex-1">
+            <InicioChat protegido={d.protegido?.nombre ?? null} onIr={ir} />
+          </div>
         </div>,
       )}
 
       {seccion(
         "alertas",
         <div className="max-w-3xl">
-          <AlertasRed alertas={d.alertasRed} onVer={() => ir("red")} />
+          {d.protegido ? (
+            <AppAlertas iniciales={d.misAlertas} nombre={d.protegido.nombre} />
+          ) : (
+            <button
+              type="button"
+              onClick={() => ir("ajustes")}
+              className="presionable flex min-h-11 w-full cursor-pointer flex-col items-center gap-2 rounded-tarjeta border border-dashed border-seguro-linea bg-seguro-fondo p-10 text-center text-bosque"
+            >
+              <BellIcon className="size-8 text-seguro" />
+              <span className="text-lg font-bold">Cargá a quién cuidás</span>
+            </button>
+          )}
         </div>,
       )}
 
