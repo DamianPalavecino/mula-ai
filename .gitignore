@@ -14,3 +14,6 @@ auth_info/
 # supabase local
 supabase/.branches/
 supabase/.temp/
+
+# reglas locales de Claude
+CLAUDE.local.md
