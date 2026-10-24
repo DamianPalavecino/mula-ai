@@ -17,6 +17,7 @@ import makeWASocket, {
   type WAMessageKey,
   type WASocket,
 } from '@whiskeysockets/baileys';
+import { rm } from 'node:fs/promises';
 import pino from 'pino';
 import qrcode from 'qrcode-terminal';
 import { enviadorWhatsapp } from './alerts.js';
@@ -25,6 +26,7 @@ import { debeAnalizar, esMensajePrevio } from './filter.js';
 import { iniciarHttp, type EstadoWhatsapp } from './http.js';
 import { normalizarTelefono } from './phone.js';
 import { procesarMensaje as pipeline } from './pipeline.js';
+import { decidirReconexion } from './reconnect.js';
 import { transcribirAudio } from './transcribe.js';
 
 validarConfig();
@@ -213,14 +215,15 @@ async function conectar(): Promise<void> {
     if (connection === 'close') {
       estadoWa = 'desconectado';
       const code = (lastDisconnect?.error as { output?: { statusCode?: number } } | undefined)?.output?.statusCode;
-      if (code === DisconnectReason.loggedOut) {
-        log(`[wa] sesión cerrada (logged out). Borrá ${config.authDir} y reiniciá para escanear el QR de nuevo.`);
-        process.exit(1);
-      }
       intentos++;
-      const espera = code === DisconnectReason.restartRequired ? 0 : Math.min(30_000, 1000 * 2 ** Math.min(intentos, 5));
-      log(`[wa] conexión cerrada (code ${code ?? '?'}). Reconecto en ${espera / 1000}s…`);
-      setTimeout(() => void conectar().catch((e) => log('[wa] error al reconectar:', e)), espera);
+      const d = decidirReconexion(code, intentos);
+      if (d.accion === 'relogin') {
+        // Antes era process.exit(1): Railway reiniciaba con la sesión muerta y quedaba en loop.
+        log(`[wa] ⚠️ ${d.motivo} (${config.authDir})`);
+        await rm(config.authDir, { recursive: true, force: true }).catch((e) => log('[wa] no pude borrar la sesión:', e));
+        intentos = 0;
+      } else log(`[wa] ${d.motivo}. Reconecto en ${d.esperaMs / 1000}s…`);
+      setTimeout(() => void conectar().catch((e) => log('[wa] error al reconectar:', e)), d.esperaMs);
     }
   });
 

@@ -37,7 +37,7 @@ npm start
 
 La primera vez aparece un QR en la terminal: **WhatsApp → Dispositivos vinculados → Vincular un dispositivo**. La sesión queda en `AUTH_DIR` (default `./auth_info`, en `.gitignore`). Si el QR no se ve bien, el log también imprime el string crudo y un link que lo renderiza.
 
-Para volver a vincular: borrá la carpeta de `AUTH_DIR` y reiniciá.
+Para volver a vincular: borrá la carpeta de `AUTH_DIR` y reiniciá. Si se desvincula desde el teléfono (`logged out`), el worker borra la sesión solo y muestra un QR nuevo en el log, sin reiniciar. Si el log dice `otra instancia con la misma sesión (code 440)`, hay dos workers con la misma sesión (local + Railway, o dos réplicas): dejá uno solo.
 
 ### Sacar el JID del grupo familiar
 

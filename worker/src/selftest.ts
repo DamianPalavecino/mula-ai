@@ -5,6 +5,8 @@
 import { armarAlertas } from './alerts.js';
 import { clasificar, clasificarHeuristico } from './classify.js';
 import { config } from './config.js';
+import { DisconnectReason } from '@whiskeysockets/baileys';
+import { decidirReconexion } from './reconnect.js';
 import { completarCbu, detectarEntidades, validarCbu } from './entities.js';
 import { debeAnalizar, esMensajePrevio } from './filter.js';
 import { normalizarTelefono } from './phone.js';
@@ -287,6 +289,20 @@ check('http: IP sin X-Forwarded-For', ipCliente(undefined, '::ffff:127.0.0.1') =
   } finally {
     server.close();
   }
+}
+
+// --- reconexión de Baileys ---
+{
+  const lo = decidirReconexion(DisconnectReason.loggedOut, 3);
+  check('reconexión: logged out → borrar sesión y QR nuevo', lo.accion === 'relogin' && lo.esperaMs === 0 && /QR/.test(lo.motivo), lo);
+  const rr = decidirReconexion(DisconnectReason.restartRequired, 1);
+  check('reconexión: 515 restart → reconecta ya', rr.accion === 'reconectar' && rr.esperaMs === 0, rr);
+  const cr = decidirReconexion(DisconnectReason.connectionReplaced, 1);
+  check('reconexión: 440 → espera larga y avisa de otra instancia', cr.accion === 'reconectar' && cr.esperaMs >= 60_000 && /otra instancia/.test(cr.motivo), cr);
+  const b1 = decidirReconexion(DisconnectReason.connectionLost, 1).esperaMs;
+  const b5 = decidirReconexion(DisconnectReason.connectionLost, 5).esperaMs;
+  const b9 = decidirReconexion(undefined, 9).esperaMs;
+  check('reconexión: backoff crece y topea en 30 s', b1 < b5 && b5 <= 30_000 && b9 === 30_000, { b1, b5, b9 });
 }
 
 // --- classify: presupuesto de tiempo del LLM (fetch falso, sin red) ---
