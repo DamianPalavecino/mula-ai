@@ -200,18 +200,46 @@ function clamp(n: number): number {
 }
 
 /**
+ * Carrera contra el reloj: si el LLM no contesta en `presupuestoMs` y la heurística ya da alerta
+ * (riesgo ≥ umbral), se queda con la heurística para que la alerta salga en menos de 5 s.
+ * Si la heurística no alerta, espera al LLM (un falso negativo rápido no sirve). `llm` no debe rechazar.
+ */
+export async function conPresupuesto<T extends { riesgo: number }>(
+  llm: Promise<T>,
+  heuristica: T,
+  { presupuestoMs, umbral }: { presupuestoMs: number; umbral: number },
+): Promise<T> {
+  if (heuristica.riesgo < umbral || !Number.isFinite(presupuestoMs)) return llm;
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const reloj = new Promise<null>((res) => (timer = setTimeout(() => res(null), presupuestoMs)));
+  const r = await Promise.race([llm, reloj]);
+  clearTimeout(timer);
+  if (r === null) {
+    console.warn(`[classify] el LLM tardó más de ${presupuestoMs} ms: alerto con la heurística (riesgo ${heuristica.riesgo})`);
+    return heuristica;
+  }
+  return r;
+}
+
+/**
  * Clasifica un mensaje con el LLM vía OpenRouter (salida estructurada). Si el LLM falla, tarda demasiado
  * o no hay API key, devuelve una clasificación heurística para que la demo no se caiga.
+ * `presupuestoMs` (default CLASSIFIER_BUDGET_MS; Infinity = esperar siempre al LLM): ver `conPresupuesto`.
  */
-export async function clasificar(texto: string, ctx: ContextoMensaje = {}): Promise<ResultadoClasificacion> {
+export async function clasificar(
+  texto: string,
+  ctx: ContextoMensaje = {},
+  { presupuestoMs = config.classifierBudgetMs }: { presupuestoMs?: number } = {},
+): Promise<ResultadoClasificacion> {
   const textoCompleto = [...(ctx.historial ?? []), texto].join('\n');
   const detectadas = detectarEntidades(textoCompleto);
   const regex = entidadesDeRed(detectadas);
   const monto = montoMaximo(detectarEntidades(texto)) ?? montoMaximo(detectadas);
+  const heuristica: ResultadoClasificacion = { ...clasificarHeuristico(texto, ctx), monto };
 
-  if (!config.openrouterApiKey) return { ...clasificarHeuristico(texto, ctx), monto };
+  if (!config.openrouterApiKey) return heuristica;
 
-  try {
+  const llm = (async (): Promise<ResultadoClasificacion> => {
     const prompt = armarPrompt(texto, ctx, regex);
     // CLASSIFIER_TIMEOUT_MS es el presupuesto TOTAL (intento + reintento), así la alerta no se demora.
     const limite = Date.now() + config.classifierTimeoutMs;
@@ -234,10 +262,12 @@ export async function clasificar(texto: string, ctx: ContextoMensaje = {}): Prom
       origen: 'llm',
       monto,
     };
-  } catch (err) {
+  })().catch((err) => {
     console.warn(`[classify] LLM falló, uso heurística: ${String(err)}`);
-    return { ...clasificarHeuristico(texto, ctx), monto };
-  }
+    return heuristica;
+  });
+
+  return conPresupuesto(llm, heuristica, { presupuestoMs, umbral: config.alertThreshold });
 }
 
 // ---------------- fallback heurístico ----------------

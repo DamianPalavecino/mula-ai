@@ -129,14 +129,19 @@ async function main(): Promise<void> {
       'OPENROUTER_API_KEY no está en el entorno: no corro el LLM. Muestro solo la heurística de fallback.\n',
     );
   console.log(`Clasificador: ${usarLlm ? config.classifierModel : 'heurística'}\n`);
-  console.log(`${pad('#', 3)} ${pad('esperado', 9)} ${pad('obtenido', 9)} ${pad('ok', 3)} ${pad('riesgo', 6)} ${pad('modalidad', 22)} ${pad('origen', 10)} texto`);
+  console.log(`${pad('#', 3)} ${pad('esperado', 9)} ${pad('obtenido', 9)} ${pad('ok', 3)} ${pad('riesgo', 6)} ${pad('modalidad', 22)} ${pad('origen', 10)} ${pad('ms', 7)} texto`);
 
   let aciertos = 0;
+  const tiempos: number[] = [];
   let aciertosModalidad = 0;
   let conModalidad = 0;
   for (const [i, c] of CASOS.entries()) {
     const ctx = { historial: c.historial, remitente: null, protegido: 'la abuela' };
-    const r = usarLlm ? await clasificar(c.texto, ctx) : { ...clasificarHeuristico(c.texto, ctx), monto: null };
+    const t0 = Date.now();
+    // sin carrera contra la heurística: acá se mide la precisión (y la latencia) del LLM solo
+    const r = usarLlm ? await clasificar(c.texto, ctx, { presupuestoMs: Infinity }) : { ...clasificarHeuristico(c.texto, ctx), monto: null };
+    const ms = Date.now() - t0;
+    tiempos.push(ms);
     // con LLM se exige además el rango de riesgo; la heurística solo tiene que acertar estafa/normal
     const enRango = !usarLlm || (c.estafa ? r.riesgo >= RIESGO_MIN_ESTAFA : r.riesgo <= RIESGO_MAX_NORMAL);
     const acierto = r.es_sospechoso === c.estafa && enRango;
@@ -146,7 +151,7 @@ async function main(): Promise<void> {
       if (r.modalidad === c.modalidad) aciertosModalidad++;
     }
     console.log(
-      `${pad(String(i + 1), 3)} ${pad(c.estafa ? 'estafa' : 'normal', 9)} ${pad(r.es_sospechoso ? 'estafa' : 'normal', 9)} ${pad(acierto ? '✓' : '✗', 3)} ${pad(String(r.riesgo), 6)} ${pad(r.modalidad + (c.modalidad && r.modalidad !== c.modalidad ? '*' : ''), 22)} ${pad(r.origen, 10)} ${pad(c.texto, 60)}`,
+      `${pad(String(i + 1), 3)} ${pad(c.estafa ? 'estafa' : 'normal', 9)} ${pad(r.es_sospechoso ? 'estafa' : 'normal', 9)} ${pad(acierto ? '✓' : '✗', 3)} ${pad(String(r.riesgo), 6)} ${pad(r.modalidad + (c.modalidad && r.modalidad !== c.modalidad ? '*' : ''), 22)} ${pad(r.origen, 10)} ${pad(`${ms}ms`, 7)} ${pad(c.texto, 60)}`,
     );
     if (usarLlm && c.texto.startsWith('hola abu')) {
       console.log(`      suplanta_a=${r.suplanta_a} · entidades=${JSON.stringify(r.entidades)}`);
@@ -158,6 +163,8 @@ async function main(): Promise<void> {
     `\nAcierto estafa/normal: ${aciertos}/${CASOS.length} (${Math.round((aciertos / CASOS.length) * 100)}%) · ` +
       `modalidad correcta en estafas: ${aciertosModalidad}/${conModalidad}  (* = modalidad distinta a la esperada)`,
   );
+  const orden = [...tiempos].sort((a, b) => a - b);
+  console.log(`Latencia: mediana ${orden[Math.floor(orden.length / 2)]} ms · máx ${orden.at(-1)} ms`);
   // 3 = omitido para `npm run check`: sin key no se probó el LLM
   process.exitCode = aciertos < CASOS.length ? 1 : usarLlm ? 0 : 3;
 }

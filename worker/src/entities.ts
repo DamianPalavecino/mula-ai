@@ -176,7 +176,7 @@ export function detectarEntidades(texto: string): EntidadDetectada[] {
   return dedupe(out);
 }
 
-function clave(e: EntidadDetectada): string {
+export function clave(e: EntidadDetectada): string {
   const v = e.tipo === 'alias' ? e.valor.toLowerCase() : e.valor.replace(/\D/g, '');
   return `${e.tipo}:${v}`;
 }

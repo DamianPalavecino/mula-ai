@@ -27,6 +27,8 @@ export const config = {
   openrouterApiKey: env('OPENROUTER_API_KEY'),
   classifierModel: env('CLASSIFIER_MODEL') ?? 'deepseek/deepseek-v4-flash',
   classifierTimeoutMs: Number(env('CLASSIFIER_TIMEOUT_MS') ?? 8000),
+  /** Si el LLM no contestó en este tiempo y la heurística ya da alerta, se alerta con la heurística. */
+  classifierBudgetMs: Number(env('CLASSIFIER_BUDGET_MS') ?? 3500),
   protegidoNombre: env('PROTEGIDO_NOMBRE') ?? 'la persona protegida',
   familyGroupJid: env('FAMILY_GROUP_JID'),
   trustedContacts: telefonos(env('TRUSTED_CONTACTS')),
@@ -67,8 +69,8 @@ export function validarConfig(): void {
     console.warn(`[config] ANALIZAR_SOLO activo: solo se analizan ${config.analizarSolo.size} número(s); el resto se ignora.`);
   if (!config.openaiApiKey) console.warn('[config] OPENAI_API_KEY no está: los audios no se transcriben.');
   if (!process.env.PROTEGIDO_NOMBRE) console.warn('[config] PROTEGIDO_NOMBRE no está: uso "la persona protegida".');
-  if (Number.isNaN(config.alertThreshold) || Number.isNaN(config.classifierTimeoutMs)) {
-    console.error('[config] ALERT_THRESHOLD y CLASSIFIER_TIMEOUT_MS tienen que ser números.');
+  if ([config.alertThreshold, config.classifierTimeoutMs, config.classifierBudgetMs].some(Number.isNaN)) {
+    console.error('[config] ALERT_THRESHOLD, CLASSIFIER_TIMEOUT_MS y CLASSIFIER_BUDGET_MS tienen que ser números.');
     process.exit(1);
   }
 }

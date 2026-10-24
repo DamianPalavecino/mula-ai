@@ -108,6 +108,7 @@ function extraerTexto(msg: WAMessage): string | null {
 // ---------------- pipeline por mensaje ----------------
 
 async function procesarMensaje(sock: WASocket, msg: WAMessage): Promise<void> {
+  const recibido = Date.now();
   const key = msg.key;
   const chat = key.remoteJid;
   if (!chat || key.fromMe) return;
@@ -136,7 +137,7 @@ async function procesarMensaje(sock: WASocket, msg: WAMessage): Promise<void> {
   pushHistorial(chat, texto);
   log(`[msg] ${quien} (${msg.pushName ?? 's/n'}): ${texto.slice(0, 160)}`);
 
-  const r = await pipeline({ texto, remitente: telefono, historial: previos, enviar: enviadorWhatsapp(sock) });
+  const r = await pipeline({ texto, remitente: telefono, historial: previos, enviar: enviadorWhatsapp(sock), recibido });
   const c = r.clasificacion;
   log(
     `[clasif:${c.origen}] sospechoso=${c.es_sospechoso} riesgo=${c.riesgo} modalidad=${c.modalidad} ` +

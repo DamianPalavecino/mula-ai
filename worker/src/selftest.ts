@@ -3,7 +3,7 @@
  * Uso: npm run selftest
  */
 import { armarAlertas } from './alerts.js';
-import { clasificar, clasificarHeuristico } from './classify.js';
+import { clasificar, clasificarHeuristico, conPresupuesto } from './classify.js';
 import { config } from './config.js';
 import { DisconnectReason } from '@whiskeysockets/baileys';
 import { decidirReconexion } from './reconnect.js';
@@ -159,7 +159,7 @@ function fakeDeps(over: Partial<DepsPipeline> = {}) {
 }
 
 {
-  const { deps, llamadas } = fakeDeps();
+  const { deps, llamadas } = fakeDeps({ consultarEntidad: async (valor) => ({ ...RESUMEN_JULI, valor_normalizado: valor, reportes: 23 }) });
   const enviar = async () => [
     { destino: 'propio' as const, jid: '5493410000000@s.whatsapp.net' },
     { destino: 'familia' as const, jid: '120363@g.us' },
@@ -219,6 +219,48 @@ function fakeDeps(over: Partial<DepsPipeline> = {}) {
   let enviados = 0;
   const r = await procesarMensaje({ texto: DEMO, remitente: null, enviar: async () => (enviados++, []) }, deps);
   check('pipeline: bajo el umbral registra reporte sin alerta', r.reporte_id === 301 && r.alerta_id === null && enviados === 0 && llamadas.alertas.length === 0, r);
+}
+
+// --- latencia ---
+const esperar = (ms: number) => new Promise((r) => setTimeout(r, ms));
+{
+  const orden: string[] = [];
+  const { deps } = fakeDeps({
+    clasificar: async (texto, ctx) => {
+      await esperar(30);
+      orden.push('llm:fin');
+      return { ...clasificarHeuristico(texto, ctx), monto: null };
+    },
+    consultarEntidad: async (valor) => {
+      orden.push('red:inicio');
+      return { ...RESUMEN_JULI, valor_normalizado: valor, reportes: 23 };
+    },
+    registrarReporte: async () => {
+      await esperar(40);
+      orden.push('reporte:fin');
+      return { reporte_id: 301, entidades: [RESUMEN_JULI] };
+    },
+  });
+  let enviado = '';
+  const r = await procesarMensaje(
+    { texto: DEMO, remitente: '3410000000', enviar: async (t) => (orden.push('enviar'), (enviado = t.persona), [{ destino: 'propio', jid: 'x' }]) },
+    deps,
+  );
+  check('latencia: la red se consulta en paralelo con el LLM', orden.indexOf('red:inicio') < orden.indexOf('llm:fin'), orden);
+  check('latencia: la alerta sale antes de que termine registrar_reporte', orden.indexOf('enviar') < orden.indexOf('reporte:fin'), orden);
+  check('latencia: la alerta ya cuenta este reporte (23 → 24)', enviado.includes('24 reportes'), enviado);
+  check('latencia: igual registra reporte y alerta', r.reporte_id === 301 && r.alerta_id === 55 && r.resumenes[0]?.reportes === 24, r);
+}
+{
+  const lento = <T>(v: T, ms: number) => esperar(ms).then(() => v);
+  const llm = { riesgo: 90, origen: 'llm' };
+  const t1 = Date.now();
+  const a = await conPresupuesto(lento(llm, 200), { riesgo: 80, origen: 'heuristica' }, { presupuestoMs: 20, umbral: 60 });
+  check('carrera: LLM lento + heurística alta → heurística a tiempo', a.origen === 'heuristica' && Date.now() - t1 < 150, a);
+  const b = await conPresupuesto(lento(llm, 60), { riesgo: 10, origen: 'heuristica' }, { presupuestoMs: 20, umbral: 60 });
+  check('carrera: LLM lento + heurística baja → espera al LLM', b.origen === 'llm', b);
+  const c2 = await conPresupuesto(lento(llm, 5), { riesgo: 80, origen: 'heuristica' }, { presupuestoMs: 100, umbral: 60 });
+  check('carrera: LLM a tiempo → LLM', c2.origen === 'llm', c2);
 }
 
 // --- http ---
@@ -328,6 +370,9 @@ check('http: IP sin X-Forwarded-For', ipCliente(undefined, '::ffff:127.0.0.1') =
     const r = await clasificar(DEMO);
     const ms = Date.now() - t0;
     check('classify: LLM colgado → heurística dentro del presupuesto total', r.origen === 'heuristica' && ms < 550, { ms, llamadas, origen: r.origen });
+    const t1 = Date.now();
+    const rc = await clasificar(DEMO, {}, { presupuestoMs: 50 });
+    check('classify: LLM lento + heurística alta → alerta con la heurística a los ~50 ms', rc.origen === 'heuristica' && Date.now() - t1 < 200, { ms: Date.now() - t1 });
 
     llamadas = 0;
     globalThis.fetch = (async () => {

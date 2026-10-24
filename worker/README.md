@@ -66,6 +66,7 @@ Para volver a vincular: borrá la carpeta de `AUTH_DIR` y reiniciá. Si se desvi
 | `OPENAI_API_KEY` | no | para transcribir audios (`gpt-4o-mini-transcribe`) |
 | `ALERT_THRESHOLD` | no | riesgo mínimo para alertar (default 60) |
 | `CLASSIFIER_TIMEOUT_MS` | no | presupuesto total del LLM (intento + reintento) antes de caer a la heurística (default 8000) |
+| `CLASSIFIER_BUDGET_MS` | no | default 3500. Si el LLM no contestó en ese tiempo y la heurística ya supera `ALERT_THRESHOLD`, alerta con la heurística (la alerta tiene que salir en < 5 s) |
 | `BAILEYS_LOG_LEVEL` | no | default `warn` |
 | `PORT` | no | puerto del HTTP (default `8080`) |
 | `NEXT_PUBLIC_WORKER_URL` | (web) | URL pública del worker; la usa la web para `/simulador` |
