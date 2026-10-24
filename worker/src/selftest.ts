@@ -7,6 +7,10 @@ import { clasificarHeuristico } from './classify.js';
 import { completarCbu, detectarEntidades, validarCbu } from './entities.js';
 import { debeAnalizar } from './filter.js';
 import { normalizarTelefono } from './phone.js';
+import type { AddressInfo } from 'node:net';
+import { crearServidorHttp, RateLimiter, validarAnalizar } from './http.js';
+import type { AlertaPayload, ResumenEntidad } from './network.js';
+import { procesarMensaje, type DepsPipeline } from './pipeline.js';
 
 let ok = 0;
 let fail = 0;
@@ -105,6 +109,172 @@ console.log('\n--- alerta persona ---\n' + alertas.persona + '\n--- alerta famil
 check('alerta persona menciona 23 reportes en 5 provincias', alertas.persona.includes('23 reportes en 5 provincias'));
 check('alerta persona pide llamar a Juli', alertas.persona.includes('Llamá a Juli al número de siempre'), alertas.persona);
 check('alerta familia menciona alias y reportes', alertas.familia.includes('juli.martinez.mp (23 reportes)'));
+
+{
+  const a = armarAlertas(
+    { ...h, monto: null, alerta_persona: 'No transfieras plata. Llamá a Juli al número que ya tenés agendado.' },
+    [],
+  );
+  check('alerta persona no repite "Llamá a" si el LLM ya lo dijo', (a.persona.match(/Llamá a/g) ?? []).length === 1, a.persona);
+}
+
+// --- pipeline (deps falsas, sin red) ---
+const RESUMEN_JULI: ResumenEntidad = {
+  entidad_id: 12,
+  tipo: 'alias',
+  valor_normalizado: 'juli.martinez.mp',
+  encontrada: true,
+  reportes: 24,
+  provincias: ['Santa Fe', 'Córdoba'],
+  modalidades: ['familiar_numero_nuevo'],
+  ultimo: null,
+  monto_total: null,
+};
+function fakeDeps(over: Partial<DepsPipeline> = {}) {
+  const llamadas = { reportes: [] as unknown[], alertas: [] as AlertaPayload[] };
+  const deps: DepsPipeline = {
+    clasificar: async (texto, ctx) => ({ ...clasificarHeuristico(texto, ctx), monto: null }),
+    consultarEntidad: async (valor) => ({ ...RESUMEN_JULI, valor_normalizado: valor, encontrada: false, reportes: 0 }),
+    registrarReporte: async (c, d) => {
+      llamadas.reportes.push({ c, d });
+      return { reporte_id: 301, entidades: [RESUMEN_JULI] };
+    },
+    registrarAlerta: async (p) => {
+      llamadas.alertas.push(p);
+      return { alerta_id: 55 };
+    },
+    umbral: 60,
+    protegido: 'la abuela',
+    ...over,
+  };
+  return { deps, llamadas };
+}
+
+{
+  const { deps, llamadas } = fakeDeps();
+  const enviar = async () => [
+    { destino: 'propio' as const, jid: '5493410000000@s.whatsapp.net' },
+    { destino: 'familia' as const, jid: '120363@g.us' },
+  ];
+  const r = await procesarMensaje({ texto: DEMO, remitente: '3410000000', enviar }, deps);
+  check('pipeline: demo registra reporte', r.reporte_id === 301 && llamadas.reportes.length === 1, r);
+  check('pipeline: demo registra alerta', r.alerta_id === 55 && llamadas.alertas.length === 1, r);
+  check('pipeline: enviada_a con etiquetas', JSON.stringify(r.enviada_a) === '["propio","familia"]', r.enviada_a);
+  check('pipeline: alerta guarda JIDs', llamadas.alertas[0]?.enviada_a.includes('120363@g.us') === true, llamadas.alertas[0]);
+  check('pipeline: alerta lleva entidad_ids', llamadas.alertas[0]?.entidad_ids[0] === 12, llamadas.alertas[0]);
+  check('pipeline: textos con la red', r.textos.persona.includes('24 reportes'), r.textos);
+  check('pipeline: resumenes de registrar_reporte', r.resumenes[0]?.reportes === 24, r.resumenes);
+}
+{
+  const { deps, llamadas } = fakeDeps();
+  const r = await procesarMensaje({ texto: DEMO, remitente: null }, deps);
+  check('pipeline: sin enviador no manda pero registra', r.enviada_a.length === 0 && r.alerta_id === 55, r);
+  check('pipeline: alerta sin enviar guarda enviada_a vacío', llamadas.alertas[0]?.enviada_a.length === 0);
+}
+{
+  const { deps, llamadas } = fakeDeps();
+  const r = await procesarMensaje({ texto: 'hola, nos vemos el sábado en lo de la tía para el cumple', remitente: null }, deps);
+  check('pipeline: normal no registra', r.reporte_id === null && r.alerta_id === null && llamadas.reportes.length === 0, r);
+  check('pipeline: normal no dice estafa', !/estafa/i.test(r.textos.persona) || /sin señales/i.test(r.textos.persona), r.textos);
+}
+{
+  const quemado = { consultarEntidad: async (valor: string) => ({ ...RESUMEN_JULI, valor_normalizado: valor }) };
+  const texto = 'hola, te paso el alias juli.martinez.mp';
+  const { deps } = fakeDeps({
+    ...quemado,
+    clasificar: async (t, ctx) => ({ ...clasificarHeuristico(t, ctx), es_sospechoso: false, riesgo: 10, monto: null }),
+  });
+  const r = await procesarMensaje({ texto, remitente: null }, deps);
+  check('pipeline: alias quemado en la red → sospechoso', r.clasificacion.es_sospechoso && r.clasificacion.riesgo >= 75, r.clasificacion);
+  check('pipeline: alias quemado registra y alerta', r.reporte_id === 301 && r.alerta_id === 55, r);
+  // sospechoso pero bajo el umbral (heurística: 50 < 60): la red lo sube y alerta
+  const { deps: d2 } = fakeDeps(quemado);
+  const r2 = await procesarMensaje({ texto, remitente: null }, d2);
+  check('pipeline: sospechoso bajo umbral + alias quemado → alerta', r2.clasificacion.riesgo >= 75 && r2.alerta_id === 55, r2.clasificacion);
+}
+{
+  const { deps, llamadas } = fakeDeps({
+    registrarReporte: async () => {
+      throw new Error('supabase caído');
+    },
+  });
+  let enviados = 0;
+  const r = await procesarMensaje(
+    { texto: DEMO, remitente: null, enviar: async () => (enviados++, [{ destino: 'propio', jid: 'x' }]) },
+    deps,
+  );
+  check('pipeline: sin red igual alerta', enviados === 1 && r.enviada_a[0] === 'propio', r);
+  check('pipeline: sin red no registra alerta', r.reporte_id === null && r.alerta_id === null && llamadas.alertas.length === 0, r);
+}
+{
+  const { deps, llamadas } = fakeDeps({ umbral: 101 });
+  let enviados = 0;
+  const r = await procesarMensaje({ texto: DEMO, remitente: null, enviar: async () => (enviados++, []) }, deps);
+  check('pipeline: bajo el umbral registra reporte sin alerta', r.reporte_id === 301 && r.alerta_id === null && enviados === 0 && llamadas.alertas.length === 0, r);
+}
+
+// --- http ---
+check('http: valida texto ok', validarAnalizar({ texto: 'hola' }).ok);
+check('http: texto vacío → error', !validarAnalizar({ texto: '   ' }).ok);
+check('http: texto > 2000 → error', !validarAnalizar({ texto: 'a'.repeat(2001) }).ok);
+check('http: sin texto → error', !validarAnalizar({}).ok);
+check('http: body no objeto → error', !validarAnalizar('hola').ok);
+check('http: remitente no string → error', !validarAnalizar({ texto: 'hola', remitente: 123 }).ok);
+check('http: enviar_whatsapp no boolean → error', !validarAnalizar({ texto: 'hola', enviar_whatsapp: 'si' }).ok);
+{
+  const v = validarAnalizar({ texto: ' hola ', remitente: '+54 9 341 555-1234', enviar_whatsapp: true });
+  check('http: normaliza remitente y trimea texto', v.ok && v.remitente === '3415551234' && v.texto === 'hola' && v.enviar_whatsapp, v);
+}
+{
+  let t = 0;
+  const rl = new RateLimiter(2, 60_000, () => t);
+  const r1 = rl.permitir('a'), r2 = rl.permitir('a'), r3 = rl.permitir('a'), rb = rl.permitir('b');
+  t = 60_001;
+  check('http: rate limit 2/min por IP', r1 && r2 && !r3 && rb && rl.permitir('a'));
+}
+{
+  let enviarPedido: boolean | null = null;
+  const server = crearServidorHttp({
+    analizar: async ({ texto, enviar_whatsapp }) => {
+      enviarPedido = enviar_whatsapp;
+      if (texto === 'explota') throw new Error('boom');
+      const { deps } = fakeDeps();
+      return procesarMensaje({ texto, remitente: null }, deps);
+    },
+    estadoWhatsapp: () => 'qr',
+    limiter: new RateLimiter(6, 60_000),
+  });
+  await new Promise<void>((res) => server.listen(0, '127.0.0.1', res));
+  const base = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
+  const post = (body: string) => fetch(`${base}/analizar`, { method: 'POST', headers: { 'content-type': 'application/json' }, body });
+  try {
+    const h = await fetch(`${base}/health`);
+    const hj = (await h.json()) as any;
+    check('http: GET /health', h.status === 200 && hj.ok === true && hj.whatsapp === 'qr', hj);
+    check('http: CORS *', h.headers.get('access-control-allow-origin') === '*');
+    const o = await fetch(`${base}/analizar`, { method: 'OPTIONS' });
+    check('http: OPTIONS 204 con CORS', o.status === 204 && !!o.headers.get('access-control-allow-methods'), o.status);
+    const a = await post(JSON.stringify({ texto: DEMO, enviar_whatsapp: true }));
+    const aj = (await a.json()) as any;
+    const claves = ['es_sospechoso', 'riesgo', 'modalidad', 'senales', 'suplanta_a', 'entidades', 'alerta_persona', 'alerta_familia', 'reporte_id', 'alerta_id', 'enviada_a', 'fuente_clasificacion'];
+    check('http: POST /analizar 200 con el contrato', a.status === 200 && claves.every((k) => k in aj), aj);
+    check('http: contrato valores', aj.reporte_id === 301 && aj.alerta_id === 55 && aj.fuente_clasificacion === 'heuristica' && aj.entidades[0]?.valor_normalizado === 'juli.martinez.mp', aj);
+    check('http: pasa enviar_whatsapp', enviarPedido === true);
+    check('http: JSON inválido → 400', (await post('{no')).status === 400);
+    check('http: texto vacío → 400', (await post(JSON.stringify({ texto: '' }))).status === 400);
+    check('http: body > 20KB → 400', (await post(JSON.stringify({ texto: 'a'.repeat(21_000) }))).status === 400);
+    const e = await post(JSON.stringify({ texto: 'explota' }));
+    check('http: error interno → 500 con {error}', e.status === 500 && typeof ((await e.json()) as any).error === 'string');
+    check('http: ruta desconocida → 404', (await fetch(`${base}/nada`)).status === 404);
+    // ya van 5 POST de 6 permitidos
+    await post(JSON.stringify({ texto: 'hola' }));
+    await post(JSON.stringify({ texto: 'hola' }));
+    const lim = await post(JSON.stringify({ texto: 'hola' }));
+    check('http: rate limit → 429', lim.status === 429 && typeof ((await lim.json()) as any).error === 'string', lim.status);
+  } finally {
+    server.close();
+  }
+}
 
 console.log(`\n${ok} ok · ${fail} fallas`);
 process.exit(fail ? 1 : 0);

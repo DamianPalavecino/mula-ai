@@ -16,6 +16,14 @@ messages.upsert → ignora fromMe / grupos / status / newsletters
   → registrar_reporte (fuente whatsapp) → alertas al chat propio + grupo → registrar_alerta
 ```
 
+Ese pipeline vive en `src/pipeline.ts` y lo comparte el HTTP (`src/http.ts`), que arranca con el worker aunque WhatsApp no esté conectado:
+
+```bash
+curl localhost:8080/health                     # {"ok":true,"whatsapp":"conectado"|"desconectado"|"qr"}
+curl -X POST localhost:8080/analizar -H 'content-type: application/json'   -d '{"texto":"hola abu, soy Juli, cambié de número, mandá a juli.martinez.mp","enviar_whatsapp":false}'
+```
+Contrato de respuesta en `CLAUDE.md` (Detalles de implementación). Con `enviar_whatsapp: true` y WhatsApp conectado manda las alertas reales; el remitente nunca recibe nada.
+
 ## Correr local
 
 ```bash
@@ -59,6 +67,8 @@ Para volver a vincular: borrá la carpeta de `AUTH_DIR` y reiniciá.
 | `ALERT_THRESHOLD` | no | riesgo mínimo para alertar (default 60) |
 | `CLASSIFIER_TIMEOUT_MS` | no | timeout del LLM antes de caer a la heurística (default 10000) |
 | `BAILEYS_LOG_LEVEL` | no | default `warn` |
+| `PORT` | no | puerto del HTTP (default `8080`; Railway lo setea solo) |
+| `NEXT_PUBLIC_WORKER_URL` | (web) | URL pública del worker en Railway; la usa la web para `/simulador` |
 
 ## Scripts
 
@@ -76,7 +86,8 @@ Para volver a vincular: borrá la carpeta de `AUTH_DIR` y reiniciá.
 3. **Volumen:** Add Volume → mount path `/data`. Variable `AUTH_DIR=/data/auth_info`. Así no se re-escanea el QR en cada deploy.
 4. Variables: las de la tabla de arriba.
 5. Deploy → abrí los logs y escaneá el QR (o abrí el link que imprime el log). Después de vincular, Baileys reinicia la conexión solo (code 515) y queda `[wa] conectado como ...`.
-6. **Una sola réplica** (dos procesos con la misma sesión se patean entre sí, code 440).
+6. **Networking → Generate Domain** (puerto `8080` o el `PORT` que asigne Railway). Esa URL va en `NEXT_PUBLIC_WORKER_URL` de Vercel. No configures healthcheck en Railway: mantiene viva la instancia vieja hasta que pasa la nueva y las dos sesiones de WhatsApp se pisan (code 440).
+7. **Una sola réplica** (dos procesos con la misma sesión se patean entre sí, code 440).
 
 Si el log dice `sesión cerrada (logged out)`: se desvinculó desde el teléfono → borrá `/data/auth_info` (o el volumen) y redeploy para un QR nuevo.
 

@@ -71,6 +71,8 @@ Ids de nodo: `e_<entidades.id>` y `r_<reportes.id>`. Una alerta apunta a sus nod
 - Helpers extra: `entidad_canonica(tipo, valor) → (tipo_norm, valor_norm, valida)` y `modalidad_label(modalidad) → text` (anon puede ejecutarlas); `limpiar_sintetico() → {reportes, alertas, entidades}` (solo service_role; la usa el seed).
 - FKs con `on delete cascade` (`reporte_entidad` → reportes/entidades, `alertas.reporte_id` → reportes).
 
+- **HTTP del worker** (`worker/src/http.ts`, puerto `PORT` ?? 8080, CORS `*`, body ≤ 20 KB, 30/min por IP). `GET /health` → `{ ok, whatsapp: "conectado"|"desconectado"|"qr" }`. `POST /analizar` con `{ texto (1–2000), remitente?, enviar_whatsapp? }` → `{ es_sospechoso, riesgo, modalidad, senales[], suplanta_a, entidades: [resumen_entidad…], alerta_persona, alerta_familia, reporte_id|null, alerta_id|null, enviada_a: ["propio"|"familia"], fuente_clasificacion: "llm"|"heuristica" }`; errores `{ error }` con 400/429/500. Usa el mismo pipeline que WhatsApp (`worker/src/pipeline.ts`): si es sospechoso hace `registrar_reporte` (`fuente: 'whatsapp'`) y, si supera `ALERT_THRESHOLD`, `registrar_alerta`. Con `enviar_whatsapp: true` y WhatsApp conectado manda las alertas reales. En `alertas.enviada_a` se guardan los JIDs. La web lo llama con `NEXT_PUBLIC_WORKER_URL`.
+
 ### Datos de demo
 - Seed sintético (`fuente = 'sintetico'`, 150–200 reportes, últimos 90 días) con clusters plantados.
 - Alias de la demo: **`juli.martinez.mp`** con ~23 reportes en 5 provincias.

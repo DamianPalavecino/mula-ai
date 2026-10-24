@@ -19,12 +19,12 @@ import makeWASocket, {
 } from '@whiskeysockets/baileys';
 import pino from 'pino';
 import qrcode from 'qrcode-terminal';
-import { armarAlertas, enviarAlertas } from './alerts.js';
-import { clasificar, type ResultadoClasificacion } from './classify.js';
+import { enviadorWhatsapp } from './alerts.js';
 import { config, validarConfig } from './config.js';
 import { debeAnalizar } from './filter.js';
-import { consultarEntidad, registrarReporte, type ResumenEntidad } from './network.js';
+import { iniciarHttp, type EstadoWhatsapp } from './http.js';
 import { normalizarTelefono } from './phone.js';
+import { procesarMensaje as pipeline } from './pipeline.js';
 import { transcribirAudio } from './transcribe.js';
 
 validarConfig();
@@ -102,29 +102,6 @@ function extraerTexto(msg: WAMessage): string | null {
 
 // ---------------- pipeline por mensaje ----------------
 
-/** Si el LLM no lo marcó pero alguna entidad ya tiene reportes en la red, se sube el riesgo. */
-async function chequearRed(c: ResultadoClasificacion): Promise<ResultadoClasificacion> {
-  if (c.es_sospechoso || c.entidades.length === 0) return c;
-  const resumenes: ResumenEntidad[] = [];
-  for (const e of c.entidades) {
-    try {
-      resumenes.push(await consultarEntidad(e.valor, e.tipo));
-    } catch (err) {
-      log('[red] resumen_entidad falló:', err);
-    }
-  }
-  const quemada = resumenes.find((r) => r.encontrada && r.reportes > 0);
-  if (!quemada) return c;
-  log(`[red] ${quemada.tipo} ${quemada.valor_normalizado} ya tiene ${quemada.reportes} reportes → sospechoso`);
-  return {
-    ...c,
-    es_sospechoso: true,
-    riesgo: Math.max(c.riesgo, 75),
-    senales: [...c.senales, 'cuenta con reportes previos en la red'],
-    modalidad: c.modalidad === 'otro' && quemada.modalidades?.[0] ? (quemada.modalidades[0] as ResultadoClasificacion['modalidad']) : c.modalidad,
-  };
-}
-
 async function procesarMensaje(sock: WASocket, msg: WAMessage): Promise<void> {
   const key = msg.key;
   const chat = key.remoteJid;
@@ -153,47 +130,21 @@ async function procesarMensaje(sock: WASocket, msg: WAMessage): Promise<void> {
   pushHistorial(chat, texto);
   log(`[msg] ${quien} (${msg.pushName ?? 's/n'}): ${texto.slice(0, 160)}`);
 
-  let c = await clasificar(texto, { historial: previos, remitente: telefono, protegido: config.protegidoNombre });
-  c = await chequearRed(c);
+  const r = await pipeline({ texto, remitente: telefono, historial: previos, enviar: enviadorWhatsapp(sock) });
+  const c = r.clasificacion;
   log(
     `[clasif:${c.origen}] sospechoso=${c.es_sospechoso} riesgo=${c.riesgo} modalidad=${c.modalidad} ` +
-      `entidades=${c.entidades.map((e) => `${e.tipo}:${e.valor}`).join(',') || '-'}`,
+      `entidades=${c.entidades.map((e) => `${e.tipo}:${e.valor}`).join(',') || '-'} · ${r.ms} ms` +
+      (r.enviada_a.length ? ` · alerta → ${r.enviada_a.join(', ')}` : ''),
   );
-  if (!c.es_sospechoso) return;
-
-  let reporteId: number | null = null;
-  let resumenes: ResumenEntidad[] = [];
-  try {
-    const r = await registrarReporte(c, { texto, remitente: telefono });
-    reporteId = r.reporte_id;
-    resumenes = r.entidades;
-    log(
-      `[red] reporte ${reporteId} · ` +
-        (resumenes.map((e) => `${e.valor_normalizado}=${e.reportes} rep/${e.provincias?.length ?? 0} prov`).join(' · ') || 'sin entidades'),
-    );
-  } catch (err) {
-    log('[red] registrar_reporte falló (igual se alerta):', err);
-  }
-
-  if (c.riesgo < config.alertThreshold) {
-    log(`[alerta] riesgo ${c.riesgo} < umbral ${config.alertThreshold}: no se alerta`);
-    return;
-  }
-  if (reporteId == null) {
-    // Sin red: igual avisamos, solo que no queda registrada la alerta.
-    const t = armarAlertas(c, []);
-    const propio = sock.user?.id ? jidNormalizedUser(sock.user.id) : null;
-    if (propio) await sock.sendMessage(propio, { text: t.persona });
-    if (config.familyGroupJid) await sock.sendMessage(config.familyGroupJid, { text: t.familia });
-    log('[alerta] enviada sin registrar (la red no respondió)');
-    return;
-  }
-  await enviarAlertas(sock, c, { reporteId, resumenes });
 }
 
 // ---------------- conexión ----------------
 
 let intentos = 0;
+/** Socket y estado actuales, para que el HTTP pueda mandar alertas reales si WhatsApp está arriba. */
+let sockActual: WASocket | null = null;
+let estadoWa: EstadoWhatsapp = 'desconectado';
 
 async function listarGrupos(sock: WASocket): Promise<void> {
   try {
@@ -233,11 +184,13 @@ async function conectar(): Promise<void> {
     syncFullHistory: false,
   });
 
+  sockActual = sock;
   sock.ev.on('creds.update', saveCreds);
 
   sock.ev.on('connection.update', async (u) => {
     const { connection, lastDisconnect, qr } = u;
     if (qr) {
+      estadoWa = 'qr';
       log('[qr] Escaneá con WhatsApp → Dispositivos vinculados → Vincular un dispositivo:');
       qrcode.generate(qr, { small: true });
       console.log(`[qr] Si no se ve bien (ej. logs de Railway), copiá este string en un generador de QR:\n${qr}`);
@@ -247,12 +200,14 @@ async function conectar(): Promise<void> {
     }
     if (connection === 'open') {
       intentos = 0;
+      estadoWa = 'conectado';
       const propio = sock.user?.id ? jidNormalizedUser(sock.user.id) : '?';
       log(`[wa] conectado como ${propio}${sock.user?.lid ? ` (lid ${jidNormalizedUser(sock.user.lid)})` : ''}`);
       log(`[wa] alertas → chat propio${config.familyGroupJid ? ` + grupo ${config.familyGroupJid}` : ' (sin grupo familiar)'}`);
       await listarGrupos(sock);
     }
     if (connection === 'close') {
+      estadoWa = 'desconectado';
       const code = (lastDisconnect?.error as { output?: { statusCode?: number } } | undefined)?.output?.statusCode;
       if (code === DisconnectReason.loggedOut) {
         log(`[wa] sesión cerrada (logged out). Borrá ${config.authDir} y reiniciá para escanear el QR de nuevo.`);
@@ -285,6 +240,15 @@ process.on('unhandledRejection', (e) => log('[unhandledRejection]', e));
 process.on('uncaughtException', (e) => log('[uncaughtException]', e));
 
 log(`[mula] worker arrancando · AUTH_DIR=${config.authDir} · modelo=${config.classifierModel} · protegido="${config.protegidoNombre}"`);
+iniciarHttp({
+  estadoWhatsapp: () => estadoWa,
+  analizar: ({ texto, remitente, enviar_whatsapp }) =>
+    pipeline({
+      texto,
+      remitente,
+      enviar: enviar_whatsapp && estadoWa === 'conectado' && sockActual ? enviadorWhatsapp(sockActual) : null,
+    }),
+});
 conectar().catch((e) => {
   log('[mula] no pude arrancar:', e);
   process.exit(1);

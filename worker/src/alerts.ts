@@ -1,7 +1,8 @@
 import { jidNormalizedUser, type WASocket } from '@whiskeysockets/baileys';
 import { config } from './config.js';
 import type { ResultadoClasificacion } from './classify.js';
-import { registrarAlerta, type ResumenEntidad } from './network.js';
+import type { ResumenEntidad } from './network.js';
+import type { Destino, Enviador } from './pipeline.js';
 
 export interface TextosAlerta {
   persona: string;
@@ -71,7 +72,7 @@ export function armarAlertas(c: ResultadoClasificacion, resumenes: ResumenEntida
   if (base && !/patr[oó]n de una estafa/i.test(base)) p.push(asegurarPunto(base));
   const yaDice = p.join(' ').toLowerCase();
   if (!/no transfier/.test(yaDice)) p.push('No transfieras.');
-  if (!/n[uú]mero de siempre/.test(yaDice))
+  if (!/n[uú]mero de siempre|agendad/.test(yaDice))
     p.push(familiar ? `Llamá a ${familiar} al número de siempre.` : 'Llamá a tu familiar al número de siempre.');
   p.push('No le respondas a ese número.');
 
@@ -96,55 +97,27 @@ export function armarAlertas(c: ResultadoClasificacion, resumenes: ResumenEntida
   return { persona: p.join(' '), familia };
 }
 
-export interface EnvioAlerta {
-  reporteId: number;
-  resumenes: ResumenEntidad[];
-}
-
 /**
- * Manda la alerta al chat propio y al grupo familiar (si está configurado) y la registra.
- * Nunca le manda nada al remitente.
+ * Enviador de WhatsApp para el pipeline: manda al chat propio y al grupo familiar (si está
+ * configurado). Nunca le manda nada al remitente. Un destino que falla no corta el otro.
  */
-export async function enviarAlertas(
-  sock: WASocket,
-  c: ResultadoClasificacion,
-  { reporteId, resumenes }: EnvioAlerta,
-): Promise<TextosAlerta & { enviada_a: string[] }> {
-  const textos = armarAlertas(c, resumenes);
-  const enviada_a: string[] = [];
-
-  const propio = sock.user?.id ? jidNormalizedUser(sock.user.id) : null;
-  if (propio) {
-    try {
-      await sock.sendMessage(propio, { text: textos.persona });
-      enviada_a.push(propio);
-    } catch (err) {
-      console.error('[alerts] no pude mandar al chat propio:', err);
+export function enviadorWhatsapp(sock: WASocket): Enviador {
+  return async (textos) => {
+    const enviados: Array<{ destino: Destino; jid: string }> = [];
+    const propio = sock.user?.id ? jidNormalizedUser(sock.user.id) : null;
+    const destinos: Array<[Destino, string | null | undefined, string]> = [
+      ['propio', propio, textos.persona],
+      ['familia', config.familyGroupJid, textos.familia],
+    ];
+    for (const [destino, jid, text] of destinos) {
+      if (!jid) continue;
+      try {
+        await sock.sendMessage(jid, { text });
+        enviados.push({ destino, jid });
+      } catch (err) {
+        console.error(`[alerts] no pude mandar a ${destino}:`, err);
+      }
     }
-  }
-  if (config.familyGroupJid) {
-    try {
-      await sock.sendMessage(config.familyGroupJid, { text: textos.familia });
-      enviada_a.push(config.familyGroupJid);
-    } catch (err) {
-      console.error('[alerts] no pude mandar al grupo familiar:', err);
-    }
-  }
-
-  try {
-    const { alerta_id } = await registrarAlerta({
-      reporte_id: reporteId,
-      protegido: config.protegidoNombre,
-      riesgo: c.riesgo,
-      modalidad: c.modalidad,
-      mensaje_persona: textos.persona,
-      mensaje_familia: textos.familia,
-      enviada_a,
-      entidad_ids: resumenes.map((r) => r.entidad_id).filter((id): id is number => typeof id === 'number'),
-    });
-    console.log(`[alerts] alerta ${alerta_id} registrada → ${enviada_a.join(', ') || '(no se envió)'}`);
-  } catch (err) {
-    console.error('[alerts] no pude registrar la alerta:', err);
-  }
-  return { ...textos, enviada_a };
+    return enviados;
+  };
 }
