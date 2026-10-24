@@ -28,6 +28,7 @@ export function tienePalabraClave(texto: string): boolean {
 
 /**
  * ¿Hay que mandar este mensaje al clasificador?
+ * - ANALIZAR_SOLO seteado → solo esos teléfonos (para vincular un número personal en la demo).
  * - Contacto de confianza → nunca (ni se procesa).
  * - Desconocido (o teléfono no resuelto) → sí si tiene más de 2 palabras o trae
  *   entidades / palabras clave. "jaja", "dale", stickers y emojis sueltos se ignoran.
@@ -36,7 +37,9 @@ export function debeAnalizar(
   telefono: string | null,
   texto: string | null | undefined,
   confianza: Set<string> = config.trustedContacts,
+  solo: Set<string> = config.analizarSolo,
 ): boolean {
+  if (solo.size > 0 && !(telefono && solo.has(telefono))) return false;
   if (telefono && confianza.has(telefono)) return false;
   const t = (texto ?? '').trim();
   if (!t) return false;

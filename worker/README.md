@@ -52,6 +52,7 @@ Para volver a vincular: borrá la carpeta de `AUTH_DIR` y reiniciá.
 | `PROTEGIDO_NOMBRE` | no | cómo se nombra en las alertas ("la abuela Marta") |
 | `FAMILY_GROUP_JID` | no | `...@g.us` del grupo familiar |
 | `TRUSTED_CONTACTS` | no | teléfonos separados por coma; se normalizan a 10 dígitos (`+54 9 341 555-1234` → `3415551234`) |
+| `ANALIZAR_SOLO` | no | teléfonos separados por coma; si tiene alguno, **solo** se analizan esos remitentes y el resto se ignora sin loguear (para vincular un número personal en la demo) |
 | `PROVINCIA_DEFAULT` | no | provincia que se guarda en los reportes (default `Santa Fe`) |
 | `AUTH_DIR` | no | carpeta de la sesión (default `./auth_info`; en Railway `/data/auth_info`) |
 | `OPENAI_API_KEY` | no | para transcribir audios (`gpt-4o-mini-transcribe`) |

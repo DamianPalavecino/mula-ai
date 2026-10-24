@@ -13,7 +13,13 @@ const env = (k: string): string | undefined => {
   return v ? v : undefined;
 };
 
-const trustedRaw = env('TRUSTED_CONTACTS') ?? '';
+const telefonos = (raw: string | undefined): Set<string> =>
+  new Set(
+    (raw ?? '')
+      .split(',')
+      .map((t) => normalizarTelefono(t))
+      .filter((t): t is string => !!t),
+  );
 
 export const config = {
   supabaseUrl: env('SUPABASE_URL'),
@@ -23,12 +29,9 @@ export const config = {
   classifierTimeoutMs: Number(env('CLASSIFIER_TIMEOUT_MS') ?? 10000),
   protegidoNombre: env('PROTEGIDO_NOMBRE') ?? 'la persona protegida',
   familyGroupJid: env('FAMILY_GROUP_JID'),
-  trustedContacts: new Set(
-    trustedRaw
-      .split(',')
-      .map((t) => normalizarTelefono(t))
-      .filter((t): t is string => !!t),
-  ),
+  trustedContacts: telefonos(env('TRUSTED_CONTACTS')),
+  /** Si tiene números, solo se analizan esos remitentes (el resto se ignora sin loguear). */
+  analizarSolo: telefonos(env('ANALIZAR_SOLO')),
   provinciaDefault: env('PROVINCIA_DEFAULT') ?? 'Santa Fe',
   authDir: path.resolve(env('AUTH_DIR') ?? './auth_info'),
   openaiApiKey: env('OPENAI_API_KEY'),
@@ -60,6 +63,8 @@ export function validarConfig(): void {
     );
   if (config.trustedContacts.size === 0)
     console.warn('[config] TRUSTED_CONTACTS vacío: todos los remitentes se tratan como desconocidos.');
+  if (config.analizarSolo.size > 0)
+    console.warn(`[config] ANALIZAR_SOLO activo: solo se analizan ${config.analizarSolo.size} número(s); el resto se ignora.`);
   if (!config.openaiApiKey) console.warn('[config] OPENAI_API_KEY no está: los audios no se transcriben.');
   if (!process.env.PROTEGIDO_NOMBRE) console.warn('[config] PROTEGIDO_NOMBRE no está: uso "la persona protegida".');
   if (Number.isNaN(config.alertThreshold) || Number.isNaN(config.classifierTimeoutMs)) {
