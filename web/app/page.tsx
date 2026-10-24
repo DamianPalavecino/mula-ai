@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import Simulador from "@/components/Simulador";
 
 export const metadata: Metadata = {
   title: { absolute: "Mula AI — Guardián de WhatsApp contra estafas" },
@@ -72,12 +71,6 @@ export default function Inicio() {
           <Link href="/red" className={botonSecundario}>
             Ver la red en vivo
           </Link>
-        </div>
-        <div className="mt-14">
-          <p className="mb-6 text-center text-sm font-medium text-suave">
-            Probalo: mandá un mensaje de estafa y mirá qué le llega a la abuela
-          </p>
-          <Simulador compacto />
         </div>
       </section>
 

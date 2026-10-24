@@ -13,7 +13,7 @@ Entrega 16:00 · submit 15:45 · freeze 14:30.
 |---|---|
 | `worker` | `typecheck` + `selftest` (entidades, filtro, heurística, textos de alerta; sin red) |
 | `classify` | 10 estafas + 10 normales con el LLM real (OpenRouter; sin key, solo la heurística) |
-| `web` | `npm test` (lógica del simulador: mock, contrato de /analizar, fallback) + `next build` (tipos + build de todas las rutas) |
+| `web` | `next build` (tipos + build de todas las rutas) |
 | `supabase` | seed contra el Supabase del entorno + la aserción de `juli.martinez.mp` |
 | `e2e` | manual: `npm run e2e` contra la base real con la anon key (`--base` antes de la 1ª detección, `--watch` para ver alertas en vivo) |
 | `prod` | manual (`npm run check prod`): con la anon key, `juli.martinez.mp` 23/5, `grafo()`, anon lee `alertas` y no escribe; con `WEB_URL`, las 3 rutas de Vercel dan 200 |
@@ -26,8 +26,8 @@ Entrega 16:00 · submit 15:45 · freeze 14:30.
 | `e2e` | `npm run e2e` | ❌ | 3s | 24/10/2026, 12:26:00 | f9d0ffb |
 | `prod` | `node --env-file-if-exists=.env scripts/smoke-prod.mjs` | ❌ | 4s | 24/10/2026, 12:28:56 | c6d5a8f |
 | `prod` | `node scripts/smoke-prod.mjs` | ⏭️ omitido | 0s | 24/10/2026, 12:28:39 | c6d5a8f |
-| `web` | `npm run build` | ✅ | 19s | 24/10/2026, 12:34:54 | fe0c8d8 |
-| `web` | `npm test` | ✅ | 1s | 24/10/2026, 12:34:54 | fe0c8d8 |
+| `web` | `npm run build` | ✅ | 17s | 24/10/2026, 12:36:34 | dcb8616 |
+| `web` | `npm test` | ✅ | 1s | 24/10/2026, 12:36:34 | dcb8616 |
 | `worker` | `npm run selftest` | ✅ | 4s | 24/10/2026, 12:30:03 | 151cc78 |
 | `worker` | `npm run typecheck` | ✅ | 2s | 24/10/2026, 12:30:03 | 151cc78 |
 <!-- check:end -->
@@ -57,11 +57,12 @@ Marcá `[x]` con hora y quién.
 - [ ] `POST /analizar` contra Supabase real: devuelve `reporte_id`/`alerta_id` y la alerta aparece en el feed de `/red`
 - [ ] `POST /analizar` con `enviar_whatsapp: true` y WhatsApp conectado → llega al chat propio y al grupo
 - [ ] Railway: dominio generado y `GET /health` responde desde afuera; URL cargada en `NEXT_PUBLIC_WORKER_URL` de Vercel
-- [x] `/simulador` en modo mock (sin `NEXT_PUBLIC_WORKER_URL`): los 3 mensajes (juli → 24 reportes en 5 provincias, ANSES/CVU → alerta, normal → "sin señales"), aviso al grupo familiar, mobile 375 px sin scroll horizontal, 1080p entra en una pantalla — 12:33, agente simulador
-- [ ] `/simulador` contra el worker real (`NEXT_PUBLIC_WORKER_URL` en Vercel + redeploy): la alerta aparece en el feed de `/red`
-- [ ] `/simulador` con el toggle "Mandar también al WhatsApp real" → llega al chat propio y al grupo
+- [ ] `/simulador` contra el worker real (y en modo mock sin `NEXT_PUBLIC_WORKER_URL`)
 - [ ] `/red`: el nodo de la alerta nueva se destaca
-- [ ] `/me-estafaron`: captura de ejemplo → denuncia + pedido de bloqueo (se corta si a las 14:00 no anda)
+- [x] 12:35 me-estafaron — local, `POST /api/extraer` con `chat.png` + `comprobante.png` → 200 en 27 s vía OpenRouter (`anthropic/claude-sonnet-5.5`): alias, CVU y teléfono bien extraídos, $180.000, denuncia + pedido de bloqueo + pasos. Sin body → 400. Cruce con la red da `null` (falta schema en prod)
+- [ ] `/me-estafaron` en Vercel con Supabase prod: las 3 cuentas salen en rojo y la denuncia trae el párrafo "Antecedentes" (necesita `OPENROUTER_API_KEY` server-only en Vercel)
+- [ ] `/me-estafaron` → "Sumar mi caso a la red" suma 1 reporte a `juli.martinez.mp` (necesita `SUPABASE_SERVICE_ROLE_KEY` server-only en Vercel; sin ella el botón queda deshabilitado)
+- [ ] Link "Me estafaron" en `Header.tsx` (lo suma el dueño del header)
 
 **Entrega**
 - [ ] URL probada desde otro celular
@@ -74,8 +75,8 @@ Marcá `[x]` con hora y quién.
 - [ ] Submit hecho
 
 ## Próximo paso
+- me-estafaron: listo en main. Falta cargar en Vercel `OPENROUTER_API_KEY` (y opcional `SUPABASE_SERVICE_ROLE_KEY`, ambas sin `NEXT_PUBLIC_`) y sumar el link en el header.
 - Demo: kit listo en `docs/demo/` (guion, mensajes, jurado, checklist, capturas). Falta: conseguir celulares y número del estafador, `npm run reset-demo`, toma de respaldo apenas ande el worker en Railway.
 - Damian: crear Supabase prod y seguir `docs/deploy.md` §1 (no hay CLIs de supabase/vercel/railway en la PC: es por clics). Después `npm run check supabase` y `npm run check prod`.
 - Después Vercel (§2) y Railway (§3); completar las URLs arriba de `docs/deploy.md`.
 - Worker: `POST /analizar` está en main. Falta: deploy a Railway con dominio público → `NEXT_PUBLIC_WORKER_URL` en Vercel (agente `deploy`/`simulador`). Después, Tarea 2 del worker: el LLM tarda 4–6 s por mensaje y la alerta tiene que llegar en menos de 5 s.
-- Web: cuando el worker esté en Railway, cargar `NEXT_PUBLIC_WORKER_URL` en Vercel y redeployar (es `NEXT_PUBLIC_`, se embebe en el build). `/red` ya destaca el nodo de la alerta; falta probarlo contra Supabase prod.
