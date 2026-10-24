@@ -26,7 +26,7 @@ export const config = {
   supabaseServiceRoleKey: env('SUPABASE_SERVICE_ROLE_KEY'),
   openrouterApiKey: env('OPENROUTER_API_KEY'),
   classifierModel: env('CLASSIFIER_MODEL') ?? 'deepseek/deepseek-v4-flash',
-  classifierTimeoutMs: Number(env('CLASSIFIER_TIMEOUT_MS') ?? 10000),
+  classifierTimeoutMs: Number(env('CLASSIFIER_TIMEOUT_MS') ?? 8000),
   protegidoNombre: env('PROTEGIDO_NOMBRE') ?? 'la persona protegida',
   familyGroupJid: env('FAMILY_GROUP_JID'),
   trustedContacts: telefonos(env('TRUSTED_CONTACTS')),

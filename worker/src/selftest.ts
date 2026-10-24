@@ -3,7 +3,8 @@
  * Uso: npm run selftest
  */
 import { armarAlertas } from './alerts.js';
-import { clasificarHeuristico } from './classify.js';
+import { clasificar, clasificarHeuristico } from './classify.js';
+import { config } from './config.js';
 import { completarCbu, detectarEntidades, validarCbu } from './entities.js';
 import { debeAnalizar, esMensajePrevio } from './filter.js';
 import { normalizarTelefono } from './phone.js';
@@ -278,6 +279,46 @@ check('http: enviar_whatsapp no boolean → error', !validarAnalizar({ texto: 'h
     check('http: rate limit → 429', lim.status === 429 && typeof ((await lim.json()) as any).error === 'string', lim.status);
   } finally {
     server.close();
+  }
+}
+
+// --- classify: presupuesto de tiempo del LLM (fetch falso, sin red) ---
+{
+  const fetchOrig = globalThis.fetch;
+  const keyOrig = config.openrouterApiKey;
+  const timeoutOrig = config.classifierTimeoutMs;
+  config.openrouterApiKey = 'test';
+  config.classifierTimeoutMs = 400;
+  const vivo = setInterval(() => {}, 1000); // AbortSignal.timeout no mantiene vivo el proceso
+  const { origen: _o, ...salidaLlm } = clasificarHeuristico(DEMO);
+  const respuestaLlm = JSON.stringify({
+    choices: [{ finish_reason: 'stop', message: { content: JSON.stringify({ ...salidaLlm, riesgo: 91 }) } }],
+  });
+  try {
+    let llamadas = 0;
+    // cuelga hasta que lo aborten
+    globalThis.fetch = ((_u: unknown, init?: { signal?: AbortSignal }) => {
+      llamadas++;
+      return new Promise((_res, rej) => init?.signal?.addEventListener('abort', () => rej(new Error('abort'))));
+    }) as typeof fetch;
+    const t0 = Date.now();
+    const r = await clasificar(DEMO);
+    const ms = Date.now() - t0;
+    check('classify: LLM colgado → heurística dentro del presupuesto total', r.origen === 'heuristica' && ms < 550, { ms, llamadas, origen: r.origen });
+
+    llamadas = 0;
+    globalThis.fetch = (async () => {
+      llamadas++;
+      if (llamadas === 1) return new Response('boom', { status: 502 });
+      return new Response(respuestaLlm, { status: 200 });
+    }) as typeof fetch;
+    const r2 = await clasificar(DEMO);
+    check('classify: falla rápida → reintenta y usa el LLM', r2.origen === 'llm' && r2.riesgo === 91 && llamadas === 2, { llamadas, origen: r2.origen });
+  } finally {
+    globalThis.fetch = fetchOrig;
+    config.openrouterApiKey = keyOrig;
+    config.classifierTimeoutMs = timeoutOrig;
+    clearInterval(vivo);
   }
 }
 

@@ -65,7 +65,7 @@ Para volver a vincular: borrá la carpeta de `AUTH_DIR` y reiniciá.
 | `AUTH_DIR` | no | carpeta de la sesión (default `./auth_info`; en el VPS `/home/agente/mula-data/auth_info`) |
 | `OPENAI_API_KEY` | no | para transcribir audios (`gpt-4o-mini-transcribe`) |
 | `ALERT_THRESHOLD` | no | riesgo mínimo para alertar (default 60) |
-| `CLASSIFIER_TIMEOUT_MS` | no | timeout del LLM antes de caer a la heurística (default 10000) |
+| `CLASSIFIER_TIMEOUT_MS` | no | presupuesto total del LLM (intento + reintento) antes de caer a la heurística (default 8000) |
 | `BAILEYS_LOG_LEVEL` | no | default `warn` |
 | `PORT` | no | puerto del HTTP (default `8080`) |
 | `NEXT_PUBLIC_WORKER_URL` | (web) | URL pública del worker; la usa la web para `/simulador` |

@@ -11,19 +11,18 @@ Tarea completa: `docs/agentes/02-worker-http.md`. Worktree: `C:\Users\dami_\orca
   - `worker/src/alerts.ts`: `enviadorWhatsapp(sock)` reemplaza a `enviarAlertas`.
   - Tests en `worker/src/selftest.ts` (83 ok). Se corren con `npm run check worker`.
 - Probado contra Supabase prod a las 12:53: r_182 + alerta #2, `npm run e2e` verde, 4,2 s con el LLM.
+- **Tarea 2.1, latencia**: `CLASSIFIER_TIMEOUT_MS` ahora es el presupuesto TOTAL del LLM (intento + reintento, default 8000; antes 2×10 s). Si quedan menos de 1,5 s, no reintenta y cae a la heurística. Tests en `selftest.ts` → "classify: ...". `test:classify` 20/20 (~2,5 s por caso). El tiempo de punta a punta se loguea en `[clasif:...] ... N ms` y `[http] /analizar ... N ms`.
 - Docs: `.env.example` (`PORT`, `NEXT_PUBLIC_WORKER_URL`), `worker/README.md`, `CLAUDE.md`.
 
 ## En curso (exactamente dónde quedó: archivo, comando, qué faltaba)
 - Nada a medio hacer: el working tree está limpio. La Tarea 2 no arrancó.
 
 ## Próximo paso
-Tarea 2 del prompt 02, en este orden:
-1. **Latencia (<5 s de punta a punta)**: el LLM tarda 2,5–6 s (`[http] /analizar ... ms` y `[clasif:...] ... ms` en el log).
-   - Idea 1: bajar `CLASSIFIER_TIMEOUT_MS` (default 10000 en `worker/src/config.ts`). Hoy hay un reintento en `worker/src/classify.ts` → `llamarOpenRouter`, así que el peor caso son 2× el timeout antes de caer a la heurística.
-   - Idea 2: acotar el reintento a un tiempo total.
-2. `npm run test:classify` (en `worker/`, LLM real, hoy da 20/20): sumar casos en `worker/src/classify.test-cases.ts`: audio transcripto (`[audio transcripto] ...`), "soy de ANSES", falso comprador de Marketplace. Meta: estafas ≥70, normales <40.
-3. Reconexión de Baileys: ya hay backoff en `index.ts` → `conectar()`; revisar que `logged out` loguee claro.
-4. Audio real con `OPENAI_API_KEY` (`worker/src/transcribe.ts`). Hoy no hay key: el worker avisa y no transcribe.
+Tarea 2 del prompt 02, lo que queda:
+1. `npm run test:classify` (en `worker/`, LLM real, 20/20): sumar casos en `worker/src/classify.test-cases.ts`: audio transcripto (`[audio transcripto] ...`), "soy de ANSES", falso comprador de Marketplace. Meta: estafas ≥70, normales <40.
+2. Reconexión de Baileys: ya hay backoff en `index.ts` → `conectar()`; revisar que `logged out` loguee claro.
+3. Audio real con `OPENAI_API_KEY` (`worker/src/transcribe.ts`). Sin key no transcribe.
+4. Opcional, latencia: si en la demo real pasa de 5 s, bajar `CLASSIFIER_TIMEOUT_MS` a ~5000 en Railway (no hace falta tocar código).
 
 Reglas:
 - Antes de pushear, `npm run check worker` en la raíz. Sin upstream, `npm run check` a secas no detecta los commits.

@@ -125,7 +125,7 @@ Escribí en español rioplatense (vos, transferí, llamá). Nunca se le responde
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
 
 /** Una llamada a OpenRouter con salida JSON estricta. Devuelve el texto del mensaje. */
-async function llamarOpenRouter(userPrompt: string): Promise<string> {
+async function llamarOpenRouter(userPrompt: string, timeoutMs: number): Promise<string> {
   const res = await fetch(OPENROUTER_URL, {
     method: 'POST',
     headers: {
@@ -150,7 +150,7 @@ async function llamarOpenRouter(userPrompt: string): Promise<string> {
       provider: { require_parameters: true },
       reasoning: { enabled: false },
     }),
-    signal: AbortSignal.timeout(config.classifierTimeoutMs),
+    signal: AbortSignal.timeout(timeoutMs),
   });
   if (!res.ok) throw new Error(`OpenRouter ${res.status}: ${(await res.text()).slice(0, 300)}`);
   const data = (await res.json()) as {
@@ -213,12 +213,16 @@ export async function clasificar(texto: string, ctx: ContextoMensaje = {}): Prom
 
   try {
     const prompt = armarPrompt(texto, ctx, regex);
+    // CLASSIFIER_TIMEOUT_MS es el presupuesto TOTAL (intento + reintento), así la alerta no se demora.
+    const limite = Date.now() + config.classifierTimeoutMs;
     let json: string;
     try {
-      json = await llamarOpenRouter(prompt);
+      json = await llamarOpenRouter(prompt, config.classifierTimeoutMs);
     } catch (err) {
-      console.warn(`[classify] primer intento falló, reintento: ${String(err)}`);
-      json = await llamarOpenRouter(prompt);
+      const resta = limite - Date.now();
+      if (resta < Math.min(1500, config.classifierTimeoutMs / 3)) throw err;
+      console.warn(`[classify] primer intento falló, reintento (${resta} ms): ${String(err)}`);
+      json = await llamarOpenRouter(prompt, resta);
     }
     const parsed = RespuestaLlmSchema.safeParse(JSON.parse(json));
     if (!parsed.success) throw new Error(`salida fuera de esquema: ${parsed.error.message}`);
