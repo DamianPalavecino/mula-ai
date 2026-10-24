@@ -3,7 +3,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "seed": "tsx supabase/seed.ts"
+    "seed": "tsx supabase/seed.ts",
+    "reset-demo": "tsx supabase/reset-demo.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.118.0",
