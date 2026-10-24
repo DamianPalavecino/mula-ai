@@ -5,7 +5,8 @@
   "scripts": {
     "seed": "tsx supabase/seed.ts",
     "check": "node scripts/check.mjs",
-    "e2e": "tsx scripts/e2e-check.mts"
+    "e2e": "tsx scripts/e2e-check.mts",
+    "reset-demo": "tsx supabase/reset-demo.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.118.0",

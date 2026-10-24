@@ -6,6 +6,9 @@ Un guardián que vigila el WhatsApp de una persona (sobre todo adultos mayores),
 
 Hackatón [shippe.ar](https://shippe.ar) · Track Social & Sector Público.
 
+- **Web:** _<URL de Vercel>_
+- **Video (2 min):** _<link de YouTube>_
+
 ## Cómo funciona
 
 ```
@@ -39,7 +42,7 @@ El contrato entre worker y web está en [`CLAUDE.md`](CLAUDE.md).
 
 1. Crear un proyecto en Supabase y pegar en el SQL editor `supabase/schema.sql` y después `supabase/functions.sql`.
 2. Copiar `.env.example` a `.env` (raíz), `worker/.env` y `web/.env.local`, y completar.
-3. Sembrar la red: `npm install && npm run seed`.
+3. Sembrar la red: `npm install && npm run seed`. Entre ensayos de la demo, `npm run reset-demo` borra los reportes en vivo y deja `juli.martinez.mp` otra vez en 23 (guion en [`docs/demo.md`](docs/demo.md)).
 4. Web: `cd web && npm install && npm run dev`.
 5. Worker: `cd worker && npm install && npm run dev` y escanear el QR con el WhatsApp a proteger.
 
