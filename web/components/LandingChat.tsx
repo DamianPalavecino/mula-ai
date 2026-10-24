@@ -1,4 +1,4 @@
-import { IconoChat, IconoEscudo, IconoGuion, IconoOk } from "@/components/iconos";
+import { IconoChat, IconoEscudo, IconoOk, IconoWhatsapp } from "@/components/iconos";
 import { partesNegrita } from "@/lib/simulador";
 import type { demoLanding } from "@/lib/demo";
 import styles from "./Landing.styles";
@@ -15,7 +15,7 @@ export default function LandingChat({ vista, familia = false }: { vista: Vista; 
       <div className={styles.chatHeader}>
         <span className={styles.chatAvatar}>{familia ? "M" : vista.nombreChat[0]}</span>
         <div><strong>{familia ? "Marta" : vista.nombreChat}</strong><span>{familia ? "En el WhatsApp de Lucía" : vista.guion.detalle}</span></div>
-        <IconoGuion className={styles.chatHeaderIcon} />
+        <IconoWhatsapp className={styles.chatHeaderIcon} />
       </div>
       <div className={styles.messages}>
         <span className={styles.day}>Hoy</span>
@@ -44,7 +44,7 @@ export function LandingOwnChat({ vista }: { vista: Vista }) {
       <div className={styles.chatHeader}>
         <span className={styles.chatAvatar}>M</span>
         <div><strong>{vista.chatAviso.nombre}</strong><span>Mensajes a vos misma</span></div>
-        <IconoEscudo className={styles.chatHeaderIcon} />
+        <IconoWhatsapp className={styles.chatHeaderIcon} />
       </div>
       <div className={styles.messages}>
         <div className={`${styles.bubble} ${styles.outgoing}`}>
