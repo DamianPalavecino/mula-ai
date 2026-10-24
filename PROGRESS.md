@@ -55,7 +55,8 @@ Marcá `[x]` con hora y quién.
 
 **Plan B / features nuevas**
 - [x] `POST /analizar`: curl local con estafa / normal / body inválido (400) — 12:27, agente worker-http (LLM real: estafa riesgo 95, normal 0; OPTIONS 204; `/health` ok. Supabase falso: `reporte_id` null y alerta sin registrar, como corresponde)
-- [ ] `POST /analizar` contra Supabase real: devuelve `reporte_id`/`alerta_id` y la alerta aparece en el feed de `/red`
+- [x] `POST /analizar` contra Supabase prod — 12:53, agente worker-http: r_182 + alerta #2, `juli.martinez.mp` 24→25, `npm run e2e` verde (falta verla en el feed de `/red`). Ojo: en Windows `curl -d 'texto con tildes'` manda latin1; usá `--data-binary @archivo.json` (r_182 quedó con `�`, la web manda UTF-8 bien)
+- [ ] La alerta de `POST /analizar` aparece en el feed de `/red` en vivo
 - [ ] `POST /analizar` con `enviar_whatsapp: true` y WhatsApp conectado → llega al chat propio y al grupo
 - [ ] Worker con URL pública (VPS: Tailscale Funnel, pendiente OK de Damian) y `GET /health` responde desde afuera; URL cargada en `NEXT_PUBLIC_WORKER_URL` de Vercel
 - [ ] `/simulador` contra el worker real (y en modo mock sin `NEXT_PUBLIC_WORKER_URL`)
