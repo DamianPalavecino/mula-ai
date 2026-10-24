@@ -486,8 +486,9 @@ async function main() {
   const juli = await rpc('resumen_entidad', { valor: JULI })
   console.log('\nresumen_entidad("juli.martinez.mp"):')
   console.log(JSON.stringify(juli, null, 2))
-  if (juli.reportes !== 23 || juli.provincias.length !== 5) {
-    console.error('ERROR: juli.martinez.mp debería tener 23 reportes en 5 provincias')
+  // ≥ porque en prod juli también tiene reportes reales (whatsapp/victima) que el seed no borra
+  if (juli.reportes < 23 || juli.provincias.length < 5) {
+    console.error('ERROR: juli.martinez.mp debería tener al menos 23 reportes en 5 provincias')
     process.exit(1)
   }
 }
