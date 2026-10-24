@@ -56,7 +56,7 @@ Comandos (desde la raíz del repo, en la Mac de Damian):
 | Ver qué variables hay | `worker/scripts/vps.sh vars` (solo nombres) |
 | QR para vincular | `worker/scripts/vps.sh qr` (abre el último en el navegador; vence en ~20 s) |
 
-Variables cargadas: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `OPENROUTER_API_KEY`, `CLASSIFIER_MODEL`, `PROTEGIDO_NOMBRE`, `PROVINCIA_DEFAULT`, `AUTH_DIR`. Faltan (cerca de la demo): `FAMILY_GROUP_JID` (los JID salen en los logs como `[grupos] ...` al conectar), `TRUSTED_CONTACTS`, `ANALIZAR_SOLO`; `OPENAI_API_KEY` opcional (audios).
+Variables cargadas: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `OPENROUTER_API_KEY`, `CLASSIFIER_MODEL`, `PROTEGIDO_NOMBRE`, `PROVINCIA_DEFAULT`, `AUTH_DIR`, `ANALIZAR_SOLO` (los 2 celulares de la demo). Faltan (cerca de la demo): `FAMILY_GROUP_JID` (los JID salen en los logs como `[grupos] ...` al conectar), `TRUSTED_CONTACTS`; `OPENAI_API_KEY` opcional (audios).
 
 ### Re-vincular el QR
 - `sesión cerrada (logged out)` en los logs → `ssh contabo-vps 'rm -rf ~/mula-data/auth_info/*'`, `worker/scripts/vps.sh restart` y `worker/scripts/vps.sh qr`.
