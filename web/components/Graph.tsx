@@ -85,12 +85,15 @@ export default function Graph({
   foco,
   seleccionado,
   onSeleccionar,
+  onFondo,
 }: {
   datos: Grafo;
   destacados: string[];
   foco: { id: string; vez: number; conPanel: boolean } | null;
   seleccionado: string | null;
   onSeleccionar: (nodo: Nodo) => void;
+  /** Clic en el fondo del grafo (cierra fichas y paneles). */
+  onFondo?: () => void;
 }) {
   const contenedor = useRef<HTMLDivElement>(null);
   const fg = useRef<ForceGraphMethods<N, L> | undefined>(undefined);
@@ -240,6 +243,7 @@ export default function Graph({
           }
           showPointerCursor={(obj) => !!obj && "tipo" in obj && obj.tipo !== "reporte"}
           onNodeHover={(n) => setHover(n && esEntidad(n) ? n.id : null)}
+          onBackgroundClick={() => onFondo?.()}
           onNodeClick={(n) => {
             if (esEntidad(n)) onSeleccionar(n);
           }}

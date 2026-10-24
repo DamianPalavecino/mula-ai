@@ -6,6 +6,7 @@ import Link from "next/link";
 import type { Alerta, Grafo, Nodo, ResumenEntidad } from "@/lib/tipos";
 import { TIPOS_ENTIDAD } from "@/lib/tipos";
 import AdminFeed from "@/components/AdminFeed";
+import BotonCerrar from "@/components/BotonCerrar";
 import ResumenCard from "@/components/ResumenCard";
 import { fusionar } from "@/lib/red";
 
@@ -51,17 +52,10 @@ export default function AdminRed({
   const [alertaSel, setAlertaSel] = useState<number | null>(null);
   const [seleccionado, setSeleccionado] = useState<Nodo | null>(null);
   const [resumen, setResumen] = useState<ResumenEntidad | null>(null);
+  const [alertasAbiertas, setAlertasAbiertas] = useState(false);
   const nodos = useRef(nodos0);
   const maxId = useRef(alertasIniciales.reduce((m, a) => Math.max(m, a.id), 0));
-  const panelRef = useRef<HTMLDivElement>(null);
   const timerDestacado = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  // En mobile el panel va debajo del grafo: lo traemos a la vista al abrirlo.
-  useEffect(() => {
-    if (seleccionado && !window.matchMedia("(min-width: 1024px)").matches) {
-      panelRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
-    }
-  }, [seleccionado]);
 
   // Devuelve los ids de nodos que no estaban (para destacarlos).
   const cargarGrafo = useCallback(async (): Promise<string[]> => {
@@ -165,76 +159,172 @@ export default function AdminRed({
     [destacar, seleccionar],
   );
 
+  const cerrarFicha = useCallback(() => {
+    setSeleccionado(null);
+    setAlertaSel(null);
+    setDestacados([]);
+  }, []);
+
+  // Escape cierra lo de arriba: primero la ficha, después las alertas.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      if (seleccionado) cerrarFicha();
+      else if (alertasAbiertas) setAlertasAbiertas(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [seleccionado, alertasAbiertas, cerrarFicha]);
+
   return (
-    <div className="grid gap-4 lg:h-[calc(100svh-22rem)] lg:min-h-[520px] lg:grid-cols-[minmax(0,1fr)_340px]">
-      <div className="h-60 lg:order-2 lg:h-auto lg:min-h-0">
-        <AdminFeed
-          alertas={alertas}
-          nuevas={nuevas}
-          enVivo={enVivo}
-          onSeleccionar={onSeleccionarAlerta}
-          seleccionada={alertaSel}
+    // El grafo ocupa toda el área; alertas, ranking, leyenda y ficha van superpuestos.
+    <div className="relative h-[calc(100svh-9rem)] min-h-[480px] overflow-hidden rounded-tarjeta border border-linea bg-fondo">
+      {error && <Aviso texto="No pudimos actualizar la red." />}
+      {grafo && grafo.nodes.length === 0 && <Aviso texto="La red todavía está vacía." />}
+      {grafo && grafo.nodes.length > 0 && (
+        <Graph
+          datos={grafo}
+          destacados={destacados}
+          foco={foco}
+          seleccionado={seleccionado?.id ?? null}
+          onSeleccionar={(nodo) => {
+            seleccionar(nodo);
+            setAlertasAbiertas(false);
+            setFoco({ id: nodo.id, vez: Date.now(), conPanel: true });
+          }}
+          onFondo={() => {
+            cerrarFicha();
+            setAlertasAbiertas(false);
+          }}
         />
-      </div>
+      )}
 
-      <div className="relative flex min-h-0 flex-col gap-3">
-        <div className="relative h-[480px] overflow-hidden rounded-lg border border-linea bg-fondo lg:h-auto lg:flex-1">
-          {error && <Aviso texto="No pudimos actualizar la red." />}
-          {grafo && grafo.nodes.length === 0 && <Aviso texto="La red todavía está vacía." />}
-          {grafo && grafo.nodes.length > 0 && (
-            <Graph
-              datos={grafo}
-              destacados={destacados}
-              foco={foco}
-              seleccionado={seleccionado?.id ?? null}
-              onSeleccionar={(nodo) => {
-                seleccionar(nodo);
-                setFoco({ id: nodo.id, vez: Date.now(), conPanel: true });
-              }}
-            />
-          )}
-        </div>
-
-
-        {seleccionado && (
-          <div
-            ref={panelRef}
-            className="rounded-lg border border-linea bg-fondo lg:absolute lg:top-3 lg:right-3 lg:max-h-[calc(100%-4.5rem)] lg:w-80 lg:overflow-y-auto"
+      {/* Alertas: pastilla arriba a la derecha; se abre como panel flotante */}
+      <div className="pointer-events-none absolute top-3 right-3 flex w-[min(22rem,calc(100%-1.5rem))] flex-col items-end gap-2">
+        {!alertasAbiertas && (
+          <button
+            type="button"
+            onClick={() => {
+              setSeleccionado(null);
+              setAlertasAbiertas(true);
+            }}
+            aria-expanded={false}
+            className="presionable pointer-events-auto inline-flex h-11 cursor-pointer items-center gap-2 rounded-pastilla bg-fondo/95 px-4 text-sm font-semibold text-tinta shadow-flotante backdrop-blur focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-tinta"
           >
-            <div className="flex items-center justify-between gap-3 border-b border-linea px-4 py-2.5">
-              <p className="min-w-0 truncate text-sm">
-                <span className="font-medium text-suave">
-                  {TIPOS_ENTIDAD[seleccionado.tipo as keyof typeof TIPOS_ENTIDAD] ?? "Entidad"}
-                </span>{" "}
-                <span className="font-mono text-tinta">{seleccionado.label}</span>
-              </p>
-              <button
-                type="button"
-                onClick={() => {
-                  setSeleccionado(null);
-                  setAlertaSel(null);
-                }}
-                className="cursor-pointer text-sm font-medium text-suave hover:text-tinta"
+            <span className={`h-2 w-2 rounded-full ${enVivo ? "bg-seguro" : "bg-linea"}`} aria-hidden />
+            Alertas
+            {alertas.length > 0 && (
+              <span
+                className={`rounded-pastilla px-2 py-0.5 text-xs tabular-nums ${
+                  nuevas.length > 0 ? "bg-alerta text-white" : "bg-panel text-tinta"
+                }`}
               >
-                Cerrar
-              </button>
-            </div>
-            <div className="flex flex-col gap-3 p-3">
-              {resumen ? (
-                <ResumenCard resumen={resumen} compacto />
-              ) : (
-                <p className="px-1 py-2 text-sm text-suave">Cargando resumen…</p>
-              )}
-              <Link
-                href={`/admin/verificar?valor=${encodeURIComponent(seleccionado.label)}`}
-                className="px-1 text-sm font-medium text-tinta underline underline-offset-2 hover:text-black"
-              >
-                Abrir en Verificar
-              </Link>
-            </div>
+                {nuevas.length > 0 ? `+${nuevas.length}` : alertas.length}
+              </span>
+            )}
+          </button>
+        )}
+        {alertasAbiertas && (
+          <div className="animate-entrada pointer-events-auto h-[26rem] max-h-[min(70svh,calc(100%-1.5rem))] w-full overflow-hidden rounded-tarjeta shadow-flotante">
+            <AdminFeed
+              alertas={alertas}
+              nuevas={nuevas}
+              enVivo={enVivo}
+              onSeleccionar={(a) => {
+                setAlertasAbiertas(false);
+                onSeleccionarAlerta(a);
+              }}
+              seleccionada={alertaSel}
+              onCerrar={() => setAlertasAbiertas(false)}
+            />
           </div>
         )}
       </div>
+
+      {seleccionado && <FichaNodo nodo={seleccionado} resumen={resumen} onCerrar={cerrarFicha} />}
     </div>
+  );
+}
+
+// Ficha del nodo: panel flotante a la derecha en desktop; bottom sheet que se desliza en mobile.
+function FichaNodo({
+  nodo,
+  resumen,
+  onCerrar,
+}: {
+  nodo: Nodo;
+  resumen: ResumenEntidad | null;
+  onCerrar: () => void;
+}) {
+  const [arrastre, setArrastre] = useState(0);
+  const [arrastrando, setArrastrando] = useState(false);
+  const inicio = useRef<number | null>(null);
+  const cabecera = useRef<HTMLDivElement>(null);
+
+  // Al abrir, el foco va al botón de cerrar (Escape también cierra).
+  useEffect(() => {
+    cabecera.current?.querySelector("button")?.focus({ preventScroll: true });
+  }, [nodo.id]);
+
+  return (
+    <section
+      role="dialog"
+      aria-label={`Detalle de ${nodo.label}`}
+      className="animate-entrada absolute inset-x-0 bottom-0 z-10 flex max-h-[72%] flex-col overflow-hidden rounded-t-tarjeta bg-fondo shadow-flotante sm:inset-x-auto sm:top-3 sm:right-3 sm:bottom-auto sm:max-h-[calc(100%-1.5rem)] sm:w-80 sm:rounded-tarjeta"
+      style={{
+        transform: arrastre ? `translateY(${arrastre}px)` : undefined,
+        transition: arrastrando ? "none" : "transform 200ms var(--ease-salida)",
+      }}
+    >
+      {/* Agarradera: deslizar hacia abajo cierra (solo mobile) */}
+      <div
+        className="flex h-7 shrink-0 cursor-grab touch-none items-center justify-center sm:hidden"
+        onPointerDown={(e) => {
+          inicio.current = e.clientY;
+          setArrastrando(true);
+          e.currentTarget.setPointerCapture(e.pointerId);
+        }}
+        onPointerMove={(e) => {
+          if (inicio.current != null) setArrastre(Math.max(0, e.clientY - inicio.current));
+        }}
+        onPointerUp={() => {
+          const cerrar = arrastre > 80;
+          inicio.current = null;
+          setArrastrando(false);
+          setArrastre(0);
+          if (cerrar) onCerrar();
+        }}
+        onPointerCancel={() => {
+          inicio.current = null;
+          setArrastrando(false);
+          setArrastre(0);
+        }}
+        aria-hidden
+      >
+        <span className="h-1.5 w-10 rounded-pastilla bg-linea" />
+      </div>
+      <div ref={cabecera} className="flex items-center justify-between gap-2 border-b border-linea py-1 pr-1 pl-4">
+        <p className="min-w-0 truncate text-sm">
+          <span className="font-medium text-suave">
+            {TIPOS_ENTIDAD[nodo.tipo as keyof typeof TIPOS_ENTIDAD] ?? "Entidad"}
+          </span>{" "}
+          <span className="font-mono text-tinta">{nodo.label}</span>
+        </p>
+        <BotonCerrar onClick={onCerrar} etiqueta="Cerrar detalle" />
+      </div>
+      <div className="flex flex-col gap-3 overflow-y-auto overscroll-contain p-3">
+        {resumen ? (
+          <ResumenCard resumen={resumen} compacto />
+        ) : (
+          <p className="px-1 py-2 text-sm text-suave">Cargando resumen…</p>
+        )}
+        <Link
+          href={`/app?tab=verificar&valor=${encodeURIComponent(nodo.label)}`}
+          className="px-1 text-sm font-medium text-tinta underline underline-offset-2 hover:text-black"
+        >
+          Abrir en Verificar
+        </Link>
+      </div>
+    </section>
   );
 }

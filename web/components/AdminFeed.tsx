@@ -5,6 +5,7 @@ import type { Alerta } from "@/lib/tipos";
 import { labelModalidad } from "@/lib/tipos";
 import { fechaRelativa } from "@/lib/formato";
 import { partesNegrita } from "@/lib/simulador";
+import BotonCerrar from "@/components/BotonCerrar";
 
 // Feed de alertas del panel admin: las recibe por props (el polling vive en AdminRed).
 export default function AdminFeed({
@@ -13,12 +14,15 @@ export default function AdminFeed({
   onSeleccionar,
   seleccionada,
   enVivo,
+  onCerrar,
 }: {
   alertas: Alerta[];
   nuevas: number[];
   onSeleccionar: (alerta: Alerta) => void;
   seleccionada: number | null;
   enVivo: boolean;
+  /** Si viene, muestra la X (panel flotante dentro de la red). */
+  onCerrar?: () => void;
 }) {
   const [, setTick] = useState(0);
   useEffect(() => {
@@ -27,19 +31,17 @@ export default function AdminFeed({
   }, []);
 
   return (
-    <div className="flex h-full flex-col overflow-hidden rounded-lg border border-linea bg-fondo">
-      <div className="flex items-center justify-between border-b border-linea px-4 py-3">
+    <div className="flex h-full flex-col overflow-hidden rounded-tarjeta border border-linea bg-fondo">
+      <div className="flex items-center justify-between gap-2 border-b border-linea py-1 pr-1 pl-4">
         <h2 className="text-base font-semibold text-tinta">Alertas</h2>
-        <span className="flex items-center gap-2 text-sm text-suave">
-          <span
-            className={`h-2 w-2 rounded-full ${enVivo ? "bg-emerald-600" : "bg-linea"}`}
-            aria-hidden
-          />
+        <span className="ml-auto flex items-center gap-2 text-sm text-suave">
+          <span className={`h-2 w-2 rounded-full ${enVivo ? "bg-seguro" : "bg-linea"}`} aria-hidden />
           {enVivo ? "En vivo" : "Sin conexión"}
         </span>
+        {onCerrar ? <BotonCerrar onClick={onCerrar} etiqueta="Cerrar alertas" /> : <span className="w-3" />}
       </div>
 
-      <ul className="flex-1 divide-y divide-linea overflow-y-auto">
+      <ul className="flex-1 divide-y divide-linea overflow-y-auto overscroll-contain">
         {alertas.length === 0 && (
           <li className="px-4 py-6 text-sm leading-relaxed text-suave">
             Todavía no hay alertas. Cuando Mula AI detecte una estafa, aparece acá en
