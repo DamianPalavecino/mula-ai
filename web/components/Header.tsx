@@ -34,7 +34,7 @@ export function HeaderBase() {
 export default async function Header() {
   const sesion = await getSesion();
   const links: LinkNav[] = sesion
-    ? [...LINKS_USUARIO, ...(sesion.rol === "admin" ? [{ href: "/admin", label: "Gobierno" }] : [])]
+    ? [...LINKS_USUARIO, { href: "/admin", label: "Red" }]
     : [{ href: "/", label: "Inicio" }];
 
   return (

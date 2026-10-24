@@ -43,7 +43,7 @@ export async function requireUser(): Promise<Sesion> {
   return sesion;
 }
 
-// Páginas y routes de /admin: exige login + rol admin (si no, manda a /app).
+// Exige login + rol admin (si no, manda a /app). /admin ya no lo usa: la red la ve cualquier logueado.
 export async function requireAdmin(): Promise<Sesion> {
   const sesion = await requireUser();
   if (sesion.rol !== "admin") redirect("/app");

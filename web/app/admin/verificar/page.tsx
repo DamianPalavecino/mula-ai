@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { requireAdmin } from "@/lib/auth";
+import { requireUser } from "@/lib/auth";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import type { ResumenEntidad } from "@/lib/tipos";
 import ResumenCard from "@/components/ResumenCard";
@@ -13,7 +13,7 @@ export default async function AdminVerificarPage({
 }: {
   searchParams: Promise<{ valor?: string | string[] }>;
 }) {
-  await requireAdmin();
+  await requireUser();
   const sp = await searchParams;
   const crudo = Array.isArray(sp.valor) ? sp.valor[0] : sp.valor;
   const valor = (crudo ?? "").trim().slice(0, 200);
@@ -29,7 +29,7 @@ export default async function AdminVerificarPage({
   return (
     <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-10 sm:px-6 sm:py-12">
       <a href="/admin" className="text-sm font-medium text-suave hover:text-tinta">
-        ← Panel de gobierno
+        ← Red de estafas
       </a>
       <h1 className="mt-3 text-3xl font-semibold tracking-tight text-tinta sm:text-4xl">
         Verificar una cuenta

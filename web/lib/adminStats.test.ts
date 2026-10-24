@@ -1,6 +1,6 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { alertasUltimas24h, calcularStats, entidadesDistintas } from "./adminStats.ts";
+import { alertaParaRol, alertasUltimas24h, calcularStats, entidadesDistintas } from "./adminStats.ts";
 
 const filas = [
   { provincia: "Santa Fe", modalidad: "familiar_numero_nuevo" },
@@ -51,4 +51,21 @@ describe("entidadesDistintas / alertasUltimas24h", () => {
     ];
     assert.equal(alertasUltimas24h(a, ahora), 1);
   });
+});
+
+it("alertaParaRol: oculta datos personales a quien no es admin", () => {
+  const a = {
+    id: 1, reporte_id: 2, protegido: "Abuela Marta", riesgo: 90, modalidad: "inversion",
+    mensaje_persona: "Marta, ojo", mensaje_familia: "Avisale a Marta", enviada_a: ["549@s"],
+    entidad_ids: [3], created_at: "2026-10-24T00:00:00Z", protegido_id: 7,
+  };
+  assert.deepEqual(alertaParaRol(a, "admin"), a);
+  const u = alertaParaRol(a, "usuario");
+  assert.equal(u.protegido, null);
+  assert.equal(u.mensaje_persona, null);
+  assert.equal(u.mensaje_familia, null);
+  assert.equal(u.enviada_a, null);
+  assert.equal(u.protegido_id, null);
+  assert.deepEqual(u.entidad_ids, [3]);
+  assert.equal(u.riesgo, 90);
 });

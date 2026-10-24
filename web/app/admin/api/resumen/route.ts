@@ -1,9 +1,9 @@
-import { sesionAdminApi } from "@/lib/auth";
+import { sesionApi } from "@/lib/auth";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 
 export async function GET(req: Request) {
-  const s = await sesionAdminApi();
+  const s = await sesionApi();
   if (s instanceof Response) return s;
 
   const p = new URL(req.url).searchParams;

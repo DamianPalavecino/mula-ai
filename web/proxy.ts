@@ -3,8 +3,8 @@ import { NextResponse, type NextMiddleware } from "next/server";
 import { clerkActivo } from "@/lib/clerk";
 import { esPublicaSoloSinSesion } from "@/lib/rutas";
 
-// Next 16: el middleware se llama proxy.ts. Protege /app/* y /admin/* (el rol admin se chequea
-// en lib/auth.ts con ADMIN_EMAILS). Todo lo demás (landing, /entrar) es público.
+// Next 16: el middleware se llama proxy.ts. Protege /app/* y /admin/* (la red de estafas la ve
+// cualquier usuario logueado; el rol admin solo destapa datos personales). Todo lo demás (landing, /entrar) es público.
 // Con sesión, landing/entrar/registro mandan directo al panel.
 // Sin keys de Clerk: passthrough (las páginas privadas igual redirigen con requireUser()).
 const esPrivada = createRouteMatcher(["/app(.*)", "/admin(.*)"]);

@@ -61,3 +61,18 @@ export function alertasUltimas24h(alertas: { created_at: string }[], ahora = Dat
   const desde = ahora - 24 * 3600 * 1000;
   return alertas.filter((a) => new Date(a.created_at).getTime() >= desde).length;
 }
+
+// La red la ve cualquier usuario logueado: a quien no es admin no le mostramos a quién
+// protege cada alerta ni sus mensajes (son de otros usuarios).
+type AlertaPrivada = {
+  protegido: string | null;
+  mensaje_persona: string | null;
+  mensaje_familia: string | null;
+  enviada_a: string[] | null;
+  protegido_id?: number | null;
+};
+
+export function alertaParaRol<T extends AlertaPrivada>(a: T, rol: "admin" | "usuario"): T {
+  if (rol === "admin") return a;
+  return { ...a, protegido: null, mensaje_persona: null, mensaje_familia: null, enviada_a: null, protegido_id: null };
+}

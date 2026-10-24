@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
-import { requireAdmin } from "@/lib/auth";
+import { requireUser } from "@/lib/auth";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import type { Alerta, Grafo } from "@/lib/tipos";
-import { alertasUltimas24h, calcularStats, entidadesDistintas, type Conteo } from "@/lib/adminStats";
+import { alertaParaRol, alertasUltimas24h, calcularStats, entidadesDistintas, type Conteo } from "@/lib/adminStats";
 import AdminRed from "@/components/AdminRed";
 
-export const metadata: Metadata = { title: "Panel de gobierno" };
+export const metadata: Metadata = { title: "Red de estafas" };
 
 function Tarjeta({ label, valor }: { label: string; valor: number }) {
   return (
@@ -48,7 +48,7 @@ function Barras({ titulo, items }: { titulo: string; items: Conteo[] }) {
 }
 
 export default async function AdminPage() {
-  await requireAdmin();
+  const sesion = await requireUser();
   const sb = supabaseAdmin();
   const [grafoRes, alertasRes, reportesRes] = await Promise.all([
     sb.rpc("grafo"),
@@ -57,7 +57,7 @@ export default async function AdminPage() {
   ]);
 
   const grafo = (grafoRes.data ?? { nodes: [], links: [] }) as Grafo;
-  const alertas = (alertasRes.data ?? []) as Alerta[];
+  const alertas = ((alertasRes.data ?? []) as Alerta[]).map((a) => alertaParaRol(a, sesion.rol));
   const stats = calcularStats(reportesRes.data ?? []);
   const hayError = grafoRes.error || alertasRes.error || reportesRes.error;
 
@@ -65,7 +65,7 @@ export default async function AdminPage() {
     <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6">
       <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
         <h1 className="text-3xl font-semibold tracking-tight text-tinta sm:text-4xl">
-          Panel de gobierno
+          Red de estafas
         </h1>
         <a
           href="/admin/verificar"
