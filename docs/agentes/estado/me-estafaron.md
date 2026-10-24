@@ -10,8 +10,20 @@ Lo actualiza el agente después de cada paso (commit + push). Si se corta, el si
 
 - Velocidad (commit `0b2352a`): el LLM solo extrae (esquema chico, `max_tokens` 1500, `sort: latency`, `reasoning: minimal`, timeout 20 s, default `google/gemini-3.5-flash-lite`); denuncia, pedido y pasos salen de `armarTextos()` en `web/lib/meEstafaron.ts` (con tests). Medido desde esta PC con las 2 capturas de demo (mismo request que la ruta, script en el scratchpad): LLM 3,0–4,2 s + red 0,3–0,9 s = 3,2–5,1 s. Lee bien alias, CVU, teléfono y $180.000. La cronología viene vacía y la UI ya la oculta.
 
+## Cómo montar la sección en el dashboard (para el simulador)
+```tsx
+import MeEstafaronPanel from "@/components/MeEstafaronPanel"; // client component
+<MeEstafaronPanel />                              // en una columna o página
+<MeEstafaronPanel onCerrar={() => setAbierto(false)} />  // en un drawer: aparece la X
+<MeEstafaronPanel titulo={false} />               // si el contenedor ya pone su título
+```
+- Autocontenido: pasos, validaciones, "Usar capturas de ejemplo" (`/demo/*.png`), resultado, copiar y "Sumar a la red". Llama a `/app/api/extraer` y `/app/api/registrar` (sin cambios); la página que lo monte tiene que estar detrás de `requireUser()`.
+- Colores: variables `--me-*` en `MeEstafaronPanel.module.css` que apuntan a los tokens de `globals.css` (`tinta`, `texto`, `suave`, `linea`, `panel`, `papel`, `alerta*`, `seguro*`, `bosque*`, `lima`). Si cambian los tokens, el panel los sigue.
+- Ancho: anda de 320 px a ~760 px; la barra fija de copiar del resultado usa `sticky bottom-0` (el contenedor no tiene que cortar el overflow vertical). En un drawer, darle `overscroll-behavior: contain` al contenedor con scroll.
+- `/app/me-estafaron` sigue existiendo y solo monta el panel; se puede borrar cuando el dashboard lo tenga.
+
 ## En curso (exactamente dónde quedó: archivo, comando, qué faltaba)
-- Nada a medio hacer. Todo pusheado.
+- Pulido del panel según better-ui/Emil (press 0.96, entrada escalonada, ícono copiar→check cruzado, tarjetas con sombra, carga de ~5 s) y captura a 375 px.
 
 ## Próximo paso
 - Mirarlo en el navegador a 375 px logueado (Clerk) en `/app/me-estafaron`: tocar "Usar capturas de ejemplo" y revisar el resultado. No lo pude ver: requiere sesión de Clerk.
