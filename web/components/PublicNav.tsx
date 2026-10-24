@@ -12,7 +12,7 @@ export default function PublicNav() {
   const cerrar = () => setAbierto(false);
 
   return (
-    <header className="mula-publicHeader" onKeyDown={(e) => {
+    <header data-header-global className="mula-publicHeader" onKeyDown={(e) => {
       if (e.key === "Escape" && abierto) { cerrar(); boton.current?.focus(); }
     }}>
       <div className="mula-publicBar">
