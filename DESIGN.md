@@ -74,6 +74,10 @@ Contraste medido (AA texto normal ≥ 4.5): `alerta` sobre `fondo` 5.9, `seguro`
 ### Íconos
 - `web/components/iconos.tsx`: SVG inline, trazo 2, `currentColor`, 24×24. Tamaños `h-4` (en chips), `h-5` (botones, pestañas), `h-6`–`h-10` (estados).
 
+## shadcn / Efferd
+- El panel usa el app shell **Efferd app-shell-4** (sidebar flotante colapsable a íconos, contenido inset; en mobile la sidebar es un drawer) sobre componentes de shadcn (`web/components/ui/*`, `components.json` con el registry `@efferd`).
+- Las variables semánticas de shadcn (`--background`, `--primary`, `--sidebar-*`, `--destructive`, …) viven en `:root` de `globals.css` y **apuntan a los tokens de arriba** (primario = `bosque`, acento = `seguro-fondo`, destructive = `alerta`, bordes = `linea`). No hay grises genéricos de shadcn ni modo oscuro.
+
 ## Componentes
 
 | Componente | Archivo | Variantes / estados |
@@ -83,9 +87,8 @@ Contraste medido (AA texto normal ≥ 4.5): `alerta` sobre `fondo` 5.9, `seguro`
 | Input con validación | `VerificarPanel` (`lib/verificar.ts`) | vacío (sin mensaje), válido (badge del tipo), inválido (borde `alerta` + error inline) |
 | Resultado de cuenta | `ResumenCard` | con reportes (rojo, número gigante, chips de provincias/modalidades), sin reportes (verde), `compacto` |
 | Alerta | `AppAlertas`, `AdminFeed` | nueva (resaltada), normal; badge de riesgo |
-| Pestañas | `Panel` | activa (borde `bosque`; "Me estafaron" en `alerta`), inactiva |
-| Atajo | `Panel` (`Atajo`) | `bosque`, `alerta` |
-| Stat | `Panel` (`Stat`) | normal, destacado (`lima`) |
+| App shell | `app-shell.tsx`, `app-sidebar.tsx` | sección activa (`seguro-fondo`), "Me estafaron" en `alerta`, badge de alertas (`alerta`), protegido con estado; colapsada a íconos; drawer en mobile (ítems de 44 px) |
+| Stat | `Panel` (`Stat`) | neutro (ícono `seguro`), alerta (ícono `alerta`) |
 | Conversación WhatsApp | `AppProbarMensaje` | vacío, analizando, resultado riesgo / sin señales, error |
 | Grafo | `Graph`, `AdminRed`, `colores.ts` | nodo por tipo, destacado (pulso), seleccionado |
 | Navbar pública | `PublicNav`, `PublicNav.css` | marca, enlaces a secciones, entrar/registro; menú mobile con cierre por enlace o Escape |

@@ -11,7 +11,7 @@ const LINKS_USUARIO: LinkNav[] = [{ href: "/app", label: "Mi panel", corto: "Pan
 
 function Marco({ inicio, children }: { inicio: string; children?: React.ReactNode }) {
   return (
-    <header className="border-b border-linea bg-fondo">
+    <header data-header-global className="border-b border-linea bg-fondo">
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-2 px-4 sm:px-6">
         <Link href={inicio} className="flex shrink-0 items-center gap-1.5 text-lg font-bold tracking-tight text-bosque">
           <IconoEscudo className="h-5 w-5 text-seguro" />

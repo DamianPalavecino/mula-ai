@@ -8,6 +8,7 @@ import { alertaParaRol, calcularStats, entidadesDistintas } from "@/lib/adminSta
 import type { Alerta, Grafo, Protegido } from "@/lib/tipos";
 import Panel from "@/components/Panel";
 import { tabInicial as aTab } from "@/lib/panel";
+import { clerkActivo } from "@/lib/clerk";
 
 export const metadata: Metadata = { title: "Mi panel" };
 
@@ -63,6 +64,7 @@ export default async function AppPage({
           : null
       }
       misAlertas={alertas}
+      conUsuario={clerkActivo}
       probarConfigurado={Boolean(process.env.WORKER_URL && process.env.MULA_TOKEN)}
       grafo={grafo}
       alertasRed={alertasRed}
