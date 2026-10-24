@@ -32,9 +32,14 @@ create table if not exists public.entidades (
   tipo              text not null,
   valor_normalizado text not null,
   created_at        timestamptz not null default now(),
-  constraint entidades_tipo_chk check (tipo in ('alias', 'cbu', 'cvu', 'telefono')),
+  constraint entidades_tipo_chk check (tipo in ('alias', 'cbu', 'cvu', 'telefono', 'cuit', 'link')),
   constraint entidades_tipo_valor_key unique (tipo, valor_normalizado)
 );
+
+-- cuit y link se sumaron después: re-crear el check en bases ya creadas (re-ejecutable)
+alter table public.entidades drop constraint if exists entidades_tipo_chk;
+alter table public.entidades add constraint entidades_tipo_chk
+  check (tipo in ('alias', 'cbu', 'cvu', 'telefono', 'cuit', 'link'));
 
 create table if not exists public.reporte_entidad (
   reporte_id bigint not null references public.reportes (id) on delete cascade,

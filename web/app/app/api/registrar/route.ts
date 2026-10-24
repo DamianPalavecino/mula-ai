@@ -44,7 +44,7 @@ export async function POST(request: Request) {
     .slice(0, MAX_ENTIDADES)
     .flatMap((e) => {
       const tipo = texto((e as { tipo?: unknown })?.tipo, 10);
-      const valor = texto((e as { valor?: unknown })?.valor, 40);
+      const valor = texto((e as { valor?: unknown })?.valor, 200); // los links pueden ser largos
       return valor ? [{ tipo, valor }] : [];
     });
   if (!entidades.length) {

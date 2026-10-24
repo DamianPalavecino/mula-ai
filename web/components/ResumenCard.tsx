@@ -27,7 +27,14 @@ export default function ResumenCard({
   resumen: ResumenEntidad;
   compacto?: boolean;
 }) {
-  const sujeto = resumen.tipo === "telefono" ? "Este número" : "Esta cuenta";
+  const sujeto =
+    resumen.tipo === "telefono"
+      ? "Este número"
+      : resumen.tipo === "cuit"
+        ? "Este CUIT"
+        : resumen.tipo === "link"
+          ? "Este link"
+          : "Esta cuenta";
 
   if (!resumen.reportes) {
     return (

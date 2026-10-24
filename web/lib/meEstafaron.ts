@@ -3,7 +3,14 @@
 import type { EntidadEnRed, EntidadExtraida } from "@/lib/extraccion";
 import type { TipoEntidad } from "@/lib/tipos";
 
-const TIPOS: Record<TipoEntidad, string> = { alias: "Alias", cbu: "CBU", cvu: "CVU", telefono: "Teléfono" };
+const TIPOS: Record<TipoEntidad, string> = {
+  alias: "Alias",
+  cbu: "CBU",
+  cvu: "CVU",
+  telefono: "Teléfono",
+  cuit: "CUIT/CUIL",
+  link: "Link",
+};
 
 function plural(n: number, singular: string, pluralForma: string): string {
   return `${n} ${n === 1 ? singular : pluralForma}`;
@@ -12,6 +19,22 @@ function plural(n: number, singular: string, pluralForma: string): string {
 /** Marca que el modelo deja en la denuncia donde van los antecedentes de la red. */
 export const MARCA_RED = "[ANTECEDENTES_RED]";
 
+// CUIT/CUIL: 11 dígitos, prefijo conocido y dígito verificador mod 11.
+export function cuitValido(digitos: string): boolean {
+  if (!/^\d{11}$/.test(digitos) || !["20", "23", "24", "25", "26", "27", "30", "33", "34"].includes(digitos.slice(0, 2))) {
+    return false;
+  }
+  const suma = [5, 4, 3, 2, 7, 6, 5, 4, 3, 2].reduce((acc, peso, i) => acc + peso * Number(digitos[i]), 0);
+  const dv = 11 - (suma % 11);
+  if (dv === 10) return false;
+  return (dv === 11 ? 0 : dv) === Number(digitos[10]);
+}
+
+// Link sin esquema, www ni barra final, en minúsculas (aprox. de lo que guarda la base).
+function linkBase(valor: string): string {
+  return valor.trim().toLowerCase().replace(/^[a-z][a-z0-9+.-]*:\/\//, "").replace(/^www\./, "").replace(/\/+$/, "");
+}
+
 // Descarta lo que la red ignoraría igual (ver detalles del contrato en CLAUDE.md).
 function entidadValida(e: EntidadExtraida): EntidadExtraida | null {
   const valor = e.valor.trim();
@@ -19,7 +42,14 @@ function entidadValida(e: EntidadExtraida): EntidadExtraida | null {
     const alias = valor.toLowerCase().replace(/\s+/g, "").replace(/^[^a-z0-9]+|[^a-z0-9]+$/g, "");
     return /^[a-z0-9.-]{6,20}$/.test(alias) ? { ...e, valor: alias } : null;
   }
+  if (e.tipo === "link") {
+    const host = linkBase(valor).split(/[/?#]/)[0];
+    return /^[a-z0-9-]+(\.[a-z0-9-]+)+$/.test(host) ? { ...e, valor } : null;
+  }
   const digitos = valor.replace(/\D/g, "");
+  if (e.tipo === "cuit") {
+    return cuitValido(digitos) ? { ...e, valor: `${digitos.slice(0, 2)}-${digitos.slice(2, 10)}-${digitos[10]}` } : null;
+  }
   if (e.tipo === "cbu" || e.tipo === "cvu") {
     if (digitos.length !== 22) return null;
     return { ...e, tipo: digitos.startsWith("000") ? "cvu" : "cbu", valor: digitos };
@@ -29,6 +59,8 @@ function entidadValida(e: EntidadExtraida): EntidadExtraida | null {
 
 // Clave aproximada para deduplicar (la normalización real la hace Postgres).
 function clave(e: EntidadExtraida): string {
+  if (e.tipo === "cuit") return `cuit:${e.valor.replace(/\D/g, "")}`;
+  if (e.tipo === "link") return `link:${linkBase(e.valor)}`;
   if (e.tipo !== "telefono") return `${e.tipo}:${e.valor}`;
   return `telefono:${e.valor.replace(/\D/g, "").slice(-10)}`;
 }

@@ -42,15 +42,15 @@ Herramientas: Supabase CLI en `C:\Users\dami_\AppData\Local\Programs\Supabase\su
 <!-- check:start -->
 | Feature | Comando | Resultado | Duración | Cuándo | Commit |
 |---|---|---|---|---|---|
-| `classify` | `npm run test:classify` | ✅ | 72s | 24/10/2026, 13:17:53 | 0931268 |
+| `classify` | `npm run test:classify` | ✅ | 76s | 24/10/2026, 13:48:44 | 893e19e |
 | `e2e` | `npm run e2e` | ✅ | 3s | 24/10/2026, 12:49:18 | 11979d5 |
 | `pre-demo` | `node --test scripts/pre-demo.test.mjs` | ✅ | 0s | 24/10/2026, 13:16:24 | 823cd2b |
 | `prod` | `node --env-file-if-exists=.env scripts/smoke-prod.mjs` | ❌ | 3s | 24/10/2026, 13:24:41 | 707ea19 |
 | `prod` | `node scripts/smoke-prod.mjs` | ⏭️ omitido | 0s | 24/10/2026, 12:28:39 | c6d5a8f |
-| `web` | `npm run build` | ✅ | 17s | 24/10/2026, 13:00:21 | fbc3601 |
-| `web` | `npm test` | ✅ | 2s | 24/10/2026, 13:00:21 | fbc3601 |
-| `worker` | `npm run selftest` | ✅ | 1s | 24/10/2026, 13:38:04 | f6c1eed |
-| `worker` | `npm run typecheck` | ✅ | 0s | 24/10/2026, 13:38:04 | f6c1eed |
+| `web` | `npm run build` | ✅ | 4s | 24/10/2026, 13:48:44 | 893e19e |
+| `web` | `npm test` | ✅ | 0s | 24/10/2026, 13:48:44 | 893e19e |
+| `worker` | `npm run selftest` | ✅ | 1s | 24/10/2026, 13:48:44 | 893e19e |
+| `worker` | `npm run typecheck` | ✅ | 0s | 24/10/2026, 13:48:44 | 893e19e |
 <!-- check:end -->
 
 ## Qué falta probar (manual / e2e)
@@ -60,6 +60,9 @@ Marcá `[x]` con hora y quién.
 - [x] 12:35 deploy — `docs/deploy.md` con pasos y variables por servicio; `scripts/smoke-prod.mjs` probado (sin vars → omitido, URL caída → 9 FAIL)
 - [x] 12:5x Damian / 12:55 deploy — Supabase prod: `schema.sql` + `functions.sql` aplicados y sembrado
 - [x] 12:55 deploy — `npm run check prod` 6/6 contra Supabase prod (juli 24/5, grafo 306/281, anon no escribe)
+- [x] 13:50 c5 — Entidades `cuit` y `link`: check + funciones aplicadas en prod (migración `entidades_cuit_link`), `supabase/tests.sql` 29 asserts OK en local y prod; seed local con clusters nuevos OK (juli 23/5)
+- [ ] Re-sembrar prod con los clusters cuit/link (`npm run seed`): ojo, en prod juli tiene 28 (5 reales) y el chequeo de 23 del seed falla aunque siembre bien
+- [ ] Deploy del worker al VPS con cuit/link (`worker/scripts/vps.sh deploy`) y leyenda CUIT/Link en /admin verificada en desktop + mobile
 - [x] 13:0x deploy — `WEB_URL=https://mula-ai.vercel.app npm run check prod` 9/9; bundle con la URL de Supabase prod; `/simulador` y `/me-estafaron` dan 200
 - [x] Realtime activo en `alertas` — 13:2x agente vercel-web: `/red` de mula-ai.vercel.app abierta en Playwright, `POST /analizar` en el VPS (riesgo 95) → la alerta entra "recién" al feed sin recargar
 - [x] Web en Vercel — 13:2x agente vercel-web: Playwright headless (contexto limpio) 1440 y 375: `/`, `/verificar` juli (rojo, 27) y maria.gomez.gym (sin reportes), `/red` (grafo + En vivo), `/me-estafaron`; todas 200 y sin scroll horizontal. `mula-ai.vercel.app` pública (200); `mula-ai-damianpalavecinos-projects.vercel.app` da 302 SSO. Vercel deploya solo cada push a main
@@ -114,6 +117,7 @@ Marcá `[x]` con hora y quién.
 - [ ] Submit hecho
 
 ## Próximo paso
+- Red: cuit/link listos en base + worker + web. Falta: `vps.sh deploy` del worker y decidir el re-seed de prod (ver "Qué falta probar").
 - Web: el worker ya tiene URL pública y `WORKER_URL` + `MULA_TOKEN` están en Vercel production (server-only). Falta: deploy del proxy server-side que la usa (`/app/api/analizar`) y `vercel --prod`. Si la URL del túnel cambió: `worker/scripts/vps.sh tunnel`.
 - me-estafaron: listo en main. Falta cargar en Vercel `OPENROUTER_API_KEY` (y opcional `SUPABASE_SERVICE_ROLE_KEY`, ambas sin `NEXT_PUBLIC_`) y sumar el link en el header.
 - Demo: kit listo en `docs/demo/` (guion, mensajes, jurado, checklist, capturas). Falta: conseguir celulares y número del estafador, `npm run reset-demo`, toma de respaldo (el worker ya anda en el VPS).

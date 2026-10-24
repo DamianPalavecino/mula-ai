@@ -2,12 +2,12 @@
  * Smoke test sin red: entities + filter + heurística + armado de alertas.
  * Uso: npm run selftest
  */
-import { armarAlertas } from './alerts.js';
+import { armarAlertas, entidadPrincipal, lineaRed } from './alerts.js';
 import { clasificar, clasificarHeuristico, conPresupuesto } from './classify.js';
 import { config } from './config.js';
 import { DisconnectReason } from '@whiskeysockets/baileys';
 import { decidirReconexion } from './reconnect.js';
-import { completarCbu, detectarEntidades, validarCbu } from './entities.js';
+import { clave, completarCbu, cuitValido, detectarEntidades, validarCbu } from './entities.js';
 import { debeAnalizar, esMensajePrevio } from './filter.js';
 import { normalizarTelefono } from './phone.js';
 import type { AddressInfo } from 'node:net';
@@ -55,6 +55,21 @@ check('teléfono +54 9 341 555-1234', tiene('llamame al +54 9 341 555-1234', 'te
 check('teléfono 011 15 5555-1234', detectarEntidades('mi nuevo es 011 15 5555-1234').some((e) => e.tipo === 'telefono'), detectarEntidades('mi nuevo es 011 15 5555-1234'));
 check('DNI de 8 dígitos no es teléfono', !detectarEntidades('mi dni 30123456').some((e) => e.tipo === 'telefono'));
 
+// cuit (titular de la cuenta) y link
+check('cuitValido: dígito verificador', cuitValido('20123456786') && !cuitValido('20123456785') && !cuitValido('99123456786'));
+check('CUIT con guiones se detecta', tiene('titular Juan Pérez CUIT 20-12345678-6', 'cuit', '20123456786'), detectarEntidades('CUIT 20-12345678-6'));
+check('CUIT pegado se detecta', tiene('cuil 27280335148', 'cuit', '27280335148'), detectarEntidades('cuil 27280335148'));
+check('CUIT no se cuenta también como teléfono', !detectarEntidades('CUIT 20-12345678-6').some((e) => e.tipo === 'telefono'), detectarEntidades('CUIT 20-12345678-6'));
+check('11 dígitos con verificador roto no es cuit', !detectarEntidades('20123456785').some((e) => e.tipo === 'cuit'));
+check('link con https se detecta', tiene('entrá a https://anses-beneficio.com/cobrar.', 'link', 'https://anses-beneficio.com/cobrar'), detectarEntidades('entrá a https://anses-beneficio.com/cobrar.'));
+check('acortador se detecta', tiene('tocá bit.ly/AbC12 ya', 'link', 'bit.ly/AbC12'), detectarEntidades('tocá bit.ly/AbC12 ya'));
+check('dominio pelado .com se detecta', tiene('registrate en inversiones-top.com', 'link', 'inversiones-top.com'), detectarEntidades('registrate en inversiones-top.com'));
+check('dominio oficial no es link', !detectarEntidades('entrá a anses.gob.ar ya').some((e) => e.tipo === 'link'), detectarEntidades('entrá a anses.gob.ar ya'));
+check('mail no es link', !detectarEntidades('escribime a juli.martinez@gmail.com').some((e) => e.tipo === 'link'), detectarEntidades('escribime a juli.martinez@gmail.com'));
+check('alias .mp no es link', !detectarEntidades(DEMO).some((e) => e.tipo === 'link'));
+check('wa.me → teléfono, no link', tiene('escribime a wa.me/5493415551234', 'telefono', '5493415551234') && !detectarEntidades('wa.me/5493415551234').some((e) => e.tipo === 'link'), detectarEntidades('wa.me/5493415551234'));
+check('clave de link ignora esquema/www/barra', clave({ tipo: 'link', valor: 'https://www.Foo.com/' }) === clave({ tipo: 'link', valor: 'foo.com' }));
+
 check('monto $ 150.000', tiene('mandame $ 150.000', 'monto', '150000'), detectarEntidades('mandame $ 150.000'));
 check('monto 150 mil', tiene('son 150 mil', 'monto', '150000'), detectarEntidades('son 150 mil'));
 check('monto 150k', tiene('necesito 150k', 'monto', '150000'), detectarEntidades('necesito 150k'));
@@ -65,6 +80,19 @@ check('monto 80.000 pesos', tiene('80.000 pesos', 'monto', '80000'), detectarEnt
 check('normalizar 5493415551234', normalizarTelefono('5493415551234') === '3415551234', normalizarTelefono('5493415551234'));
 check('normalizar 0341 15 555-1234', normalizarTelefono('0341 15 555-1234') === '3415551234', normalizarTelefono('0341 15 555-1234'));
 check('normalizar +54 9 11 5555-1234', normalizarTelefono('+54 9 11 5555-1234') === '1155551234', normalizarTelefono('+54 9 11 5555-1234'));
+
+// --- alertas con cuit/link ---
+{
+  const r = (tipo: ResumenEntidad['tipo'], valor: string, reportes: number): ResumenEntidad => ({
+    entidad_id: 1, tipo, valor_normalizado: valor, encontrada: reportes > 0, reportes, provincias: ['Córdoba'], modalidades: [], ultimo: null, monto_total: 0,
+  });
+  const ppal = entidadPrincipal([r('link', 'anses-beneficio.com', 9), r('cuit', '20123456786', 3), r('telefono', '3415551234', 12)]);
+  check('principal: cuit (cuenta) antes que link y teléfono', ppal?.tipo === 'cuit', ppal);
+  check('lineaRed nombra el CUIT', /^El CUIT 20123456786/.test(lineaRed(r('cuit', '20123456786', 3)) ?? ''), lineaRed(r('cuit', '20123456786', 3)));
+  check('lineaRed nombra el link', /^El link anses-beneficio\.com/.test(lineaRed(r('link', 'anses-beneficio.com', 2)) ?? ''), lineaRed(r('link', 'anses-beneficio.com', 2)));
+  const soloLink = armarAlertas({ ...clasificarHeuristico('Ganaste un premio de ANSES, cobralo urgente en https://anses-beneficio.com'), monto: null }, [r('link', 'anses-beneficio.com', 4)]);
+  check('familia: un link no es "pidió plata a"', !/pidió plata a anses/.test(soloLink.familia), soloLink.familia);
+}
 
 // --- filter ---
 const confianza = new Set(['3415551234']);

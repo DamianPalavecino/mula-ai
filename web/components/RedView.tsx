@@ -40,7 +40,7 @@ function fusionar(previos: Map<string, Nodo>, nuevo: Grafo): Grafo {
   return { nodes, links: (nuevo.links ?? []).map((l) => ({ ...l })) };
 }
 
-const LEYENDA: TipoNodo[] = ["alias", "cbu", "cvu", "telefono", "reporte"];
+const LEYENDA: TipoNodo[] = ["alias", "cbu", "cvu", "telefono", "cuit", "link", "reporte"];
 
 export default function RedView() {
   const [grafo, setGrafo] = useState<Grafo | null>(null);

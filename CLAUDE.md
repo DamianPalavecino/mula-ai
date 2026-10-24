@@ -24,7 +24,7 @@ Comparten solo la base. **No cambiar el contrato sin avisar al otro.** Si hace f
 
 ### Tablas
 - `reportes` — `id bigserial`, `fuente` (`whatsapp` | `victima` | `sintetico`), `modalidad`, `provincia`, `monto numeric`, `texto`, `riesgo int 0-100`, `confianza int 0-100`, `senales text[]`, `suplanta_a`, `remitente` (teléfono normalizado), `created_at`.
-- `entidades` — `id bigserial`, `tipo` (`alias` | `cbu` | `cvu` | `telefono`), `valor_normalizado`, `created_at`; único `(tipo, valor_normalizado)`.
+- `entidades` — `id bigserial`, `tipo` (`alias` | `cbu` | `cvu` | `telefono` | `cuit` | `link`), `valor_normalizado`, `created_at`; único `(tipo, valor_normalizado)`. `cuit` (CUIT/CUIL del titular de la cuenta destino) y `link` (sitio/link del estafador) se agregaron el 24/10.
 - `reporte_entidad` — `reporte_id`, `entidad_id` (PK compuesta). Es la red.
 - `alertas` — `id bigserial`, `reporte_id`, `protegido`, `riesgo`, `modalidad`, `mensaje_persona`, `mensaje_familia`, `enviada_a text[]`, `entidad_ids bigint[]`, `created_at`. **Realtime activado** (la web escucha INSERT).
   - `protegido_id bigint` (nullable, FK → `protegidos.id`, `on delete set null`): el protegido dueño de la alerta. Se agrega, `protegido` (texto) se mantiene.
@@ -40,7 +40,9 @@ RLS: anon/authenticated: sin acceso (desde 24/10 13:xx). La web lee server-side 
   - alias: minúsculas, trim, sin espacios ni puntuación al final.
   - cbu/cvu: solo dígitos (22).
   - telefono: solo dígitos, sin `54`, sin el `9` de celular, sin `0` ni `15` locales → 10 dígitos (ej. `3415551234`).
-- `detectar_tipo(valor text) → text` — 22 dígitos → `cvu` si empieza con `000`, si no `cbu`; 8–13 dígitos (con `+`, espacios, guiones) → `telefono`; resto → `alias`.
+  - cuit: solo dígitos (11).
+  - link: host en minúsculas sin esquema, `www.` ni puerto (`https://www.Anses-Bono.com/x?y` → `anses-bono.com`). En plataformas compartidas (`link_plataforma`: acortadores, redes, links de pago, ej. `bit.ly`, `t.me`, `link.mercadopago.com.ar`) queda host + path sin query (`bit.ly/AbC12`).
+- `detectar_tipo(valor text) → text` — con esquema/`www.`, dominio con path o TLD típico (`.com`, `.online`, `.ly`…, no `.mp`/`.ar` solos) → `link`; 22 dígitos → `cvu` si empieza con `000`, si no `cbu`; 11 dígitos con dígito verificador de CUIT (acepta prefijo `CUIT`/`CUIL`) → `cuit`; 8–13 dígitos (con `+`, espacios, guiones) → `telefono`; resto → `alias`.
 - `registrar_reporte(payload jsonb) → jsonb` *(service_role)*
   - payload: `{ fuente, modalidad, provincia, monto, texto, riesgo, confianza, senales[], suplanta_a, remitente, entidades: [{tipo, valor}] }`
   - normaliza cada entidad, hace upsert en `entidades`, vincula en `reporte_entidad`.
@@ -66,11 +68,11 @@ Ids de nodo: `e_<entidades.id>` y `r_<reportes.id>`. Una alerta apunta a sus nod
 ### Detalles de implementación (agregados, no cambian lo de arriba)
 - Llamadas supabase-js: `rpc('registrar_reporte', { payload })`, `rpc('registrar_alerta', { payload })`, `rpc('resumen_entidad', { valor, tipo })`, `rpc('grafo')`.
 - `registrar_reporte` acepta además `created_at` (ISO, opcional; el seed lo usa para backdatear). `remitente` se guarda normalizado con `normalizar('telefono', …)` (acepta JID `549…@s.whatsapp.net`). **No** se agrega solo como entidad: si querés el remitente en la red, mandalo también en `entidades`.
-- `entidades[]` acepta `{tipo, valor}` con `tipo` opcional (si falta o es inválido → `detectar_tipo`), o strings sueltos. `cbu`/`cvu` se re-derivan por el prefijo `000`. Se ignoran sin error las inválidas tras normalizar: alias fuera de `^[a-z0-9.-]{6,20}$`, cbu/cvu ≠ 22 dígitos, teléfono ≠ 10 dígitos. No se validan dígitos verificadores en la base (el seed sí genera CBU/CVU válidos).
+- `entidades[]` acepta `{tipo, valor}` con `tipo` opcional (si falta o es inválido → `detectar_tipo`), o strings sueltos. `cbu`/`cvu` se re-derivan por el prefijo `000`; links de WhatsApp (`wa.me/549…`, `api.whatsapp.com/send?phone=…`) se re-derivan a `telefono`. Se ignoran sin error las inválidas tras normalizar: alias fuera de `^[a-z0-9.-]{6,20}$`, cbu/cvu ≠ 22 dígitos, teléfono ≠ 10 dígitos, cuit sin dígito verificador válido (`cuit_valido`), link sin dominio, oficial (`link_oficial`: `*.gob.ar`, bancos, google.com…) o plataforma sin path. No se validan dígitos verificadores de CBU/CVU en la base (el seed sí los genera válidos); el de CUIT sí.
 - `modalidad` desconocida → `'otro'` (en reportes y alertas); `fuente` inválida → error. `riesgo`/`confianza` se recortan a 0–100.
 - `normalizar('alias', …)` también saca puntuación inicial (`@juli…`) y espacios internos.
 - `grafo()`: solo entidades con ≥1 reporte y reportes con ≥1 entidad (sin nodos aislados). `label` de reporte = `modalidad_label(modalidad)`.
-- Helpers extra: `entidad_canonica(tipo, valor) → (tipo_norm, valor_norm, valida)` y `modalidad_label(modalidad) → text` (anon puede ejecutarlas); `limpiar_sintetico() → {reportes, alertas, entidades}` (solo service_role; la usa el seed).
+- Helpers extra: `entidad_canonica(tipo, valor) → (tipo_norm, valor_norm, valida)`, `modalidad_label(modalidad) → text`, `cuit_valido(d)`, `link_plataforma(host)`, `link_oficial(host)` (solo service_role); tests SQL en `supabase/tests.sql`; `limpiar_sintetico() → {reportes, alertas, entidades}` (solo service_role; la usa el seed).
 - FKs con `on delete cascade` (`reporte_entidad` → reportes/entidades, `alertas.reporte_id` → reportes).
 - Web `/me-estafaron`: `POST /api/extraer` (FormData `imagenes` ≤4, `relato`, `provincia`) → LLM con visión vía OpenRouter (`OPENROUTER_API_KEY`, `EXTRACTOR_MODEL`, default `anthropic/claude-sonnet-5.5`) extrae entidades/montos y redacta denuncia + pedido de bloqueo; cruza cada entidad con `resumen_entidad` (anon). `POST /me-estafaron/registrar` hace `registrar_reporte` con `fuente: 'victima'`, `confianza: 60`, solo si el usuario confirma y el server tiene `SUPABASE_SERVICE_ROLE_KEY` (server-only, sin `NEXT_PUBLIC_`). Rate limit en memoria por IP.
 

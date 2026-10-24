@@ -1,6 +1,6 @@
 // Tipos del contrato Supabase (ver CLAUDE.md en la raíz del repo).
 
-export type TipoEntidad = "alias" | "cbu" | "cvu" | "telefono";
+export type TipoEntidad = "alias" | "cbu" | "cvu" | "telefono" | "cuit" | "link";
 export type TipoNodo = TipoEntidad | "reporte";
 
 export type Modalidad =
@@ -96,6 +96,8 @@ export const TIPOS_ENTIDAD: Record<TipoEntidad, string> = {
   cbu: "CBU",
   cvu: "CVU",
   telefono: "Teléfono",
+  cuit: "CUIT/CUIL",
+  link: "Link",
 };
 
 // POST {WORKER_URL}/analizar (server-side) → respuesta (contrato del worker).

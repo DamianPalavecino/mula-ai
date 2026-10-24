@@ -53,7 +53,7 @@ const ESQUEMA = {
       items: {
         type: "object",
         properties: {
-          tipo: { type: "string", enum: ["alias", "cbu", "cvu", "telefono"] },
+          tipo: { type: "string", enum: ["alias", "cbu", "cvu", "telefono", "cuit", "link"] },
           valor: { type: "string" },
           rol: { type: "string", enum: ["destino_plata", "contacto_estafador", "otro"] },
           donde: { type: "string" },
@@ -109,8 +109,10 @@ Tu trabajo: extraer los datos del caso y dejar armados los textos para que la pe
 Modalidades: familiar_numero_nuevo ("hola ma, cambié de número"), accidente_o_comisaria, falso_organismo (ANSES, AFIP/ARCA, banco, PAMI, Mercado Pago), premio_o_sorteo, falso_comprador (Marketplace, comprobante falso), falsa_venta (seña o pago adelantado), inversion (cripto, rendimientos garantizados), otro.
 
 Reglas de extracción:
-- entidades: solo alias, CBU, CVU y teléfonos que se lean literalmente en las capturas o en el relato. Copialos tal cual se ven. No completes dígitos que no se leen ni inventes nada; si un número está cortado, no lo pongas. rol = destino_plata (adonde se mandó o se pidió la plata), contacto_estafador (el número que escribió) u otro. donde = "captura N" (según el orden en que llegan) o "relato".
+- entidades: solo alias, CBU, CVU, teléfonos, CUIT/CUIL y links que se lean literalmente en las capturas o en el relato. Copialos tal cual se ven. No completes dígitos que no se leen ni inventes nada; si un número está cortado, no lo pongas. rol = destino_plata (adonde se mandó o se pidió la plata), contacto_estafador (el número que escribió) u otro. donde = "captura N" (según el orden en que llegan) o "relato".
 - CBU y CVU tienen 22 dígitos; el CVU empieza con 000. Un alias tiene de 6 a 20 caracteres (letras, números, punto y guion).
+- cuit: el CUIT/CUIL del titular de la cuenta de destino, tal como figura en el comprobante ("CUIT/CUIL: 20-12345678-9"), con rol destino_plata. Tiene 11 dígitos. Nunca pongas el CUIT/CUIL de la víctima (el de la cuenta de origen, el que envía la plata).
+- link: cualquier sitio o link que haya mandado o usado el estafador (página falsa de un organismo o banco, web de inversión, link de pago, formulario, acortador como bit.ly), copiado tal cual. Un link de wa.me va igual como link. No pongas links legítimos que no mandó el estafador.
 - transferencias: una por cada comprobante o pago que se vea o se cuente. monto en pesos como número (sin símbolos ni separadores). fecha en formato AAAA-MM-DD si se puede deducir, si no como aparece. titular_destino: el nombre del titular solo si figura en el comprobante. comprobante: número de operación o de transacción si figura.
 - monto_total: la suma de lo transferido (null si no se sabe). fecha_hecho: la fecha de la estafa (AAAA-MM-DD) o null.
 - cronologia: los hechos en orden, en frases cortas ("El 23/10 escribe un número desconocido diciendo ser el nieto", ...).

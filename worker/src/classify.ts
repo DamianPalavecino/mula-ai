@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { config } from './config.js';
-import { dedupe, detectarEntidades, entidadesDeRed, montoMaximo, type Entidad } from './entities.js';
+import { dedupe, detectarEntidades, entidadesDeRed, esCuenta, montoMaximo, TIPOS_RED, type Entidad } from './entities.js';
 
 export const MODALIDADES = [
   'familiar_numero_nuevo',
@@ -23,7 +23,7 @@ export const ClasificacionSchema = z.object({
   suplanta_a: z.string().nullable(),
   entidades: z.array(
     z.object({
-      tipo: z.enum(['alias', 'cbu', 'cvu', 'telefono']),
+      tipo: z.enum(['alias', 'cbu', 'cvu', 'telefono', 'cuit', 'link']),
       valor: z.string(),
     }),
   ),
@@ -41,7 +41,7 @@ const RespuestaLlmSchema = ClasificacionSchema.extend({
   entidades: z
     .array(z.object({ tipo: z.string(), valor: z.string() }))
     .transform((xs) =>
-      xs.filter((e): e is Entidad => ['alias', 'cbu', 'cvu', 'telefono'].includes(e.tipo)),
+      xs.filter((e): e is Entidad => (TIPOS_RED as readonly string[]).includes(e.tipo)),
     ),
 });
 
@@ -62,7 +62,7 @@ export const CLASIFICACION_JSON_SCHEMA = {
       items: {
         type: 'object',
         properties: {
-          tipo: { type: 'string', enum: ['alias', 'cbu', 'cvu', 'telefono'] },
+          tipo: { type: 'string', enum: [...TIPOS_RED] },
           valor: { type: 'string' },
         },
         required: ['tipo', 'valor'],
@@ -115,7 +115,7 @@ Cómo completar:
 - riesgo: entero de 0 a 100. 80+ cuando hay guion claro + pedido de plata o datos (también una seña o pago adelantado a un desconocido por alias/CBU/CVU con presión de "me quedan pocos"). 0-30 para mensajes normales.
 - senales: frases cortas en español ("pide dinero", "urgencia", "dice ser familiar", "número desconocido").
 - suplanta_a: a quién dice ser ("Juli, la nieta", "ANSES", "el banco") o null si no suplanta a nadie.
-- entidades: solo alias, CBU, CVU o teléfonos que aparezcan literalmente en los mensajes. No inventes.
+- entidades: solo alias, CBU, CVU, CUIT/CUIL del titular de la cuenta destino, links/dominios que mande el remitente o teléfonos, que aparezcan literalmente en los mensajes. No inventes.
 - alerta_persona: para la persona protegida, que es un adulto mayor. Máximo 2 oraciones cortas, simples, sin tecnicismos ni emojis. Que diga que no transfiera ni pase datos y que verifique llamando al familiar al número de siempre (el que ya tenía agendado). Nunca le sugieras responderle al que escribió.
 - alerta_familia: para el grupo familiar. Una oración: qué pasó, a quién suplantó y qué pidió. Que inviten a llamar a la persona protegida.
 - Si no es sospechoso, igual completá las alertas con un texto breve neutro ("Mensaje sin señales de estafa.").
@@ -189,6 +189,7 @@ function filtrarEntidadesLlm(ents: Entidad[], textoCompleto: string): Entidad[] 
     .filter((e) => {
       if (!e.valor) return false;
       if (e.tipo === 'alias') return bajo.includes(e.valor.toLowerCase());
+      if (e.tipo === 'link') return bajo.includes(e.valor.toLowerCase().replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/+$/, ''));
       const d = e.valor.replace(/\D/g, '');
       return d.length >= 8 && digitos.includes(d);
     })
@@ -301,7 +302,7 @@ export function clasificarHeuristico(texto: string, ctx: ContextoMensaje = {}): 
   let riesgo = 10; // desconocido
 
   const modalidades = PATRONES_MODALIDAD.filter(([, re]) => re.test(t)).map(([m]) => m);
-  const pidePlata = PIDE_PLATA.test(t) || entidades.some((e) => e.tipo !== 'telefono');
+  const pidePlata = PIDE_PLATA.test(t) || entidades.some((e) => esCuenta(e.tipo));
   const urgencia = URGENCIA.test(t);
   const familiar = FAMILIAR.test(t) || /\bsoy (tu )?[a-z]+/.test(t) && /cambie|numero nuevo|nuevo numero/.test(t);
   const contextoNormal = NORMAL_PLATA.test(t);
@@ -310,7 +311,8 @@ export function clasificarHeuristico(texto: string, ctx: ContextoMensaje = {}): 
   if (urgencia) (riesgo += 20), senales.push('urgencia');
   if (familiar && modalidades.includes('familiar_numero_nuevo')) (riesgo += 25), senales.push('dice ser familiar');
   if (modalidades.length) (riesgo += 20), senales.push('guion conocido');
-  if (entidades.some((e) => e.tipo !== 'telefono')) (riesgo += 10), senales.push('cuenta de destino');
+  if (entidades.some((e) => esCuenta(e.tipo))) (riesgo += 10), senales.push('cuenta de destino');
+  if (entidades.some((e) => e.tipo === 'link')) (riesgo += 10), senales.push('link raro');
   if (contextoNormal && !modalidades.length && !urgencia) riesgo -= 35;
   senales.push('número desconocido');
   riesgo = clamp(riesgo);
@@ -324,7 +326,7 @@ export function clasificarHeuristico(texto: string, ctx: ContextoMensaje = {}): 
   else if (modalidad === 'falso_organismo') suplanta_a = (t.match(/anses|afip|arca|pami|banco/)?.[0] ?? 'un organismo').toUpperCase();
   else if (familiar && modalidad === 'familiar_numero_nuevo') suplanta_a = 'un familiar';
 
-  const destino = entidades.find((e) => e.tipo !== 'telefono');
+  const destino = entidades.find((e) => esCuenta(e.tipo));
   return {
     es_sospechoso,
     riesgo,

@@ -193,7 +193,7 @@ export default function MeEstafaronResultado({
       <Seccion titulo="Cuentas y números del caso">
         {red.length === 0 ? (
           <p className="rounded-lg border border-linea bg-panel p-4 text-base text-texto">
-            No encontramos ningún alias, CBU, CVU ni teléfono legible. Si los tenés, agregalos en el
+            No encontramos ningún alias, CBU, CVU, teléfono, CUIT ni link legible. Si los tenés, agregalos en el
             relato y volvé a armar el caso.
           </p>
         ) : (

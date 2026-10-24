@@ -1,6 +1,7 @@
 import { jidNormalizedUser, type WASocket } from '@whiskeysockets/baileys';
 import { config } from './config.js';
 import type { ResultadoClasificacion } from './classify.js';
+import { esCuenta } from './entities.js';
 import type { ResumenEntidad } from './network.js';
 import type { Destino, Enviador } from './pipeline.js';
 
@@ -20,14 +21,17 @@ export const ETIQUETA_MODALIDAD: Record<string, string> = {
   otro: 'otro',
 };
 
-const NOMBRE_TIPO: Record<string, string> = { alias: 'El alias', cbu: 'El CBU', cvu: 'El CVU', telefono: 'El número' };
+const NOMBRE_TIPO: Record<string, string> = {
+  alias: 'El alias', cbu: 'El CBU', cvu: 'El CVU', telefono: 'El número', cuit: 'El CUIT', link: 'El link',
+};
 
-/** La entidad "de destino" más reportada (alias/CBU/CVU antes que teléfono). */
+// Cuentas primero (alias/CBU/CVU, después el CUIT del titular), después links y al final teléfonos.
+const PRIORIDAD: Record<string, number> = { alias: 0, cbu: 0, cvu: 0, cuit: 1, link: 2, telefono: 3 };
+
+/** La entidad "de destino" más reportada (cuentas antes que links y teléfonos). */
 export function entidadPrincipal(resumenes: ResumenEntidad[]): ResumenEntidad | null {
   const ordenadas = [...resumenes].sort((a, b) => {
-    const pa = a.tipo === 'telefono' ? 1 : 0;
-    const pb = b.tipo === 'telefono' ? 1 : 0;
-    return pa - pb || (b.reportes ?? 0) - (a.reportes ?? 0);
+    return (PRIORIDAD[a.tipo] ?? 3) - (PRIORIDAD[b.tipo] ?? 3) || (b.reportes ?? 0) - (a.reportes ?? 0);
   });
   return ordenadas[0] ?? null;
 }
@@ -78,7 +82,7 @@ export function armarAlertas(c: ResultadoClasificacion, resumenes: ResumenEntida
 
   // --- grupo familiar ---
   const quien = config.protegidoNombre;
-  const destino = principal && principal.tipo !== 'telefono' ? principal : null;
+  const destino = principal && esCuenta(principal.tipo) ? principal : null;
   let familia: string;
   if (c.suplanta_a || destino) {
     familia = `🚨 *Mula AI*: Alguien le escribió a ${quien}`;

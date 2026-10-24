@@ -1,10 +1,14 @@
 /**
- * Detección determinista de entidades en un mensaje: alias, CBU/CVU, teléfonos AR y montos.
+ * Detección determinista de entidades en un mensaje: alias, CBU/CVU, CUIT/CUIL, links, teléfonos AR y montos.
  * Acá solo se DETECTA; la normalización final (la que define la identidad en la red) la hace
  * Postgres con `normalizar(tipo, valor)`.
  */
 
-export type TipoEntidadRed = 'alias' | 'cbu' | 'cvu' | 'telefono';
+export type TipoEntidadRed = 'alias' | 'cbu' | 'cvu' | 'telefono' | 'cuit' | 'link';
+export const TIPOS_RED: readonly TipoEntidadRed[] = ['alias', 'cbu', 'cvu', 'telefono', 'cuit', 'link'];
+
+/** Tipos que son una cuenta a la que se manda plata (el resto: teléfono, link). */
+export const esCuenta = (tipo: string): boolean => tipo === 'alias' || tipo === 'cbu' || tipo === 'cvu' || tipo === 'cuit';
 export type TipoEntidad = TipoEntidadRed | 'monto';
 
 export interface Entidad {
@@ -45,6 +49,20 @@ export function completarCbu(base20: string): string {
   const b1 = base20.slice(0, 7);
   const b2 = base20.slice(7);
   return b1 + digitoVerificador(b1, PESOS_BLOQUE_1) + b2 + digitoVerificador(b2, PESOS_BLOQUE_2);
+}
+
+// ---------- CUIT / CUIL ----------
+
+const PESOS_CUIT = [5, 4, 3, 2, 7, 6, 5, 4, 3, 2];
+const PREFIJOS_CUIT = new Set(['20', '23', '24', '25', '26', '27', '30', '33', '34']);
+
+/** 11 dígitos, prefijo de persona/empresa y dígito verificador (mod 11). Igual que `cuit_valido` en Postgres. */
+export function cuitValido(digitos: string): boolean {
+  if (!/^\d{11}$/.test(digitos) || !PREFIJOS_CUIT.has(digitos.slice(0, 2))) return false;
+  let suma = 0;
+  for (let i = 0; i < 10; i++) suma += Number(digitos[i]) * PESOS_CUIT[i]!;
+  const dv = (11 - (suma % 11)) % 11;
+  return dv < 10 && dv === Number(digitos[10]);
 }
 
 // ---------- utilidades ----------
@@ -88,6 +106,19 @@ const RE_MONTOS: RegExp[] = [
   // 150.000 pesos · 80000 ars
   /(?<![\d.,$])(\d{1,3}(?:\.\d{3})+|\d{4,})\s?(?:pesos|ars|mangos)(?![a-záéíóúñ])/gi,
 ];
+
+// ---------- links ----------
+
+const RE_LINK =
+  /\b(?:https?:\/\/|www\.)[^\s<>"']+|(?<![@\w.\-])[a-z0-9\-]+(?:\.[a-z0-9\-]+)*\.(?:com|net|org|info|xyz|site|online|top|shop|store|app|io|ly|link|club|live|vip|gle|la|ee|me|co|ar)(?:\.ar)?(?:\/[^\s<>"']*)?(?![\w@])/gi;
+const RE_WHATSAPP = /(?:wa\.me\/|whatsapp\.com\/send\/?\?phone=)\+?(\d{8,15})/i;
+// Lo que la base no guarda (oficiales, ver link_oficial) y TLDs cortos que suelen ser alias ("casa.roja.mp").
+const RE_LINK_OFICIAL = /^(?:[a-z0-9\-]+\.)*(?:gob|gov|mil|edu)\.ar$|^(?:google\.com|whatsapp\.com)$/;
+const TLD_SOLO_CON_PATH = /\.(?:gle|la|ee|me|co|ar)$/;
+
+function hostDe(url: string): string {
+  return url.toLowerCase().replace(/^[a-z][a-z0-9+.\-]*:\/\//, '').split(/[/?#]/)[0]!.replace(/^www\./, '');
+}
 
 // ---------- alias ----------
 
@@ -141,7 +172,7 @@ function detectarAlias(texto: string): string[] {
 
 // ---------- API ----------
 
-/** Detecta alias, CBU/CVU, teléfonos AR y montos. Devuelve [{tipo, valor}] sin duplicados. */
+/** Detecta alias, CBU/CVU, CUIT/CUIL, links, teléfonos AR y montos. Devuelve [{tipo, valor}] sin duplicados. */
 export function detectarEntidades(texto: string): EntidadDetectada[] {
   if (!texto) return [];
   const out: EntidadDetectada[] = [];
@@ -152,6 +183,28 @@ export function detectarEntidades(texto: string): EntidadDetectada[] {
     const digitos = m[0].replace(/\D/g, '');
     resto = blanquear(resto, m.index!, m.index! + m[0].length);
     if (validarCbu(digitos)) out.push({ tipo: digitos.startsWith('000') ? 'cvu' : 'cbu', valor: digitos });
+  }
+
+  // links (wa.me/… es un teléfono); se blanquean para que sus dígitos no sean teléfono ni CUIT
+  for (const m of resto.matchAll(RE_LINK)) {
+    const url = m[0].replace(/[.,;:!?)\]]+$/, '');
+    if (url.includes('@')) continue;
+    const wa = url.match(RE_WHATSAPP);
+    const host = hostDe(url);
+    const conEsquema = /^(?:https?:\/\/|www\.)/i.test(url);
+    if (wa) out.push({ tipo: 'telefono', valor: wa[1]! });
+    else if (RE_LINK_OFICIAL.test(host)) { /* la base no los guarda */ }
+    else if (conEsquema || url.includes('/') || !TLD_SOLO_CON_PATH.test(host)) out.push({ tipo: 'link', valor: url });
+    else continue; // "casa.roja.ar" sin path: puede ser alias
+    resto = blanquear(resto, m.index!, m.index! + m[0].length);
+  }
+
+  // CUIT/CUIL (11 dígitos con verificador; antes que teléfonos, que también pueden tener 11)
+  for (const m of resto.matchAll(/(?<![\d.,])\d{2}[ \-.]?\d{8}[ \-.]?\d(?![\d.,]?\d)/g)) {
+    const digitos = m[0].replace(/\D/g, '');
+    if (!cuitValido(digitos)) continue;
+    out.push({ tipo: 'cuit', valor: digitos });
+    resto = blanquear(resto, m.index!, m.index! + m[0].length);
   }
 
   // montos (antes que teléfonos, para no confundir "$ 1500000000")
@@ -177,7 +230,10 @@ export function detectarEntidades(texto: string): EntidadDetectada[] {
 }
 
 export function clave(e: EntidadDetectada): string {
-  const v = e.tipo === 'alias' ? e.valor.toLowerCase() : e.valor.replace(/\D/g, '');
+  const v =
+    e.tipo === 'alias' ? e.valor.toLowerCase()
+    : e.tipo === 'link' ? e.valor.toLowerCase().replace(/^[a-z][a-z0-9+.\-]*:\/\//, '').replace(/^www\./, '').replace(/\/+$/, '')
+    : e.valor.replace(/\D/g, '');
   return `${e.tipo}:${v}`;
 }
 

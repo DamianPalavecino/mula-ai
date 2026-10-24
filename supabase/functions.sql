@@ -2,10 +2,71 @@
 -- Re-ejecutable. Correr DESPUÉS de schema.sql.
 --
 -- Contrato:        normalizar, detectar_tipo, resumen_entidad, registrar_reporte, registrar_alerta, grafo
--- Helpers (extra): entidad_canonica, modalidad_label, limpiar_sintetico (solo service_role, la usa el seed)
+-- Helpers (extra): entidad_canonica, modalidad_label, limpiar_sintetico (solo service_role, la usa el seed),
+--                  cuit_valido, link_plataforma, link_oficial
 
 -- ---------------------------------------------------------------------------
--- detectar_tipo(valor) → 'cbu' | 'cvu' | 'telefono' | 'alias'
+-- cuit_valido(digitos) → 11 dígitos, prefijo de persona/empresa y dígito verificador (mod 11)
+-- ---------------------------------------------------------------------------
+create or replace function public.cuit_valido(d text)
+returns boolean
+language plpgsql
+immutable
+parallel safe
+as $$
+declare
+  w  int[] := '{5,4,3,2,7,6,5,4,3,2}';
+  s  int := 0;
+  dv int;
+begin
+  if d is null or d !~ '^\d{11}$' or substr(d, 1, 2) not in ('20', '23', '24', '25', '26', '27', '30', '33', '34') then
+    return false;
+  end if;
+  for i in 1..10 loop
+    s := s + substr(d, i, 1)::int * w[i];
+  end loop;
+  dv := 11 - s % 11;
+  if dv = 11 then
+    dv := 0;
+  end if;
+  return dv < 10 and dv = substr(d, 11, 1)::int;
+end;
+$$;
+
+-- ---------------------------------------------------------------------------
+-- link_plataforma(host) → sitios compartidos (acortadores, redes, links de pago): el link
+--   se guarda con path, porque el host solo no identifica a nadie.
+-- link_oficial(host) → sitios legítimos que los guiones citan para dar confianza: no entran a la red.
+-- ---------------------------------------------------------------------------
+create or replace function public.link_plataforma(host text)
+returns boolean
+language sql
+immutable
+parallel safe
+as $$
+  select link_plataforma.host in (
+    'bit.ly', 'tinyurl.com', 'cutt.ly', 'is.gd', 't.co', 'ow.ly', 'rebrand.ly', 'shorturl.at', 'acortar.link',
+    'linktr.ee', 't.me', 'wa.me', 'chat.whatsapp.com', 'forms.gle', 'docs.google.com', 'drive.google.com',
+    'sites.google.com', 'mpago.la', 'link.mercadopago.com.ar', 'mercadopago.com.ar', 'mercadolibre.com.ar',
+    'articulo.mercadolibre.com.ar', 'instagram.com', 'facebook.com', 'fb.me', 'tiktok.com', 'youtube.com',
+    'youtu.be', 'x.com', 'twitter.com')
+$$;
+
+create or replace function public.link_oficial(host text)
+returns boolean
+language sql
+immutable
+parallel safe
+as $$
+  select link_oficial.host ~ '(^|\.)(gob|gov|mil|edu)\.ar$'
+      or link_oficial.host in (
+        'google.com', 'whatsapp.com', 'bna.com.ar', 'bancogalicia.com', 'santander.com.ar', 'bbva.com.ar',
+        'macro.com.ar', 'bancoprovincia.com.ar', 'bancociudad.com.ar', 'uala.com.ar', 'brubank.com',
+        'naranjax.com', 'personal.com.ar', 'claro.com.ar', 'movistar.com.ar')
+$$;
+
+-- ---------------------------------------------------------------------------
+-- detectar_tipo(valor) → 'cbu' | 'cvu' | 'telefono' | 'cuit' | 'link' | 'alias'
 -- ---------------------------------------------------------------------------
 create or replace function public.detectar_tipo(valor text)
 returns text
@@ -23,9 +84,19 @@ begin
   if s ~* '^\d{8,15}(:\d+)?@s\.whatsapp\.net$' then
     return 'telefono';                                  -- JID de WhatsApp
   end if;
+  if s ~* '^[a-z][a-z0-9+.-]*://' or s ~* '^www\.' then
+    return 'link';                                      -- URL con esquema o www
+  end if;
+  if s !~ '\s' and (s ~* '^[a-z0-9-]+(\.[a-z0-9-]+)+/'
+      or s ~* '^[a-z0-9-]+(\.[a-z0-9-]+)*\.(com|net|org|info|xyz|site|online|top|shop|store|app|io|ly|link|club|live|vip)(\.ar)?$') then
+    return 'link';                                      -- dominio pelado (con path o TLD típico; .mp/.ar solos son alias)
+  end if;
   d := regexp_replace(s, '\D', '', 'g');
   if s ~ '^[0-9[:space:].-]+$' and length(d) = 22 then
     return case when d like '000%' then 'cvu' else 'cbu' end;
+  end if;
+  if s ~* '^(cuit|cuil)?[[:space:]:]*\d{2}[[:space:].-]?\d{8}[[:space:].-]?\d$' and public.cuit_valido(d) then
+    return 'cuit';                                      -- antes que teléfono: también son 11 dígitos
   end if;
   if s ~ '^\+?[0-9[:space:]()-]+$' and length(d) between 8 and 13 then
     return 'telefono';
@@ -39,6 +110,8 @@ $$;
 --   alias:    minúsculas, sin espacios, sin puntuación al principio/final
 --   cbu/cvu:  solo dígitos
 --   telefono: solo dígitos, sin 00/54, sin 9 de celular, sin 0 ni 15 locales → 10 dígitos
+--   cuit:     solo dígitos
+--   link:     host en minúsculas sin esquema, www ni puerto; en link_plataforma, host + path (sin query)
 --   tipo null/desconocido → usa detectar_tipo
 -- ---------------------------------------------------------------------------
 create or replace function public.normalizar(tipo text, valor text)
@@ -51,11 +124,12 @@ declare
   t text := lower(trim(coalesce(normalizar.tipo, '')));
   v text := normalizar.valor;
   d text;
+  h text;
 begin
   if v is null then
     return null;
   end if;
-  if t not in ('alias', 'cbu', 'cvu', 'telefono') then
+  if t not in ('alias', 'cbu', 'cvu', 'telefono', 'cuit', 'link') then
     t := public.detectar_tipo(v);
   end if;
 
@@ -67,8 +141,22 @@ begin
     return nullif(v, '');
   end if;
 
-  if t in ('cbu', 'cvu') then
+  if t in ('cbu', 'cvu', 'cuit') then
     return nullif(regexp_replace(v, '\D', '', 'g'), '');
+  end if;
+
+  if t = 'link' then
+    v := regexp_replace(trim(v), '^[a-zA-Z][a-zA-Z0-9+.-]*://', '');
+    v := regexp_replace(v, '[?#].*$', '');
+    v := regexp_replace(v, '^[^/]*@', '');              -- usuario@ (truco anses.gob.ar@trucho.com)
+    h := split_part(v, '/', 1);
+    v := rtrim(substr(v, length(h) + 1), '/');          -- path
+    h := regexp_replace(lower(h), ':\d*$', '');
+    h := rtrim(regexp_replace(h, '^www\.', ''), '.');
+    if v <> '' and public.link_plataforma(h) then
+      return h || v;
+    end if;
+    return nullif(h, '');
   end if;
 
   -- telefono (acepta también JIDs de WhatsApp: 5493415551234@s.whatsapp.net)
@@ -104,7 +192,9 @@ $$;
 -- ---------------------------------------------------------------------------
 -- entidad_canonica(tipo, valor) → (tipo_norm, valor_norm, valida)
 --   tipo null/desconocido → detectar_tipo. cbu/cvu se re-deriva por el prefijo 000.
---   valida: alias ^[a-z0-9.-]{6,20}$ · cbu/cvu 22 dígitos · telefono 10 dígitos
+--   valida: alias ^[a-z0-9.-]{6,20}$ · cbu/cvu 22 dígitos · telefono 10 dígitos · cuit con dígito
+--   verificador · link con dominio, que no sea oficial ni plataforma sin path.
+--   Links de WhatsApp (wa.me/549…, api.whatsapp.com/send?phone=…) se re-derivan a telefono.
 -- ---------------------------------------------------------------------------
 create or replace function public.entidad_canonica(
   tipo text, valor text,
@@ -113,10 +203,21 @@ language plpgsql
 immutable
 parallel safe
 as $$
+declare
+  wa text[];
 begin
   tipo_norm := lower(trim(coalesce(entidad_canonica.tipo, '')));
-  if tipo_norm not in ('alias', 'cbu', 'cvu', 'telefono') then
+  if tipo_norm not in ('alias', 'cbu', 'cvu', 'telefono', 'cuit', 'link') then
     tipo_norm := public.detectar_tipo(entidad_canonica.valor);
+  end if;
+  if tipo_norm = 'link' then
+    wa := regexp_match(entidad_canonica.valor, '(?:wa\.me/|whatsapp\.com/send/?\?phone=)\+?(\d{8,15})', 'i');
+    if wa is not null then
+      tipo_norm := 'telefono';
+      valor_norm := public.normalizar('telefono', wa[1]);
+      valida := valor_norm ~ '^\d{10}$';
+      return;
+    end if;
   end if;
   valor_norm := public.normalizar(tipo_norm, entidad_canonica.valor);
   if tipo_norm in ('cbu', 'cvu') and valor_norm ~ '^\d{22}$' then
@@ -127,6 +228,10 @@ begin
     when 'cbu'      then valor_norm ~ '^\d{22}$'
     when 'cvu'      then valor_norm ~ '^\d{22}$'
     when 'telefono' then valor_norm ~ '^\d{10}$'
+    when 'cuit'     then public.cuit_valido(valor_norm)
+    when 'link'     then valor_norm ~ '^[a-z0-9-]+(\.[a-z0-9-]+)*\.[a-z]{2,}(/\S*)?$' and length(valor_norm) <= 200
+                         and not public.link_oficial(split_part(valor_norm, '/', 1))
+                         and (position('/' in valor_norm) > 0 or not public.link_plataforma(valor_norm))
   end, false);
 end;
 $$;
@@ -444,6 +549,9 @@ revoke execute on function
   public.detectar_tipo(text),
   public.entidad_canonica(text, text),
   public.modalidad_label(text),
+  public.cuit_valido(text),
+  public.link_plataforma(text),
+  public.link_oficial(text),
   public.resumen_entidad(text, text),
   public.grafo()
   from public, anon, authenticated;
@@ -452,6 +560,9 @@ grant execute on function
   public.detectar_tipo(text),
   public.entidad_canonica(text, text),
   public.modalidad_label(text),
+  public.cuit_valido(text),
+  public.link_plataforma(text),
+  public.link_oficial(text),
   public.resumen_entidad(text, text),
   public.grafo()
   to service_role;

@@ -34,6 +34,7 @@ SUPABASE_URL=$API_URL SUPABASE_SERVICE_ROLE_KEY=$SERVICE_ROLE_KEY npm run seed
 supabase start                      # desde la raíz; API en http://127.0.0.1:54321, Studio en :54323
 docker exec -i supabase_db_mula-ai psql -U postgres < supabase/schema.sql
 docker exec -i supabase_db_mula-ai psql -U postgres < supabase/functions.sql
+docker exec -i supabase_db_mula-ai psql -U postgres -v ON_ERROR_STOP=1 < supabase/tests.sql   # normalización (alias, cuit, link…)
 supabase status -o env              # API_URL, ANON_KEY, SERVICE_ROLE_KEY
 supabase stop                       # cuando termines
 ```

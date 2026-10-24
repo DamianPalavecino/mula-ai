@@ -16,7 +16,7 @@ export default async function AdminVerificarPage({
   await requireAdmin();
   const sp = await searchParams;
   const crudo = Array.isArray(sp.valor) ? sp.valor[0] : sp.valor;
-  const valor = (crudo ?? "").trim().slice(0, 60);
+  const valor = (crudo ?? "").trim().slice(0, 200);
 
   let resumen: ResumenEntidad | null = null;
   let fallo = false;
@@ -36,15 +36,15 @@ export default async function AdminVerificarPage({
       </h1>
       <form method="GET" className="mt-6">
         <label htmlFor="valor" className="text-sm font-medium text-suave">
-          Alias, CBU/CVU o teléfono
+          Alias, CBU/CVU, teléfono, CUIT o link
         </label>
         <div className="mt-2 flex flex-col gap-3 sm:flex-row">
           <input
             id="valor"
             name="valor"
             defaultValue={valor}
-            maxLength={60}
-            placeholder="alias, CBU/CVU o teléfono"
+            maxLength={200}
+            placeholder="alias, CBU/CVU, teléfono, CUIT o link"
             autoComplete="off"
             autoCapitalize="none"
             autoCorrect="off"

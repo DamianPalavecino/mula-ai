@@ -82,6 +82,27 @@ function cuentaRuidosa(c: string): string {
 // ---------------------------------------------------------------------------
 // Teléfonos: un número canónico (área + local = 10 dígitos) y sus formas ruidosas
 // ---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
+// CUIT/CUIL del titular (dígito verificador mod 11) y links
+// ---------------------------------------------------------------------------
+const WC = [5, 4, 3, 2, 7, 6, 5, 4, 3, 2]
+function armarCuit(prefijo: string, dni8: string): string {
+  const base = prefijo + dni8
+  const dv = (11 - (WC.reduce((s, w, i) => s + w * Number(base[i]), 0) % 11)) % 11
+  if (dv === 10) throw new Error(`CUIT sin dígito verificador válido: ${base}`)
+  return base + dv
+}
+/** Formatos en los que aparece en un comprobante: 27-28033514-8, 27280335148, CUIL 27 28033514 8. */
+function cuitRuidoso(c: string, i: number): string {
+  const f = [`${c.slice(0, 2)}-${c.slice(2, 10)}-${c[10]}`, c, `CUIL ${c.slice(0, 2)} ${c.slice(2, 10)} ${c[10]}`]
+  return f[i % f.length]
+}
+/** El mismo sitio como lo pega la gente: con/sin esquema, www, path y query. */
+function linkRuidoso(host: string, i: number, path = ''): string {
+  const f = [`https://${host}${path}`, `www.${host}`, `${host}${path}`, `http://www.${host}/?ref=wsp${i}`]
+  return f[i % f.length]
+}
+
 type Tel = { area: string; local: string }
 const canonTel = (t: Tel) => t.area + t.local
 function telRuidoso(t: Tel): string {
@@ -291,6 +312,7 @@ const JULI = 'juli.martinez.mp'
 const T1: Tel = { area: '341', local: '5551234' } // Rosario
 const T2: Tel = { area: '11', local: '44445555' } // AMBA
 const C1 = armarCbu('0000003', '0012345678901') // CVU Mercado Pago
+const CUIT_JULI = armarCuit('27', '38455120') // titular de la cuenta mula detrás de juli.martinez.mp
 const provJuli = shuffle([
   ...Array(7).fill('Santa Fe'), ...Array(6).fill('Buenos Aires'), ...Array(4).fill('CABA'),
   ...Array(4).fill('Córdoba'), ...Array(2).fill('Mendoza'),
@@ -304,6 +326,7 @@ for (let i = 0; i < 23; i++) {
   const telTxt = telRuidoso(tel)
   const ents: Ent[] = [{ tipo: 'alias', valor: aliasTxt }, { tipo: 'telefono', valor: telTxt }]
   if (chance(0.25)) ents.push({ tipo: 'cvu', valor: cuentaRuidosa(C1) })
+  if (i % 4 === 1) ents.push({ tipo: 'cuit', valor: cuitRuidoso(CUIT_JULI, i) }) // víctima subió el comprobante
   reportes.push(
     reporte(modJuli[i], provJuli[i], ents, {
       pago: aliasTxt.trim(), remitente: telTxt, dias: i === 0 ? [0, 0] : [1, 60], riesgo: [82, 98],
@@ -330,6 +353,7 @@ for (let i = 0; i < 16; i++) {
 const T4: Tel = { area: '11', local: '67891234' }
 const ALIAS_C = 'anses.bono.tramite'
 const B1 = armarCbu('0110599', '4000012345678') // Banco Nación
+const LINK_C = 'anses-bono-tramite.com'
 for (let i = 0; i < 16; i++) {
   const m: Modalidad = i < 14 ? 'falso_organismo' : 'otro'
   const telTxt = telRuidoso(T4)
@@ -340,6 +364,11 @@ for (let i = 0; i < 16; i++) {
   if (m === 'falso_organismo') {
     r.suplanta_a = 'ANSES'
     r.texto = texto(m, { tel: telTxt, pago: i < 9 ? ALIAS_C : B1, monto: r.monto, quien: 'ANSES' })
+  }
+  if (i % 3 !== 2) {
+    const l = linkRuidoso(LINK_C, i, '/turno')
+    r.entidades.push({ tipo: 'link', valor: l })
+    r.texto += `. Completá el trámite en ${l}`
   }
   reportes.push(r)
 }
@@ -356,7 +385,19 @@ for (let i = 0; i < 12; i++) {
   if (i % 2 === 1) { rem = telRuidoso(T5); ents.push({ tipo: 'telefono', valor: rem }) }
   if (i < 4) ents.push({ tipo: 'cvu', valor: cuentaRuidosa(C3) })
   if (i === 6) ents.push({ tipo: 'cvu', valor: C1 })
+  if (i % 2 === 0) ents.push({ tipo: 'link', valor: linkRuidoso('rinde-mas-invest.online', i, '/registro') })
+  if (i % 3 === 1) ents.push({ valor: `https://bit.ly/RindeMas24?src=${i}` }) // acortador: queda bit.ly/RindeMas24
   reportes.push(reporte('inversion', chance(0.35) ? 'Mendoza' : prov(), ents, { tel: rem ?? undefined, pago: i < 10 ? ALIAS_D : B1, remitente: rem, riesgo: [70, 95] }))
+}
+
+// --- Cluster E: mula con 3 billeteras a nombre del mismo CUIT (comparte C2 con B) ---
+const CUIT_E = armarCuit('27', '41203398')
+const CVUS_E = [nuevoCvu('0003'), nuevoCvu('0007'), C2] // Mercado Pago, Ualá y la de B
+for (let i = 0; i < 9; i++) {
+  const m: Modalidad = i % 3 === 0 ? 'falso_comprador' : 'falsa_venta'
+  const cvu = CVUS_E[i % 3]
+  const ents: Ent[] = [{ tipo: 'cuit', valor: cuitRuidoso(CUIT_E, i) }, { tipo: 'cvu', valor: cuentaRuidosa(cvu) }]
+  reportes.push(reporte(m, chance(0.5) ? 'Buenos Aires' : prov(), ents, { pago: cvu, riesgo: [72, 94] }))
 }
 
 // --- Fondo: casos sueltos, con algo de reutilización para que haya pares/tríos ---
@@ -405,7 +446,7 @@ while (reportes.length < TOTAL) {
 // ---------------------------------------------------------------------------
 // Chequeos locales antes de tocar la base
 // ---------------------------------------------------------------------------
-for (const c of [C1, C2, C3, B1, ...pool.filter((p) => p.tipo === 'cbu' || p.tipo === 'cvu').map((p) => p.canon)]) {
+for (const c of [C1, C2, C3, B1, ...CVUS_E, ...pool.filter((p) => p.tipo === 'cbu' || p.tipo === 'cvu').map((p) => p.canon)]) {
   if (!cbuValido(c)) throw new Error(`CBU/CVU con verificador inválido: ${c}`)
 }
 reportes.sort((a, b) => a.created_at.localeCompare(b.created_at))
@@ -436,7 +477,8 @@ async function main() {
   const { count: nLinks } = await sb.from('reporte_entidad').select('*', { count: 'exact', head: true })
   console.log(`Entidades en la base: ${nEnt} · vínculos reporte↔entidad: ${nLinks}`)
 
-  for (const [v, t] of [[ALIAS_B, 'alias'], [canonTel(T4), 'telefono'], [ALIAS_D, 'alias'], [B1, null]] as const) {
+  for (const [v, t] of [[ALIAS_B, 'alias'], [canonTel(T4), 'telefono'], [ALIAS_D, 'alias'], [B1, null], [CUIT_JULI, 'cuit'],
+    [CUIT_E, 'cuit'], [LINK_C, 'link'], ['bit.ly/RindeMas24', 'link']] as const) {
     const r = await rpc('resumen_entidad', { valor: v, tipo: t })
     console.log(`  ${r.tipo.padEnd(8)} ${r.valor_normalizado.padEnd(22)} ${r.reportes} reportes · ${r.provincias.length} provincias`)
   }

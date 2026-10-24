@@ -57,6 +57,30 @@ describe("limpiarEntidades", () => {
     ]);
     assert.equal(out.length, 1);
   });
+
+  it("deduplica CUIT con y sin guiones y descarta dígito verificador o prefijo inválidos", () => {
+    const out = limpiarEntidades([
+      ent("cuit", "CUIT/CUIL: 20-12345678-6"),
+      ent("cuit", "20123456786"),
+      ent("cuit", "20-12345678-9"),
+      ent("cuit", "21-12345678-6"),
+      ent("cuit", "2012345678"),
+    ]);
+    assert.equal(out.length, 1);
+    assert.deepEqual([out[0].tipo, out[0].valor], ["cuit", "20-12345678-6"]);
+  });
+
+  it("deduplica links con y sin https/www/barra final y descarta los que no tienen host", () => {
+    const out = limpiarEntidades([
+      ent("link", "https://www.Anses-Beneficios.com/"),
+      ent("link", "anses-beneficios.com"),
+      ent("link", "http://anses-beneficios.com"),
+      ent("link", "bit.ly/AbC12"),
+      ent("link", "localhost"),
+      ent("link", "no es un link"),
+    ]);
+    assert.deepEqual(out.map((e) => e.valor), ["https://www.Anses-Beneficios.com/", "bit.ly/AbC12"]);
+  });
 });
 
 describe("antecedentesRed", () => {

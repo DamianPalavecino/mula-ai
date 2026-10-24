@@ -8,7 +8,7 @@ import ResumenCard from "@/components/ResumenCard";
 export const metadata: Metadata = {
   title: "Verificar antes de pagar",
   description:
-    "Pegá un alias, CBU, CVU o teléfono y fijate si tiene reportes de estafa en la red de Mula AI antes de transferir.",
+    "Pegá un alias, CBU/CVU, teléfono, CUIT o link y fijate si tiene reportes de estafa en la red de Mula AI antes de transferir.",
 };
 
 const EJEMPLO = "juli.martinez.mp";
@@ -21,7 +21,7 @@ export default async function AppVerificarPage({
   await requireUser();
   const sp = await searchParams;
   const crudo = Array.isArray(sp.valor) ? sp.valor[0] : sp.valor;
-  const valor = (crudo ?? "").trim().slice(0, 60);
+  const valor = (crudo ?? "").trim().slice(0, 200);
 
   let resumen: ResumenEntidad | null = null;
   let fallo = false;
@@ -44,19 +44,19 @@ export default async function AppVerificarPage({
         ¿Esta cuenta tiene reportes?
       </h1>
       <p className="mt-4 text-lg leading-relaxed text-texto">
-        Pegá el alias, CBU, CVU o teléfono que te pasaron. Te mostramos si ya fue reportado en la red
+        Pegá el alias, CBU/CVU, teléfono, CUIT o link que te pasaron. Te mostramos si ya fue reportado en la red
         de Mula AI.
       </p>
       <form method="GET" className="mt-8">
         <label htmlFor="valor" className="text-sm font-medium text-suave">
-          Alias, CBU/CVU o teléfono
+          Alias, CBU/CVU, teléfono, CUIT o link
         </label>
         <div className="mt-2 flex flex-col gap-3 sm:flex-row">
           <input
             id="valor"
             name="valor"
             defaultValue={valor}
-            maxLength={60}
+            maxLength={200}
             placeholder={`ej. ${EJEMPLO}`}
             autoComplete="off"
             autoCapitalize="none"
