@@ -81,7 +81,8 @@ Marcá `[x]` con hora y quién.
 - [x] `POST /analizar` cerrado (Tarea E, deploy `707ea19`) — 13:25 worker-latencia, en el VPS: sin `X-Mula-Token` → 401, token malo → 401, token del `worker.conf` → 200 (1.6 s); `/health` 200 sin token; `Origin` ajeno → sin `Access-Control-*`. Token: `MULA_TOKEN` (acepta `HTTP_TOKEN_ENVIO`, que es el que hay hoy en el VPS). `WEB_ORIGIN` sin setear (el browser ya no llama al worker). 13:27: `MULA_TOKEN` nuevo cargado en `worker.conf` del VPS y en Vercel (production) por pipe, sin mostrarlo; nuevo → 200, el viejo `HTTP_TOKEN_ENVIO` → 401. `docs/demo/guion.md` usa `MULA_TOKEN`
 - [ ] La alerta de `POST /analizar` aparece en el feed de `/red` en vivo
 - [ ] `POST /analizar` con `enviar_whatsapp: true` y WhatsApp conectado → llega al chat propio y al grupo
-- [ ] Worker con URL pública (VPS: Tailscale Funnel, pendiente OK de Damian) y `GET /health` responde desde afuera; URL cargada en `NEXT_PUBLIC_WORKER_URL` de Vercel
+- [x] Worker con URL pública — 13:45 agente worker-funnel: Funnel bloqueado (pide habilitarlo en el admin + `sudo` para operator) → Cloudflare quick tunnel `mula-tunnel` (systemd usuario en el VPS) en https://realized-forgotten-aspect-quick.trycloudflare.com. Desde afuera (Mac + allorigins) `/health` → `{"ok":true,"whatsapp":"conectado"}`; `POST /analizar` sin token → 401, con `MULA_TOKEN` → 200 en 2.2 s (LLM), el worker loguea la IP real. `WORKER_URL` cargada en Vercel production (server-only, sin redeploy: lo hace quien sube el proxy). Ojo: la URL cambia si `mula-tunnel` reinicia o el VPS rebootea → `worker/scripts/vps.sh tunnel` (docs/deploy.md §3)
+- [ ] **Antes de grabar: `npm run reset-demo`** (los ensayos por `/analizar` suben el contador de juli)
 - [x] `/simulador` en modo mock (sin `NEXT_PUBLIC_WORKER_URL`): 3 mensajes, aviso al grupo familiar, mobile 375 px sin scroll horizontal, 1080p entra en una pantalla — 12:33, agente simulador
 - [x] `/simulador` contra worker local + Supabase prod (`NEXT_PUBLIC_WORKER_URL=http://localhost:8080`): Juli → alerta LLM riesgo 90-95 en ~7 s, `registrar_alerta` ok, aparece "recién" y resaltada en el feed de `/red`; `npm run e2e -- --reciente 10` verde (entidad_ids en grafo()) — 12:58, agente simulador. Dejó 3 reportes whatsapp de ensayo (juli en 27): `npm run reset-demo` antes de grabar
 - [ ] `/simulador` en Vercel contra el worker del VPS (URL **HTTPS**: desde una página HTTPS un `http://` lo bloquea el navegador y cae al mock sin avisar)
@@ -111,9 +112,9 @@ Marcá `[x]` con hora y quién.
 - [ ] Submit hecho
 
 ## Próximo paso
-- Web/simulador: cargar `NEXT_PUBLIC_WORKER_URL` (HTTPS del VPS) en Vercel y redeployar. Ojo agentes de web: `ea0610f` (/me-estafaron) había borrado el simulador al commitear desde un árbol viejo; ya está restaurado. Hacé `git pull --rebase` antes de commitear.
+- Web: el worker ya tiene URL pública y `WORKER_URL` + `MULA_TOKEN` están en Vercel production (server-only). Falta: deploy del proxy server-side que la usa (`/app/api/analizar`) y `vercel --prod`. Si la URL del túnel cambió: `worker/scripts/vps.sh tunnel`.
 - me-estafaron: listo en main. Falta cargar en Vercel `OPENROUTER_API_KEY` (y opcional `SUPABASE_SERVICE_ROLE_KEY`, ambas sin `NEXT_PUBLIC_`) y sumar el link en el header.
 - Demo: kit listo en `docs/demo/` (guion, mensajes, jurado, checklist, capturas). Falta: conseguir celulares y número del estafador, `npm run reset-demo`, toma de respaldo (el worker ya anda en el VPS).
 - Supabase prod listo (12:55, `check prod` 6/6).
 - Después Vercel (§2); el worker ya está en el VPS (§3). Completar las URLs arriba de `docs/deploy.md`.
-- Worker: `POST /analizar` está en main y el worker corre en el VPS. Falta: URL pública (Funnel) → `NEXT_PUBLIC_WORKER_URL` en Vercel (agente `deploy`/`simulador`). Después, Tarea 2 del worker: el LLM tarda 4–6 s por mensaje y la alerta tiene que llegar en menos de 5 s.
+- Worker: URL pública lista (Cloudflare tunnel, `vps.sh tunnel`). Latencia ~3 s (ver arriba).

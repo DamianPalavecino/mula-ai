@@ -6,6 +6,7 @@
 #   worker/scripts/vps.sh restart | status
 #   worker/scripts/vps.sh set KEY VALOR   agrega/reemplaza una variable no secreta y reinicia (ej. ANALIZAR_SOLO, FAMILY_GROUP_JID)
 #   worker/scripts/vps.sh vars            nombres de las variables cargadas (sin valores)
+#   worker/scripts/vps.sh tunnel          URL pública actual (Cloudflare quick tunnel, servicio `mula-tunnel`) + /health por esa URL
 # Variables: ~/.config/mula-ai/worker.conf en el VPS (secretos: cargados una vez desde el archivo de entorno raíz; no secretos: `vps.sh set`).
 # Sesión de WhatsApp: ~/mula-data/auth_info en el VPS (fuera del repo, sobrevive deploys).
 set -euo pipefail
@@ -28,5 +29,9 @@ case "${1:-status}" in
     [[ "$k" =~ ^[A-Z_][A-Z0-9_]*$ ]] || { echo "KEY inválida: $k"; exit 1; }
     printf '%s="%s"\n' "$k" "$v" | ssh "$HOST" "sed -i '/^$k=/d' $CONF && cat >> $CONF && systemctl --user restart mula-worker && echo '$k cargada, reiniciado'" ;;
   vars) ssh "$HOST" "cut -d= -f1 $CONF" ;;
-  *) echo "uso: $0 qr|logs|deploy|restart|status|set|vars"; exit 1 ;;
+  tunnel)
+    url=$(ssh "$HOST" "journalctl --user -u mula-tunnel --no-pager -o cat | grep -o 'https://[a-z0-9-]*\.trycloudflare\.com' | tail -1")
+    [ -n "$url" ] || { echo "mula-tunnel sin URL (ssh contabo-vps 'systemctl --user status mula-tunnel')"; exit 1; }
+    echo "$url"; curl -s -m 15 "$url/health"; echo ;;
+  *) echo "uso: $0 qr|logs|deploy|restart|status|set|vars|tunnel"; exit 1 ;;
 esac

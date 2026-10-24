@@ -5,7 +5,7 @@ Sin valores secretos acá. Las claves se cargan en cada servicio, nunca en el re
 ## URLs
 - Supabase: https://rldsoshlnhwkccfakkjm.supabase.co (proyecto MulaAI)
 - Web (Vercel): https://mula-ai.vercel.app
-- Worker: VPS Contabo (`contabo-vps` por Tailscale), servicio systemd de usuario `mula-worker`. Dominio público: _(pendiente)_
+- Worker: VPS Contabo (`contabo-vps` por Tailscale), servicio systemd de usuario `mula-worker`. URL pública: **https://realized-forgotten-aspect-quick.trycloudflare.com** (Cloudflare quick tunnel; si cambia: `worker/scripts/vps.sh tunnel`, ver §3)
 
 ## 1. Supabase
 1. supabase.com → New project (región São Paulo). Guardá la contraseña de la base.
@@ -39,7 +39,8 @@ supabase.exe db query --linked "select fuente, count(*) from reportes group by 1
    |---|---|
    | `NEXT_PUBLIC_SUPABASE_URL` | Project URL |
    | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | anon (**nunca** la service_role) |
-   | `NEXT_PUBLIC_WORKER_URL` | _(cuando el worker tenga URL pública)_ URL del worker en el VPS |
+   | `WORKER_URL` | URL pública del worker (§3), **server-only**: la llama el server de Vercel, nunca el browser. No usar `NEXT_PUBLIC_WORKER_URL` |
+   | `MULA_TOKEN` | mismo valor que en `worker.conf` del VPS; server-only (header `X-Mula-Token` en `POST /analizar`) |
    | `OPENROUTER_API_KEY` (y opcional `SUPABASE_SERVICE_ROLE_KEY`, `EXTRACTOR_MODEL`) | para `/me-estafaron`; server-only, **sin** `NEXT_PUBLIC_` |
 4. Deploy. Cada vez que cambies una `NEXT_PUBLIC_*` → Redeploy (se embeben en el build).
 5. Smoke: `$env:WEB_URL="https://<proyecto>.vercel.app"; npm run check prod` (prueba `/`, `/verificar?valor=juli.martinez.mp` y `/red`). Después abrilos en incógnito.
@@ -50,6 +51,16 @@ Corre en el VPS de Damian (Contabo, alias ssh `contabo-vps` por Tailscale) como 
 - Repo: `~/Spaces/personal/mula-ai` (clon de `main`). Start: `worker/node_modules/.bin/tsx src/index.ts`.
 - Variables: `~/.config/mula-ai/worker.conf` (chmod 600). `AUTH_DIR=/home/agente/mula-data/auth_info`, fuera del repo: un deploy no toca la sesión.
 - HTTP: `:8080` (`GET /health`, `POST /analizar`), hoy solo dentro de la tailnet.
+
+### URL pública (Cloudflare quick tunnel)
+Servicio systemd de usuario `mula-tunnel` en el VPS: `~/.local/bin/cloudflared tunnel --no-autoupdate --url http://localhost:8080` (`Restart=always`, enabled, linger activo → arranca solo tras reboot). Sin cuenta ni `sudo`. Se eligió en vez de Tailscale Funnel porque Funnel pedía habilitarlo en el admin de la tailnet y `sudo tailscale set --operator=agente`.
+
+- **La URL es aleatoria y cambia si `mula-tunnel` se reinicia o el VPS rebootea.** Reiniciar `mula-worker` (deploy, `set`) NO la cambia.
+- Ver la URL actual: `worker/scripts/vps.sh tunnel`.
+- Si cambió: `cd web && vercel env rm WORKER_URL production -y && printf '%s' '<url nueva>' | vercel env add WORKER_URL production && vercel --prod`, y actualizar la URL de arriba.
+- Apagar: `ssh contabo-vps 'systemctl --user disable --now mula-tunnel'`.
+- Verificar desde afuera: `curl -s "https://api.allorigins.win/raw?url=<url>/health"` → `{"ok":true,"whatsapp":"conectado"}`.
+- Detrás del túnel el rate limit (30/min) usa la IP real del cliente (`X-Forwarded-For`).
 
 Comandos (desde la raíz del repo, en la Mac de Damian):
 
