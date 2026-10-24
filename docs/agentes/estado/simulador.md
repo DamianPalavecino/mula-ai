@@ -18,13 +18,14 @@ Tarea original: `docs/agentes/03-web-simulador.md`. Toca solo `web/` (menos `/me
   3. `5f23d51` redirects: `/app/verificar`, `/admin/verificar` → `?tab=verificar`; `/app/me-estafaron` → `?tab=me-estafaron`; `/app/setup` → `?tab=ajustes` (la action sigue en `app/app/setup/actions.ts`); `/admin` → `?tab=red`. APIs de `/app/api` y `/admin/api` intactas.
 - Más pasos pusheados: `5786838` header mínimo con sesión; `ec412bd` "Probar" con look WhatsApp + ejemplos de un clic (`lib/probar.ts` + test); `b34bc35` **`DESIGN.md`** (raíz, fuente de verdad) + `web/lib/tokens.test.ts` (falla si el bloque ```css tokens``` de DESIGN.md y el `@theme` de `globals.css` no son 1:1; corre en `npm run check web`, que ahora también mira `DESIGN.md`); `407dd78` **`/styleguide`** (`components/Styleguide.tsx`: tokens, botones, input con validación, chips, badges, ResumenCard, alerta, tabs, sidebar, tabla, drawer, toast, estados, WhatsApp, nodos; tema día/noche y densidad en vivo; sin datos reales, sin link, noindex).
 - Para cambiar un token: editarlo en `DESIGN.md` **y** en `web/app/globals.css` (mismo nombre y valor).
+- **15:11 `288cfa1`: /app sobre Efferd app-shell-4** (pedido del humano: sin banner verde, sin atajos repetidos, sin pills inútiles). `components.json` (registry `@efferd`), `components/ui/*` de shadcn, `lib/utils.ts` (cn), `hooks/use-mobile.ts`. `components/app-shell.tsx` + `components/app-sidebar.tsx` (adaptados de Efferd: sidebar flotante colapsable, drawer en mobile con ítems de 44 px; protegido como encabezado chico con estado; secciones Inicio, Alertas, Probar, Verificar, Me estafaron, Red, Ajustes; badge de alertas en Inicio; Vincular WhatsApp y UserButton en el footer). `Panel.tsx`: stats en fila de cards chicas + alertas en vivo como contenido de Inicio; "Alertas" = alertas de la red. Variables de shadcn mapeadas a tokens en `:root` de `globals.css` (documentado en DESIGN.md). El header global se oculta en /app (`data-header-global` + `<style>` en el shell). Tabs en `lib/panel.ts` (no en módulos "use client": eso dio un 500, ver `e85f79f`).
+- **No tocar** `Graph.tsx`, `colores.ts` ni la leyenda: los rediseña el agente me-estafaron.
 - Ojo: `qrcode` es dependencia nueva (de `/app/vincular`): `cd web && npm install` antes de buildear.
 - Capturas sin login: ruta temporal `app/preview-panel/page.tsx` (NO commitear) que renderiza `<Panel>` con datos fijos dentro de `<Suspense>` + `await connection()`; mirar con el navegador de Orca.
 
 ## Próximo paso
-- Probar con login real en prod todas las pestañas de `/app` (inicio, probar, verificar, me estafaron, red, ajustes) en 375 px y 1080p.
-- Pasar valores sueltos que quedan (`rounded-2xl`, `rounded-xl`, `text-[15px]`) a tokens (`rounded-tarjeta`, `rounded-control`).
-- AppAlertas y MeEstafaronForm con el look del prototipo (rojo suave, riesgo grande).
+- Probar /app con login real en Vercel (desktop 1080p y 375 px): sidebar, drawer, cada sección.
+- Capturas: el script CDP quedó en about:blank; usar el navegador de Orca (735 px = modo mobile).
 
 ## Bloqueos / qué necesita del humano
 - URL HTTPS pública del worker en el VPS → `NEXT_PUBLIC_WORKER_URL` en Vercel. Con `http://` el navegador lo bloquea desde Vercel y cae al mock sin avisar.
