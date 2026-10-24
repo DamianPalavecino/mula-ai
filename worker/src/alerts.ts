@@ -1,0 +1,150 @@
+import { jidNormalizedUser, type WASocket } from '@whiskeysockets/baileys';
+import { config } from './config.js';
+import type { ResultadoClasificacion } from './classify.js';
+import { registrarAlerta, type ResumenEntidad } from './network.js';
+
+export interface TextosAlerta {
+  persona: string;
+  familia: string;
+}
+
+export const ETIQUETA_MODALIDAD: Record<string, string> = {
+  familiar_numero_nuevo: 'familiar con número nuevo',
+  accidente_o_comisaria: 'accidente o comisaría',
+  falso_organismo: 'falso organismo o banco',
+  premio_o_sorteo: 'premio o sorteo',
+  falso_comprador: 'falso comprador',
+  falsa_venta: 'falsa venta',
+  inversion: 'inversión',
+  otro: 'otro',
+};
+
+const NOMBRE_TIPO: Record<string, string> = { alias: 'El alias', cbu: 'El CBU', cvu: 'El CVU', telefono: 'El número' };
+
+/** La entidad "de destino" más reportada (alias/CBU/CVU antes que teléfono). */
+export function entidadPrincipal(resumenes: ResumenEntidad[]): ResumenEntidad | null {
+  const ordenadas = [...resumenes].sort((a, b) => {
+    const pa = a.tipo === 'telefono' ? 1 : 0;
+    const pb = b.tipo === 'telefono' ? 1 : 0;
+    return pa - pb || (b.reportes ?? 0) - (a.reportes ?? 0);
+  });
+  return ordenadas[0] ?? null;
+}
+
+function plural(n: number, uno: string, varios: string): string {
+  return `${n} ${n === 1 ? uno : varios}`;
+}
+
+/** "El alias juli.martinez.mp tiene 23 reportes en 5 provincias." */
+export function lineaRed(e: ResumenEntidad | null): string | null {
+  if (!e) return null;
+  const nombre = `${NOMBRE_TIPO[e.tipo] ?? 'La cuenta'} ${e.valor_normalizado}`;
+  const n = e.reportes ?? 0;
+  if (n <= 1) return `${nombre} quedó registrado en la red para proteger a otros.`;
+  const prov = e.provincias?.length ?? 0;
+  return `${nombre} tiene ${plural(n, 'reporte', 'reportes')}${prov > 1 ? ` en ${prov} provincias` : ''}.`;
+}
+
+function asegurarPunto(s: string): string {
+  const t = s.trim();
+  return /[.!?]$/.test(t) ? t : `${t}.`;
+}
+
+/** Nombre corto de a quién suplanta, para "Llamá a Juli al número de siempre". */
+function nombreFamiliar(suplanta: string | null): string | null {
+  if (!suplanta) return null;
+  const primero = suplanta.split(/[,(]/)[0]!.trim();
+  if (!primero || /^(el|la|un|una)\s/i.test(primero) || /anses|afip|arca|banco|pami|organismo/i.test(primero)) return null;
+  return primero;
+}
+
+/** Arma los textos finales combinando la salida del LLM con lo que dice la red. */
+export function armarAlertas(c: ResultadoClasificacion, resumenes: ResumenEntidad[]): TextosAlerta {
+  const principal = entidadPrincipal(resumenes);
+  const red = lineaRed(principal);
+  const familiar = nombreFamiliar(c.suplanta_a);
+
+  // --- persona protegida ---
+  const p: string[] = ['⚠️ *Mula AI*: Este mensaje tiene el patrón de una estafa.'];
+  if (red) p.push(red);
+  const base = c.alerta_persona?.trim();
+  if (base && !/patr[oó]n de una estafa/i.test(base)) p.push(asegurarPunto(base));
+  const yaDice = p.join(' ').toLowerCase();
+  if (!/no transfier/.test(yaDice)) p.push('No transfieras.');
+  if (!/n[uú]mero de siempre/.test(yaDice))
+    p.push(familiar ? `Llamá a ${familiar} al número de siempre.` : 'Llamá a tu familiar al número de siempre.');
+  p.push('No le respondas a ese número.');
+
+  // --- grupo familiar ---
+  const quien = config.protegidoNombre;
+  const destino = principal && principal.tipo !== 'telefono' ? principal : null;
+  let familia: string;
+  if (c.suplanta_a || destino) {
+    familia = `🚨 *Mula AI*: Alguien le escribió a ${quien}`;
+    if (c.suplanta_a) familia += ` haciéndose pasar por ${c.suplanta_a}`;
+    if (destino) {
+      const n = destino.reportes ?? 0;
+      familia += ` y pidió plata a ${destino.valor_normalizado}`;
+      if (n > 1) familia += ` (${plural(n, 'reporte', 'reportes')})`;
+    }
+    familia += `. Llamá a ${quien} para avisarle.`;
+  } else {
+    familia = `🚨 *Mula AI*: ${asegurarPunto(c.alerta_familia || `Alguien le escribió a ${quien} con un mensaje sospechoso`)} Llamá a ${quien} para avisarle.`;
+  }
+  familia += `\nRiesgo ${c.riesgo}/100 · ${ETIQUETA_MODALIDAD[c.modalidad] ?? c.modalidad}`;
+
+  return { persona: p.join(' '), familia };
+}
+
+export interface EnvioAlerta {
+  reporteId: number;
+  resumenes: ResumenEntidad[];
+}
+
+/**
+ * Manda la alerta al chat propio y al grupo familiar (si está configurado) y la registra.
+ * Nunca le manda nada al remitente.
+ */
+export async function enviarAlertas(
+  sock: WASocket,
+  c: ResultadoClasificacion,
+  { reporteId, resumenes }: EnvioAlerta,
+): Promise<TextosAlerta & { enviada_a: string[] }> {
+  const textos = armarAlertas(c, resumenes);
+  const enviada_a: string[] = [];
+
+  const propio = sock.user?.id ? jidNormalizedUser(sock.user.id) : null;
+  if (propio) {
+    try {
+      await sock.sendMessage(propio, { text: textos.persona });
+      enviada_a.push(propio);
+    } catch (err) {
+      console.error('[alerts] no pude mandar al chat propio:', err);
+    }
+  }
+  if (config.familyGroupJid) {
+    try {
+      await sock.sendMessage(config.familyGroupJid, { text: textos.familia });
+      enviada_a.push(config.familyGroupJid);
+    } catch (err) {
+      console.error('[alerts] no pude mandar al grupo familiar:', err);
+    }
+  }
+
+  try {
+    const { alerta_id } = await registrarAlerta({
+      reporte_id: reporteId,
+      protegido: config.protegidoNombre,
+      riesgo: c.riesgo,
+      modalidad: c.modalidad,
+      mensaje_persona: textos.persona,
+      mensaje_familia: textos.familia,
+      enviada_a,
+      entidad_ids: resumenes.map((r) => r.entidad_id).filter((id): id is number => typeof id === 'number'),
+    });
+    console.log(`[alerts] alerta ${alerta_id} registrada → ${enviada_a.join(', ') || '(no se envió)'}`);
+  } catch (err) {
+    console.error('[alerts] no pude registrar la alerta:', err);
+  }
+  return { ...textos, enviada_a };
+}

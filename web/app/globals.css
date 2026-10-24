@@ -1,0 +1,33 @@
+@import "tailwindcss";
+
+/* Paleta sobria: tinta, grises y un rojo de alerta fuerte (se tiene que leer en el video). */
+@theme {
+  --color-tinta: #111418;
+  --color-texto: #3d434b;
+  --color-suave: #6b7280;
+  --color-linea: #e3e5e8;
+  --color-fondo: #ffffff;
+  --color-panel: #f6f7f8;
+  --color-alerta: #c1121f;
+  --color-alerta-fondo: #fdf0f1;
+  --color-alerta-linea: #f3c4c8;
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+
+  --animate-entrada: entrada 450ms ease-out;
+  @keyframes entrada {
+    from {
+      opacity: 0;
+      transform: translateY(-8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
+
+body {
+  background: var(--color-fondo);
+  color: var(--color-tinta);
+}

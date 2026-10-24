@@ -1,0 +1,13 @@
+{
+  "name": "mula-ai",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "seed": "tsx supabase/seed.ts"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.118.0",
+    "dotenv": "^18.0.9",
+    "tsx": "^4.23.15"
+  }
+}

@@ -1,0 +1,16 @@
+node_modules/
+.env
+.env.*
+!.env.example
+.next/
+dist/
+.vercel/
+*.log
+.DS_Store
+*.tsbuildinfo
+next-env.d.ts
+# sesión de WhatsApp (Baileys): nunca al repo
+auth_info/
+# supabase local
+supabase/.branches/
+supabase/.temp/
