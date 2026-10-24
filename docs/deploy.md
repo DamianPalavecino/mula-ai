@@ -23,6 +23,14 @@ Sin valores secretos acá. Las claves se cargan en cada servicio, nunca en el re
    Verifica: `juli.martinez.mp` ≥23 reportes en ≥5 provincias, `grafo()` con nodos y links, anon lee `alertas` y **no** puede escribir.
 6. Realtime: Database → Publications → `supabase_realtime` tiene que incluir `alertas` (lo hace `schema.sql`).
 
+### CLI de Supabase (opcional)
+No está en el PATH: `C:\Users\dami_\AppData\Local\Programs\Supabase\supabase.exe` (bash: `/c/Users/dami_/AppData/Local/Programs/Supabase/supabase.exe`). Logueado; el repo se linkea una vez por worktree (`supabase/.temp`, ignorado):
+```bash
+supabase.exe link --project-ref <ref>                       # el ref sale de `supabase.exe projects list`
+supabase.exe db query --linked -f supabase/schema.sql       # aplicar SQL a prod (después functions.sql)
+supabase.exe db query --linked "select fuente, count(*) from reportes group by 1"
+```
+
 ## 2. Vercel (web)
 1. vercel.com → Add New → Project → importar `damianpalavecino/mula-ai`.
 2. **Root Directory: `web`** (Next.js se detecta solo).
