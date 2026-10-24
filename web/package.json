@@ -9,11 +9,13 @@
     "test": "node --experimental-strip-types --no-warnings --test \"lib/**/*.test.ts\""
   },
   "dependencies": {
+    "@clerk/nextjs": "^7.9.20",
     "@supabase/supabase-js": "^2.118.0",
     "next": "16.4.3",
     "react": "19.3.0",
     "react-dom": "19.3.0",
-    "react-force-graph-2d": "^1.29.2"
+    "react-force-graph-2d": "^1.29.2",
+    "server-only": "^0.0.1"
   },
   "devDependencies": {
     "@tailwindcss/turbopack": "^4",
