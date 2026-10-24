@@ -6,7 +6,7 @@
 //   - anon key: resumen_entidad, grafo y registrar_reporte → ≥400; GET alertas → ≥400 o [].
 //   - service role (si está): juli.martinez.mp ≥23 reportes y ≥5 provincias, grafo() con nodos y
 //     links, select a protegidos → 200 (requiere supabase/auth.sql aplicado).
-//   - WEB_URL (si está): / y /entrar → 200; /app y /admin sin sesión → 2xx/3xx, nunca 5xx;
+//   - WEB_URL (si está): / y /entrar → 200; /app y /admin sin sesión → redirect o 404 de Clerk (signed-out); 2xx/3xx, nunca 5xx;
 //     /red, /simulador, /verificar, /me-estafaron → 3xx o 404.
 // MODO=pre-cierre: los checks de anon imprimen WARN en vez de FAIL (antes de aplicar
 //   supabase/cierre-anon.sql). Sin la variable, exige el cierre.
@@ -67,15 +67,25 @@ if (SUPABASE_SERVICE_ROLE_KEY) {
 
 // --- web ---
 if (WEB_URL) {
+  // Devuelve { status, clerk } (clerk = header x-clerk-auth-status, si el proxy de Clerk intervino).
   const get = async (p) => {
-    try { return (await fetch(new URL(p, WEB_URL), { redirect: 'manual' })).status; }
-    catch (e) { return `sin conexión: ${e.cause?.code ?? e.message}`; }
+    try {
+      const r = await fetch(new URL(p, WEB_URL), { redirect: 'manual' });
+      return { status: r.status, clerk: r.headers.get('x-clerk-auth-status') };
+    } catch (e) { return { status: `sin conexión: ${e.cause?.code ?? e.message}`, clerk: null }; }
   };
   const es = (s, lo, hi) => typeof s === 'number' && s >= lo && s <= hi;
-  for (const p of ['/', '/entrar']) { const s = await get(p); ok(s === 200, `web ${p} → ${s} (esperado 200)`); }
-  for (const p of ['/app', '/admin']) { const s = await get(p); ok(es(s, 200, 399), `web ${p} sin sesión → ${s} (2xx/3xx, nunca 5xx)`); }
+  for (const p of ['/', '/entrar']) { const { status: s } = await get(p); ok(s === 200, `web ${p} → ${s} (esperado 200)`); }
+  // Sin sesión, Clerk redirige a /entrar en un navegador; a un cliente sin cookies (curl/fetch)
+  // le responde 404 con x-clerk-auth-status: signed-out. Lo que no puede pasar es 200 con datos ni 5xx.
+  for (const p of ['/app', '/admin']) {
+    const { status: s, clerk } = await get(p);
+    ok(es(s, 300, 399) || (s === 404 && clerk === 'signed-out'), `web ${p} sin sesión → ${s} (${clerk ?? 'sin clerk'}; esperado redirect o 404 de Clerk)`);
+  }
+  // Rutas públicas viejas: redirect del server (3xx), 404, o el shell de Suspense (200) que
+  // redirige en el cliente a /app/... (verificar). Nunca 5xx.
   for (const p of ['/red', '/simulador', '/verificar', '/me-estafaron']) {
-    const s = await get(p); ok(es(s, 300, 399) || s === 404, `web ${p} → ${s} (3xx o 404)`);
+    const { status: s } = await get(p); ok(es(s, 200, 399) || s === 404, `web ${p} → ${s} (redirect, 404 o shell; nunca 5xx)`);
   }
 } else console.log('(sin WEB_URL: no pruebo Vercel)');
 
