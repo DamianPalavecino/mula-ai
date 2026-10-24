@@ -21,19 +21,19 @@
 
 ## 15:30–15:45 — verificación final
 
-**Web** (en incógnito y desde otro celular con datos móviles, no el wifi del lugar):
+**Web** (https://mula-ai.vercel.app, en incógnito y desde otro celular con datos móviles, no el wifi del lugar; **no** la URL `mula-ai-damianpalavecinos-projects.vercel.app`, que pide login de Vercel):
 - [ ] `/` carga. — amigo
 - [ ] `/verificar` con `juli.martinez.mp` da rojo con reportes; con `maria.gomez.gym` da "sin reportes". — amigo
 - [ ] `/red` muestra el grafo y el feed de alertas. — amigo
 - [ ] `/simulador` manda el mensaje 1 y muestra la alerta. — amigo
 
-**Repo** (`github.com/damianpalavecino/mula-ai`, sin sesión):
+**Repo** (`github.com/DamianPalavecino/mula-ai`, sin sesión):
 - [ ] Es público y abre en incógnito. — Damian
 - [ ] Sin secretos en la historia. Tiene que salir vacío:
   ```bash
-  git log -p --all | grep -iE "sk-ant|sk-or-|service_role\"?\s*[:=]|eyJhbGci"
+  rtk proxy git log -p --all | grep -iE "sk-ant|sk-or-|service_role\"?\s*[:=]|eyJhbGci" | grep -v "grep -iE"
   ```
-  (los nombres de variables en `.env.example` y los docs no cuentan; lo que no puede aparecer es un valor). — Damian
+  (`rtk proxy` porque el hook de rtk resume `git log -p` y el grep da vacío aunque haya algo; sin rtk, sacalo. El `grep -v` saca los docs que citan este mismo comando. Los nombres de variables no cuentan; lo que no puede aparecer es un valor). — Damian
 - [ ] Sin sesión de WhatsApp ni `.env` trackeados. Los dos tienen que salir vacíos:
   ```bash
   git ls-files | grep -E "auth_info|(^|/)\.env($|\.)" | grep -v "\.env\.example$"
@@ -47,7 +47,7 @@
 
 ## 15:45 — submit
 
-- [ ] Formulario con los tres links: URL HTTPS de Vercel, repo de GitHub, video de YouTube. Abrir cada uno desde el formulario antes de mandar. — Damian
+- [ ] Formulario con los tres links: https://mula-ai.vercel.app, repo de GitHub, video de YouTube. Abrir cada uno desde el formulario antes de mandar. — Damian
 - [ ] Submit hecho. Hora: ____ — Damian
 - [ ] Worker y web quedan prendidos (el jurado puede probar después). — todos
 
@@ -64,8 +64,8 @@ Descripción:
 ```
 Las estafas funcionan porque cada víctima está sola. Mula AI vigila el WhatsApp de una persona, reconoce el guion de estafa y la cuenta mula en el momento en que llegan, avisa a la persona y a su familia, y suma cada caso a una red compartida que cualquiera puede consultar antes de pagar.
 
-Web: TODO_URL
-Código: https://github.com/damianpalavecino/mula-ai
+Web: https://mula-ai.vercel.app
+Código: https://github.com/DamianPalavecino/mula-ai
 
 Los reportes previos de la red son sintéticos y están marcados como tales. La detección y las alertas del video son en vivo. El worker usa Baileys como prototipo; en producción el mismo motor va en una app Android y en APIs de riesgo para bancos y billeteras.
 

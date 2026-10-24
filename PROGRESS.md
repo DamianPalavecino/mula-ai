@@ -44,7 +44,8 @@ Herramientas: Supabase CLI en `C:\Users\dami_\AppData\Local\Programs\Supabase\su
 |---|---|---|---|---|---|
 | `classify` | `npm run test:classify` | ✅ | 72s | 24/10/2026, 13:17:53 | 0931268 |
 | `e2e` | `npm run e2e` | ✅ | 3s | 24/10/2026, 12:49:18 | 11979d5 |
-| `prod` | `node --env-file-if-exists=.env scripts/smoke-prod.mjs` | ✅ | 4s | 24/10/2026, 13:11:19 | 2d7d878 |
+| `pre-demo` | `node --test scripts/pre-demo.test.mjs` | ✅ | 0s | 24/10/2026, 13:16:24 | 823cd2b |
+| `prod` | `node --env-file-if-exists=.env scripts/smoke-prod.mjs` | ✅ | 1s | 24/10/2026, 13:15:51 | 823cd2b |
 | `prod` | `node scripts/smoke-prod.mjs` | ⏭️ omitido | 0s | 24/10/2026, 12:28:39 | c6d5a8f |
 | `web` | `npm run build` | ✅ | 17s | 24/10/2026, 13:00:21 | fbc3601 |
 | `web` | `npm test` | ✅ | 2s | 24/10/2026, 13:00:21 | fbc3601 |
@@ -62,10 +63,10 @@ Marcá `[x]` con hora y quién.
 - [x] 13:0x deploy — `WEB_URL=https://mula-ai.vercel.app npm run check prod` 9/9; bundle con la URL de Supabase prod; `/simulador` y `/me-estafaron` dan 200
 - [ ] Realtime activo en `alertas` (un INSERT aparece en el feed de `/red`)
 - [ ] Web en Vercel: `/`, `/verificar?valor=juli.martinez.mp` (23 reportes, en rojo) y `/red` en incógnito
-- [x] 12:45 worker — en el VPS. systemd `mula-worker` en `contabo-vps`, `[wa] conectado como 5493436612270`; tras `restart` reconecta en 1 s sin QR, `/health` → `{"ok":true,"whatsapp":"conectado"}`. Sesión en `~/mula-data/auth_info`, vars en `~/.config/mula-ai/worker.conf`. Operar con `worker/scripts/vps.sh deploy|qr|logs|status`
+- [x] 12:45 worker — en el VPS. systemd `mula-worker` en `contabo-vps`, `[wa] conectado como 549343xxxxxxx`; tras `restart` reconecta en 1 s sin QR, `/health` → `{"ok":true,"whatsapp":"conectado"}`. Sesión en `~/mula-data/auth_info`, vars en `~/.config/mula-ai/worker.conf`. Operar con `worker/scripts/vps.sh deploy|qr|logs|status`
 
 **Worker / WhatsApp**
-- [x] 12:33 worker — vinculado local (número de Damian 5493436612270, lid 44066381295863, `ANALIZAR_SOLO` con 2 números de prueba). Demo desde 3413950428 → `[clasif:llm] riesgo=85 familiar_numero_nuevo alias:juli.martinez.mp` → alerta al chat propio 4 s después del mensaje. `registrar_reporte` falló: la función no existe todavía en Supabase (pendiente el schema)
+- [x] 12:33 worker — vinculado local (número de Damian 549343xxxxxxx, lid xxxxxxxxxxxxxx, `ANALIZAR_SOLO` con 2 números de prueba). Demo desde 341xxxxxxx → `[clasif:llm] riesgo=85 familiar_numero_nuevo alias:juli.martinez.mp` → alerta al chat propio 4 s después del mensaje. `registrar_reporte` falló: la función no existe todavía en Supabase (pendiente el schema)
 - [x] Un mensaje de estafa desde un número desconocido → alerta al chat propio en menos de 5 s — 12:48 worker VPS: msg 48:46 → alerta #1 registrada 48:51 (~5 s, LLM 4.5 s, al límite); Damian la vio en el chat propio. 12:57 `/red` de Vercel muestra la alerta en el feed "En vivo" (desktop + mobile)
 - [ ] La misma alerta llega al grupo familiar
 - [ ] El mensaje de un contacto de confianza no se procesa (no aparece en los logs)
@@ -97,7 +98,12 @@ Marcá `[x]` con hora y quién.
 - [ ] `npm run reset-demo` contra Supabase prod deja `juli.martinez.mp` en 23/5 (correrlo antes de cada toma)
 - [ ] Capturas de `docs/demo/capturas/` (chat + comprobante) probadas en `/me-estafaron`
 - [ ] Toma de respaldo grabada y subida como "no listada" (`docs/demo/guion.md`)
-- [ ] README: `TODO_URL` y `TODO_VIDEO` reemplazados; sacar `/simulador` o `/me-estafaron` si se cortaron
+- [ ] README: `TODO_VIDEO` reemplazado (el título y la descripción de YouTube están en un comentario HTML debajo de la tabla); sacar `/simulador` o `/me-estafaron` si se cortaron
+- [x] 13:25 agente entrega — README con `https://mula-ai.vercel.app` (las 6 rutas dan 200 por curl), links a `/verificar`, `/red`, `/simulador`, `/me-estafaron`, sin WhatsApp local ni Railway. Misma URL en `docs/demo/checklist.md` y `guion.md`
+- [x] 13:12 agente entrega — repo sin secretos. **Ojo: el hook de rtk resume `git log -p` y el grep da vacío aunque haya algo**; con `rtk proxy git log -p --all | grep -iE "sk-ant|sk-or-|service_role\"?\s*[:=]|eyJhbGci"` salen 5 líneas y las 5 son docs que citan el mismo comando (con `| grep -v "grep -iE"` → vacío). `git ls-files | grep -E "auth_info|(^|/)\.env($|\.)" | grep -v "\.env\.example$"` → vacío. `git log --all --name-only --format= | grep -E "auth_info/" | sort -u` → vacío
+- [x] 13:12 agente entrega — capturas trackeadas (`docs/demo/capturas/chat.png`, `comprobante.png`) sin teléfonos reales (el del chat es el ficticio `+54 9 11 4444-5555`). El número real de Damian estaba en este archivo (redactado 13:25), pero sigue en la historia (`d4f4843`, `11979d5`)
+- [x] 13:2x agente entrega — mensajes exactos de `docs/demo/mensajes.md` con el clasificador real: estafas 85–100, normales 0–10, LLM 2–3 s (ANSES y el alias suelto cortaron a 3,5 s y alertaron por heurística). `npm run check classify` 20/20
+- [x] 13:28 agente entrega — `npm run pre-demo` (reset-demo → `check prod` con `WEB_URL=https://mula-ai.vercel.app` → `/health` del VPS → semáforo). Probado con `-- --dry`: 3/3 🟢 (juli en 28 por los ensayos, sin borrar). Falta la corrida real ~14:00
 - [ ] Submit hecho
 
 ## Próximo paso

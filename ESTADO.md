@@ -1,4 +1,4 @@
-# Estado — Mula AI (13:1x)
+# Estado — Mula AI (13:30)
 
 Web: https://mula-ai.vercel.app
 
@@ -17,14 +17,19 @@ Resumen para leer rápido e iterar. El detalle vivo (cada prueba, con hora y qui
 | `/me-estafaron` | ✅ en local (capturas → denuncia + pedido de bloqueo, ~25 s). Faltan las variables en Vercel | `web/app/me-estafaron`, `web/app/api/extraer` |
 | Kit de demo | ✅ guion, mensajes, capturas, preguntas del jurado, checklist | `docs/demo/` |
 
-## Qué falta (verificado 13:1x contra https://mula-ai.vercel.app y la VPS)
-1. **Redeploy de Vercel**: el deploy en vivo no ve las variables. `POST /api/extraer` responde "Falta configurar OPENROUTER_API_KEY" y el bundle de `/simulador` no trae `NEXT_PUBLIC_WORKER_URL`. Si ya están cargadas en Vercel, falta redeployar (Deployments → Redeploy).
-2. **URL pública HTTPS del worker**: todavía no existe (`docs/deploy.md` dice "pendiente"). Sin ella, `NEXT_PUBLIC_WORKER_URL` no tiene a qué apuntar y el simulador en Vercel usa el mock.
-3. **VPS**: no están `FAMILY_GROUP_JID` (alertas al grupo familiar) ni `OPENAI_API_KEY` (audios). El resto está cargado y `/health` da conectado.
-4. **Link "Me estafaron"** en el header (no está en `/`).
-5. **Latencia**: hoy ~5 s, al límite.
-6. Probar a mano: un mensaje normal no alerta, un contacto de confianza se ignora.
-7. **Entrega**: `npm run reset-demo` → grabar → YouTube → README sin `TODO_URL`/`TODO_VIDEO` → submit 15:45.
+## Qué falta (13:30, agente entrega: verificado contra https://mula-ai.vercel.app y la VPS)
+1. **URL pública HTTPS del worker** (Funnel, esperando que Damian lo habilite) → `NEXT_PUBLIC_WORKER_URL` en Vercel + redeploy. Hoy el bundle de `/simulador` no trae URL del worker: usa el mock.
+2. **VPS**: falta `FAMILY_GROUP_JID` (sin eso la alerta no llega al grupo familiar del guion), `TRUSTED_CONTACTS` y `OPENAI_API_KEY` (audios; si no está, no usar el mensaje de audio). Cargadas: Supabase, OpenRouter, `ANALIZAR_SOLO`, `HTTP_TOKEN_ENVIO`.
+3. **Link "Me estafaron"** en el header: hay cambios sin commitear en `web/components/Header.tsx`; en Vercel todavía no está.
+4. Probar a mano: un mensaje normal no alerta, un contacto de confianza se ignora, la alerta llega al grupo.
+5. **Entrega** (kit listo, ver abajo): ~14:00 `npm run pre-demo` real → 14:30 grabar → YouTube → `TODO_VIDEO` en el README (título y descripción ya están en un comentario HTML ahí) → submit 15:45.
+
+Ya resuelto en esta pasada: `/me-estafaron` en Vercel tiene la key (`/api/extraer` responde); latencia del LLM 2–3 s con corte a 3,5 s; README con la URL real; repo sin secretos (ojo: el chequeo hay que correrlo con `rtk proxy git log -p`, ver `docs/demo/checklist.md`).
+
+### Kit de entrega
+- `npm run pre-demo`: reset-demo → `check prod` contra Vercel → `/health` del worker → semáforo 🟢/🔴. `-- --dry` no borra nada.
+- `docs/demo/guion.md` (con tiempos esperados), `mensajes.md` (todos probados: estafas ≥85, normales ≤10), `checklist.md` (con título y descripción de YouTube).
+- El número real de Damian quedó en la historia del repo (commits `d4f4843`, `11979d5`, en `PROGRESS.md`); en el archivo actual está redactado.
 
 ## Cómo iterar una feature
 1. `git pull --rebase`.
@@ -34,6 +39,6 @@ Resumen para leer rápido e iterar. El detalle vivo (cada prueba, con hora y qui
 5. Marcá la prueba en `PROGRESS.md`.
 
 ## Ojo
-- Antes de grabar: `npm run reset-demo`. Los ensayos suben el contador de juli (hoy está en 27).
+- Antes de grabar: `npm run pre-demo` (incluye el reset). Los ensayos suben el contador de juli (13:28 estaba en 28).
 - En Windows, `curl -d` con tildes manda latin1: usá `--data-binary @archivo.json`.
 - Varios agentes pushean a `main`: siempre `git pull --rebase` antes de commitear (un commit viejo ya borró el simulador una vez).

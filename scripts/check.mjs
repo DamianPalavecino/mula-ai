@@ -15,6 +15,8 @@ const FEATURES = {
   // manual: lee la base real con la anon key (tablas, demo, grafo, último caso de WhatsApp + alerta, Realtime)
   e2e: { paths: ['scripts/e2e-check.mts'], cwd: '.', cmds: ['npm run e2e'], manual: true },
   // manual: prod con la anon key (SUPABASE_URL, SUPABASE_ANON_KEY y opcional WEB_URL en el entorno)
+  // checklist de la toma: solo la lógica (sin red); `npm run pre-demo` corre lo real
+  'pre-demo': { paths: ['scripts/pre-demo'], cwd: '.', cmds: ['node --test scripts/pre-demo.test.mjs'] },
   prod: { paths: ['scripts/smoke-prod'], cwd: '.', cmds: ['node --env-file-if-exists=.env scripts/smoke-prod.mjs'], manual: true },
 };
 

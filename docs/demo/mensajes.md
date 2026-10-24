@@ -2,6 +2,8 @@
 
 Todos usan `juli.martinez.mp`, el alias plantado en el seed (23 reportes en 5 provincias). Copiar tal cual.
 
+Probados 13:2x con el clasificador real (sin la red): las estafas dan riesgo 85–100 y los normales 0–10. ANSES y el alias suelto después del audio pasaron los 3,5 s y alertaron por la heurística (90 y 100).
+
 ## Estafa — el de la toma buena
 
 Desde el celular del estafador (número que no está en `TRUSTED_CONTACTS`):
@@ -19,7 +21,7 @@ Si queda tiempo para una toma más natural:
 1. `hola abu soy juli, este es mi número nuevo, agendalo 🙏`
 2. *(a los 5 s)* `choqué y necesito que me mandes 150 mil urgente a juli.martinez.mp, no le digas a mamá`
 
-El primero solo puede no alertar. El segundo sí (alias con reportes + monto + urgencia), y el worker usa el historial corto del chat para entender que "juli" dice ser familiar.
+Los dos alertan (13:2x: el primero solo da riesgo 85 por "número nuevo" de un familiar; el segundo 90 con el alias). Para el video conviene que la alerta del segundo sea la que se ve, así nombra al alias y sus reportes.
 
 ## Estafa — audio de 10 s
 

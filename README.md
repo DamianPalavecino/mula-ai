@@ -4,9 +4,24 @@
 
 | | |
 |---|---|
-| 🌐 **Web** | TODO_URL |
+| 🌐 **Web** | **https://mula-ai.vercel.app** · probá [`/verificar?valor=juli.martinez.mp`](https://mula-ai.vercel.app/verificar?valor=juli.martinez.mp) |
 | ▶️ **Video (2 min)** | TODO_VIDEO |
 | 🏁 **Hackatón** | [shippe.ar](https://shippe.ar) · Track Social & Sector Público |
+
+<!-- YouTube (copiar y pegar al subir; reemplazar TODO_VIDEO por el link):
+Título:
+Mula AI — guardián de WhatsApp contra estafas y cuentas mula (shippe.ar 2026)
+
+Descripción:
+Las estafas funcionan porque cada víctima está sola. Mula AI vigila el WhatsApp de una persona, reconoce el guion de estafa y la cuenta mula en el momento en que llegan, avisa a la persona y a su familia, y suma cada caso a una red compartida que cualquiera puede consultar antes de pagar.
+
+Web: https://mula-ai.vercel.app
+Código: https://github.com/DamianPalavecino/mula-ai
+
+Los reportes previos de la red son sintéticos y están marcados como tales. La detección y las alertas del video son en vivo. El worker usa Baileys como prototipo; en producción el mismo motor va en una app Android y en APIs de riesgo para bancos y billeteras.
+
+Hackatón shippe.ar · Track Social & Sector Público.
+-->
 
 ## Qué es
 
@@ -21,11 +36,11 @@ Toda estafa necesita dos piezas que las bandas reusan con decenas de víctimas: 
 
 ## Demo
 
-- **WhatsApp real**: un número desconocido le escribe a "la abuela" y la alerta llega a su chat y al grupo familiar en segundos.
-- **`/verificar`**: pegá un alias, CBU/CVU o teléfono (probá `juli.martinez.mp`) y mirá sus reportes antes de transferir.
-- **`/red`**: el grafo de cuentas y números conectados por los casos, con las alertas entrando en vivo.
-- **`/simulador`**: la misma detección sin WhatsApp: dos celulares en pantalla, el del estafador y el de la abuela.
-- **`/me-estafaron`**: para quien ya transfirió. Sube capturas y recibe la denuncia y el pedido de bloqueo armados, vinculados a los otros casos.
+- **WhatsApp real** (el video): un número desconocido le escribe a "la abuela" y la alerta llega a su chat y al grupo familiar en segundos.
+- **[`/verificar`](https://mula-ai.vercel.app/verificar)**: pegá un alias, CBU/CVU o teléfono (probá `juli.martinez.mp`) y mirá sus reportes antes de transferir.
+- **[`/red`](https://mula-ai.vercel.app/red)**: el grafo de cuentas y números conectados por los casos, con las alertas entrando en vivo.
+- **[`/simulador`](https://mula-ai.vercel.app/simulador)**: la misma detección sin WhatsApp, para probarla vos: dos celulares en pantalla, el del estafador y el de la abuela.
+- **[`/me-estafaron`](https://mula-ai.vercel.app/me-estafaron)**: para quien ya transfirió. Sube capturas y recibe la denuncia y el pedido de bloqueo armados, vinculados a los otros casos.
 
 Guion, mensajes de prueba y capturas de ejemplo en [`docs/demo/`](docs/demo/).
 
@@ -56,7 +71,7 @@ La normalización es determinista (en SQL): `Juli.Martinez.MP`, `@juli.martinez.
 2. Copiar `.env.example` a `.env` (raíz), `worker/.env` y `web/.env.local`, y completar.
 3. Sembrar la red: `npm install && npm run seed` (en la raíz).
 4. Web: `cd web && npm install && npm run dev`.
-5. Worker: `cd worker && npm install && npm run dev` y escanear el QR con el WhatsApp a proteger (**número secundario**).
+5. Worker: corre como servicio en un VPS, vinculado una sola vez por QR a un **número secundario**. Pasos, variables y comandos en [`docs/deploy.md`](docs/deploy.md#3-worker-vps).
 6. Chequeo end-to-end: `npm run e2e` verifica con la anon key las tablas, `juli.martinez.mp`, `grafo()`, el último reporte de WhatsApp con su alerta y la suscripción Realtime. `--base` antes de la primera detección real, `--watch` para ver las alertas que entran en vivo, `--web <url>` para pegarle también a la web.
 
 Tests: `npm run check` en la raíz. Detalle en el README de cada carpeta: [`supabase/`](supabase/), [`worker/`](worker/), [`web/`](web/). El contrato entre worker y web está en [`CLAUDE.md`](CLAUDE.md).
