@@ -43,6 +43,7 @@ Marcá `[x]` con hora y quién.
 - [ ] Worker en Railway: conectado, sesión persistida (redeploy sin re-escanear el QR)
 
 **Worker / WhatsApp**
+- [x] 12:33 worker — vinculado local (número de Damian 5493436612270, lid 44066381295863, `ANALIZAR_SOLO` con 2 números de prueba). Demo desde 3413950428 → `[clasif:llm] riesgo=85 familiar_numero_nuevo alias:juli.martinez.mp` → alerta al chat propio 4 s después del mensaje. `registrar_reporte` falló: la función no existe todavía en Supabase (pendiente el schema)
 - [ ] Un mensaje de estafa desde un número desconocido → alerta al chat propio en menos de 5 s
 - [ ] La misma alerta llega al grupo familiar
 - [ ] El mensaje de un contacto de confianza no se procesa (no aparece en los logs)
