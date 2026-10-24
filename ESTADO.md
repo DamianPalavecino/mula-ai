@@ -19,7 +19,7 @@ Resumen para leer rápido e iterar. El detalle vivo (cada prueba, con hora y qui
 
 ## Qué falta (13:30, agente entrega: verificado contra https://mula-ai.vercel.app y la VPS)
 1. **URL pública HTTPS del worker** (Funnel, esperando que Damian lo habilite) → `NEXT_PUBLIC_WORKER_URL` en Vercel + redeploy. Hoy el bundle de `/simulador` no trae URL del worker: usa el mock.
-2. **VPS**: falta `FAMILY_GROUP_JID` (sin eso la alerta no llega al grupo familiar del guion), `TRUSTED_CONTACTS` y `OPENAI_API_KEY` (audios; si no está, no usar el mensaje de audio). Cargadas: Supabase, OpenRouter, `ANALIZAR_SOLO`, `HTTP_TOKEN_ENVIO`.
+2. **VPS**: `FAMILY_GROUP_JID` cargado 13:2x (WhatsApp de la Nieta Dami, persona, no grupo). Falta `TRUSTED_CONTACTS` y `OPENAI_API_KEY` (audios; si no está, no usar el mensaje de audio). Cargadas: Supabase, OpenRouter, `ANALIZAR_SOLO`, `HTTP_TOKEN_ENVIO`.
 3. **Link "Me estafaron"** en el header: hay cambios sin commitear en `web/components/Header.tsx`; en Vercel todavía no está.
 4. Probar a mano: un mensaje normal no alerta, un contacto de confianza se ignora, la alerta llega al grupo.
 5. **Entrega** (kit listo, ver abajo): ~14:00 `npm run pre-demo` real → 14:30 grabar → YouTube → `TODO_VIDEO` en el README (título y descripción ya están en un comentario HTML ahí) → submit 15:45.
