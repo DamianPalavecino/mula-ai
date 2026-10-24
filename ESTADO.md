@@ -9,7 +9,7 @@ Resumen para leer rápido e iterar. El detalle vivo (cada prueba, con hora y qui
 | Clasificador | ✅ 20/20 con el LLM real (DeepSeek por OpenRouter). Tarda 4–6 s por mensaje | `worker/src/classify.ts` · `npm run check classify` |
 | Worker WhatsApp | ✅ en el VPS (systemd `mula-worker`). Estafa real → alerta al chat propio en ~5 s → aparece en `/red` | `worker/` · `worker/scripts/vps.sh logs` |
 | `POST /analizar` | ✅ mismo pipeline que WhatsApp, probado contra prod. Le falta URL pública HTTPS | `worker/src/http.ts` |
-| `/verificar` | ✅ en Vercel | `web/app/verificar` |
+| `/verificar` | ✅ en local. En Vercel está deployado pero no se probó | `web/app/verificar` |
 | `/red` (grafo + alertas en vivo) | ✅ en Vercel. El feed resalta la alerta nueva | `web/app/red` |
 | `/simulador` (plan B) | ✅ en local contra el worker. En Vercel todavía usa el mock | `web/app/simulador` |
 | `/me-estafaron` | ✅ en local (capturas → denuncia + pedido de bloqueo, ~25 s). Faltan las variables en Vercel | `web/app/me-estafaron`, `web/app/api/extraer` |
