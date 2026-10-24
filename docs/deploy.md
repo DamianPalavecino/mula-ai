@@ -3,7 +3,7 @@
 Sin valores secretos acá. Las claves se cargan en cada servicio, nunca en el repo.
 
 ## URLs
-- Supabase: _(completar: https://xxxx.supabase.co)_
+- Supabase: https://rldsoshlnhwkccfakkjm.supabase.co (proyecto MulaAI)
 - Web (Vercel): https://mula-ai.vercel.app
 - Worker: VPS Contabo (`contabo-vps` por Tailscale), servicio systemd de usuario `mula-worker`. Dominio público: _(pendiente)_
 

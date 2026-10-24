@@ -44,7 +44,7 @@ Herramientas: Supabase CLI en `C:\Users\dami_\AppData\Local\Programs\Supabase\su
 |---|---|---|---|---|---|
 | `classify` | `npm run test:classify` | ✅ | 66s | 24/10/2026, 12:28:29 | c6d5a8f |
 | `e2e` | `npm run e2e` | ✅ | 3s | 24/10/2026, 12:49:18 | 11979d5 |
-| `prod` | `node --env-file-if-exists=.env scripts/smoke-prod.mjs` | ✅ | 1s | 24/10/2026, 12:52:39 | 833c037 |
+| `prod` | `node --env-file-if-exists=.env scripts/smoke-prod.mjs` | ✅ | 4s | 24/10/2026, 13:11:19 | 2d7d878 |
 | `prod` | `node scripts/smoke-prod.mjs` | ⏭️ omitido | 0s | 24/10/2026, 12:28:39 | c6d5a8f |
 | `web` | `npm run build` | ✅ | 17s | 24/10/2026, 13:00:21 | fbc3601 |
 | `web` | `npm test` | ✅ | 2s | 24/10/2026, 13:00:21 | fbc3601 |
@@ -59,7 +59,7 @@ Marcá `[x]` con hora y quién.
 - [x] 12:35 deploy — `docs/deploy.md` con pasos y variables por servicio; `scripts/smoke-prod.mjs` probado (sin vars → omitido, URL caída → 9 FAIL)
 - [x] 12:5x Damian / 12:55 deploy — Supabase prod: `schema.sql` + `functions.sql` aplicados y sembrado
 - [x] 12:55 deploy — `npm run check prod` 6/6 contra Supabase prod (juli 24/5, grafo 306/281, anon no escribe)
-- [ ] `npm run check prod` con `WEB_URL` contra Vercel
+- [x] 13:0x deploy — `WEB_URL=https://mula-ai.vercel.app npm run check prod` 9/9; bundle con la URL de Supabase prod; `/simulador` y `/me-estafaron` dan 200
 - [ ] Realtime activo en `alertas` (un INSERT aparece en el feed de `/red`)
 - [ ] Web en Vercel: `/`, `/verificar?valor=juli.martinez.mp` (23 reportes, en rojo) y `/red` en incógnito
 - [x] 12:45 worker — en el VPS. systemd `mula-worker` en `contabo-vps`, `[wa] conectado como 5493436612270`; tras `restart` reconecta en 1 s sin QR, `/health` → `{"ok":true,"whatsapp":"conectado"}`. Sesión en `~/mula-data/auth_info`, vars en `~/.config/mula-ai/worker.conf`. Operar con `worker/scripts/vps.sh deploy|qr|logs|status`
