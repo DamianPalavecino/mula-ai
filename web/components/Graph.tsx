@@ -15,15 +15,15 @@ type L = LinkObject<Nodo>;
 
 
 const ALERTA = "#c1121f";
-const UMBRAL_LABEL = 5; // entidades con al menos esta cantidad de reportes muestran su label
+const UMBRAL_LABEL = 12; // entidades con al menos esta cantidad de reportes muestran su label
 
 function esEntidad(n: Nodo | undefined | null): boolean {
   return !!n && n.tipo !== "reporte";
 }
 
 function radio(n: Nodo): number {
-  if (!esEntidad(n)) return 2;
-  return 4 + Math.sqrt(n.reportes ?? 1) * 1.8;
+  if (!esEntidad(n)) return 3;
+  return 3 + Math.sqrt(n.reportes ?? 1) * 2.6;
 }
 
 function idDe(extremo: L["source"]): string {
@@ -40,7 +40,7 @@ export default function Graph({
 }: {
   datos: Grafo;
   destacados: string[];
-  foco: { id: string; vez: number } | null;
+  foco: { id: string; vez: number; conPanel: boolean } | null;
   seleccionado: string | null;
   onSeleccionar: (nodo: Nodo) => void;
 }) {
@@ -52,6 +52,7 @@ export default function Graph({
   const datosRef = useRef(datos);
   datosRef.current = datos;
 
+  const montado = tam.w > 0 && tam.h > 0;
   const destacadosSet = useMemo(() => new Set(destacados), [destacados]);
 
   // El canvas sigue el tamaño del contenedor.
@@ -66,6 +67,15 @@ export default function Graph({
     return () => ro.disconnect();
   }, []);
 
+  // Menos repulsión: los clusters quedan más juntos y el grafo se ve más grande.
+  useEffect(() => {
+    const carga = fg.current?.d3Force("charge");
+    carga?.strength?.(-24);
+    carga?.distanceMax?.(160);
+    fg.current?.d3Force("link")?.distance?.(36);
+    fg.current?.d3ReheatSimulation();
+  }, [montado]);
+
   // Centrar la cámara en el nodo de la alerta (puede tardar en tener posición si es nuevo).
   useEffect(() => {
     if (!foco) return;
@@ -73,8 +83,12 @@ export default function Graph({
     const timer = setInterval(() => {
       const nodo = datosRef.current.nodes.find((n) => n.id === foco.id) as N | undefined;
       if (nodo && nodo.x != null && nodo.y != null) {
-        fg.current?.centerAt(nodo.x, nodo.y, 800);
-        fg.current?.zoom(3, 800);
+        // En desktop el panel de detalle tapa la derecha: corremos el nodo hacia la izquierda.
+        const zoom = 1.5;
+        const desplazar =
+          foco.conPanel && window.matchMedia("(min-width: 1024px)").matches ? 170 / zoom : 0;
+        fg.current?.centerAt(nodo.x + desplazar, nodo.y, 800);
+        fg.current?.zoom(zoom, 800);
         clearInterval(timer);
       } else if (++intentos > 15) {
         clearInterval(timer);
@@ -85,7 +99,7 @@ export default function Graph({
 
   return (
     <div ref={contenedor} className="absolute inset-0">
-      {tam.w > 0 && tam.h > 0 && (
+      {montado && (
         <ForceGraph2D<Nodo>
           ref={fg}
           width={tam.w}
@@ -152,23 +166,44 @@ export default function Graph({
               ctx.lineWidth = 2 / escala;
               ctx.stroke();
             }
+          }}
+          onRenderFramePost={(ctx, escala) => {
+            // Labels en una pasada aparte: primero los prioritarios, y se saltean los que se pisan.
+            const prioridad = (n: Nodo) =>
+              (destacadosSet.has(n.id) ? 3000 : 0) +
+              (seleccionado === n.id ? 2000 : 0) +
+              (hover === n.id ? 1000 : 0) +
+              (n.reportes ?? 0);
+            const candidatos = (datos.nodes as N[])
+              .filter(
+                (n) =>
+                  esEntidad(n) &&
+                  ((n.reportes ?? 0) >= UMBRAL_LABEL ||
+                    hover === n.id ||
+                    seleccionado === n.id ||
+                    destacadosSet.has(n.id)),
+              )
+              .sort((a, b) => prioridad(b) - prioridad(a));
 
-            const conLabel =
-              esEntidad(n) &&
-              ((n.reportes ?? 0) >= UMBRAL_LABEL ||
-                hover === n.id ||
-                destacado ||
-                seleccionado === n.id);
-            if (conLabel) {
-              const fuente = 12 / escala;
-              ctx.font = `600 ${fuente}px ui-sans-serif, system-ui, sans-serif`;
-              ctx.textAlign = "center";
-              ctx.textBaseline = "top";
-              const ty = y + r + 3 / escala;
-              ctx.lineWidth = 3 / escala;
+            const fuente = 12 / escala;
+            ctx.font = `600 ${fuente}px ui-sans-serif, system-ui, sans-serif`;
+            ctx.textAlign = "center";
+            ctx.textBaseline = "top";
+            ctx.lineWidth = 3 / escala;
+            const ocupados: { x1: number; y1: number; x2: number; y2: number }[] = [];
+            for (const n of candidatos) {
+              const ancho = ctx.measureText(n.label).width;
+              const x = n.x ?? 0;
+              const ty = (n.y ?? 0) + radio(n) + 3 / escala;
+              const caja = { x1: x - ancho / 2, y1: ty, x2: x + ancho / 2, y2: ty + fuente * 1.2 };
+              const pisa = ocupados.some(
+                (o) => caja.x1 < o.x2 && caja.x2 > o.x1 && caja.y1 < o.y2 && caja.y2 > o.y1,
+              );
+              if (pisa) continue;
+              ocupados.push(caja);
               ctx.strokeStyle = "rgba(255, 255, 255, 0.9)";
               ctx.strokeText(n.label, x, ty);
-              ctx.fillStyle = destacado ? ALERTA : "#111418";
+              ctx.fillStyle = destacadosSet.has(n.id) ? ALERTA : "#111418";
               ctx.fillText(n.label, x, ty);
             }
           }}

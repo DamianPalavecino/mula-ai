@@ -46,12 +46,20 @@ export default function RedView() {
   const [grafo, setGrafo] = useState<Grafo | null>(null);
   const [error, setError] = useState(false);
   const [destacados, setDestacados] = useState<string[]>([]);
-  const [foco, setFoco] = useState<{ id: string; vez: number } | null>(null);
+  const [foco, setFoco] = useState<{ id: string; vez: number; conPanel: boolean } | null>(null);
   const [alertaSel, setAlertaSel] = useState<number | null>(null);
   const [seleccionado, setSeleccionado] = useState<Nodo | null>(null);
   const [resumen, setResumen] = useState<ResumenEntidad | null>(null);
   const nodos = useRef(new Map<string, Nodo>());
+  const panelRef = useRef<HTMLDivElement>(null);
   const timerDestacado = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // En mobile el panel va debajo del grafo: lo traemos a la vista al abrirlo.
+  useEffect(() => {
+    if (seleccionado && !window.matchMedia("(min-width: 1024px)").matches) {
+      panelRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+  }, [seleccionado]);
 
   const cargarGrafo = useCallback(async () => {
     if (!supabase) return;
@@ -82,11 +90,11 @@ export default function RedView() {
       });
   }, []);
 
-  const destacar = useCallback((alerta: Alerta) => {
+  const destacar = useCallback((alerta: Alerta, conPanel = false) => {
     const ids = (alerta.entidad_ids ?? []).map((id) => `e_${id}`);
     if (ids.length === 0) return;
     setDestacados(ids);
-    setFoco({ id: ids[0], vez: Date.now() });
+    setFoco({ id: ids[0], vez: Date.now(), conPanel });
     if (timerDestacado.current) clearTimeout(timerDestacado.current);
     timerDestacado.current = setTimeout(() => setDestacados([]), DURACION_DESTACADO);
   }, []);
@@ -102,8 +110,8 @@ export default function RedView() {
   const onSeleccionarAlerta = useCallback(
     (alerta: Alerta) => {
       setAlertaSel(alerta.id);
-      destacar(alerta);
       const primero = nodos.current.get(`e_${alerta.entidad_ids?.[0]}`);
+      destacar(alerta, !!primero);
       if (primero) seleccionar(primero);
     },
     [destacar, seleccionar],
@@ -112,7 +120,7 @@ export default function RedView() {
   if (!supabase) return <FaltaConfig />;
 
   return (
-    <div className="grid gap-4 lg:h-[calc(100svh-12rem)] lg:min-h-[560px] lg:grid-cols-[minmax(0,1fr)_340px]">
+    <div className="grid gap-4 lg:h-[calc(100svh-17rem)] lg:min-h-[520px] lg:grid-cols-[minmax(0,1fr)_340px]">
       <div className="h-60 lg:order-2 lg:h-auto lg:min-h-0">
         <AlertFeed
           onNueva={onNueva}
@@ -121,7 +129,7 @@ export default function RedView() {
         />
       </div>
 
-      <div className="flex min-h-0 flex-col gap-3">
+      <div className="relative flex min-h-0 flex-col gap-3">
         <div className="relative h-[480px] overflow-hidden rounded-lg border border-linea bg-fondo lg:h-auto lg:flex-1">
           {error && <Aviso texto="No pudimos cargar la red. Recargá la página." />}
           {!error && !grafo && <Aviso texto="Cargando la red…" />}
@@ -132,41 +140,11 @@ export default function RedView() {
               destacados={destacados}
               foco={foco}
               seleccionado={seleccionado?.id ?? null}
-              onSeleccionar={seleccionar}
+              onSeleccionar={(nodo) => {
+                seleccionar(nodo);
+                setFoco({ id: nodo.id, vez: Date.now(), conPanel: true });
+              }}
             />
-          )}
-
-          {seleccionado && (
-            <div className="absolute inset-x-3 top-3 max-h-[calc(100%-1.5rem)] overflow-y-auto rounded-lg border border-linea bg-fondo sm:right-auto sm:w-80">
-              <div className="flex items-center justify-between border-b border-linea px-4 py-2.5">
-                <p className="text-sm font-medium text-suave">
-                  {TIPOS_ENTIDAD[seleccionado.tipo as keyof typeof TIPOS_ENTIDAD] ?? "Entidad"}
-                </p>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSeleccionado(null);
-                    setAlertaSel(null);
-                  }}
-                  className="cursor-pointer text-sm font-medium text-suave hover:text-tinta"
-                >
-                  Cerrar
-                </button>
-              </div>
-              <div className="flex flex-col gap-3 p-3">
-                {resumen ? (
-                  <ResumenCard resumen={resumen} compacto />
-                ) : (
-                  <p className="px-1 py-2 text-sm text-suave">Cargando resumen…</p>
-                )}
-                <Link
-                  href={`/verificar?valor=${encodeURIComponent(seleccionado.label)}`}
-                  className="px-1 text-sm font-medium text-tinta underline underline-offset-2 hover:text-black"
-                >
-                  Abrir en Verificar
-                </Link>
-              </div>
-            </div>
           )}
         </div>
 
@@ -182,6 +160,45 @@ export default function RedView() {
             </li>
           ))}
         </ul>
+
+        {seleccionado && (
+          <div
+            ref={panelRef}
+            className="rounded-lg border border-linea bg-fondo lg:absolute lg:top-3 lg:right-3 lg:max-h-[calc(100%-4.5rem)] lg:w-80 lg:overflow-y-auto"
+          >
+            <div className="flex items-center justify-between gap-3 border-b border-linea px-4 py-2.5">
+              <p className="min-w-0 truncate text-sm">
+                <span className="font-medium text-suave">
+                  {TIPOS_ENTIDAD[seleccionado.tipo as keyof typeof TIPOS_ENTIDAD] ?? "Entidad"}
+                </span>{" "}
+                <span className="font-mono text-tinta">{seleccionado.label}</span>
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  setSeleccionado(null);
+                  setAlertaSel(null);
+                }}
+                className="cursor-pointer text-sm font-medium text-suave hover:text-tinta"
+              >
+                Cerrar
+              </button>
+            </div>
+            <div className="flex flex-col gap-3 p-3">
+              {resumen ? (
+                <ResumenCard resumen={resumen} compacto />
+              ) : (
+                <p className="px-1 py-2 text-sm text-suave">Cargando resumen…</p>
+              )}
+              <Link
+                href={`/verificar?valor=${encodeURIComponent(seleccionado.label)}`}
+                className="px-1 text-sm font-medium text-tinta underline underline-offset-2 hover:text-black"
+              >
+                Abrir en Verificar
+              </Link>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

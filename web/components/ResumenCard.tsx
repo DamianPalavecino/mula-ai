@@ -65,7 +65,7 @@ export default function ResumenCard({
       <div
         className={`grid gap-4 bg-alerta-fondo ${compacto ? "p-4" : "p-5 sm:grid-cols-2 sm:p-6"}`}
       >
-        <Consultado resumen={resumen} />
+        {!compacto && <Consultado resumen={resumen} />}
         <Dato label="Monto total reportado">{monto(resumen.monto_total)}</Dato>
         {modalidades.length > 0 && (
           <Dato label="Modalidades">

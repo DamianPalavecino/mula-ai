@@ -78,7 +78,7 @@ export default function VerifyForm() {
             autoCapitalize="none"
             autoCorrect="off"
             spellCheck={false}
-            className="h-12 flex-1 rounded-md border border-linea bg-fondo px-4 font-mono text-base text-tinta placeholder:text-suave focus:border-tinta focus:outline-none"
+            className="h-12 w-full rounded-md sm:flex-1 border border-linea bg-fondo px-4 font-mono text-base text-tinta placeholder:text-suave focus:border-tinta focus:outline-none"
           />
           <button
             type="submit"
