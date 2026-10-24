@@ -84,3 +84,19 @@ export const TIPOS_ENTIDAD: Record<TipoEntidad, string> = {
   cvu: "CVU",
   telefono: "Teléfono",
 };
+
+// POST {NEXT_PUBLIC_WORKER_URL}/analizar → respuesta (contrato del worker).
+export interface RespuestaAnalizar {
+  es_sospechoso: boolean;
+  riesgo: number;
+  modalidad: string;
+  senales: string[];
+  suplanta_a: string | null;
+  entidades: ResumenEntidad[];
+  alerta_persona: string;
+  alerta_familia: string;
+  reporte_id: number | null;
+  alerta_id: number | null;
+  enviada_a: string[];
+  fuente_clasificacion: "llm" | "heuristica";
+}

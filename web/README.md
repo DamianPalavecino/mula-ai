@@ -3,6 +3,7 @@
 Next.js 16 (App Router, TypeScript, Tailwind 4). Lee la red de Supabase con la anon key; nunca escribe.
 
 - `/` — qué es y cómo se configura.
+- `/simulador` — dos celulares (estafador y abuela): manda el texto a `POST ${NEXT_PUBLIC_WORKER_URL}/analizar` y muestra la alerta y el aviso al grupo familiar. Sin la variable, o si el worker falla, usa un mock local (`lib/simulador.ts`). Versión compacta en el hero de `/`.
 - `/verificar` — "antes de pagar": `resumen_entidad(valor)`. Acepta `?valor=` en la URL.
 - `/red` — grafo de `grafo()` + feed de `alertas` en vivo (Realtime, INSERT).
 
@@ -25,6 +26,7 @@ También podés ponerlos en un archivo de entorno local de Next (está en `.giti
 |---|---|
 | `NEXT_PUBLIC_SUPABASE_URL` | URL del proyecto Supabase |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | anon key (pública). **Nunca** la service role. |
+| `NEXT_PUBLIC_WORKER_URL` | URL pública del worker (Railway), sin `/analizar`. Opcional: sin ella el simulador usa el mock. |
 
 Sin variables la web buildea igual y las páginas muestran "Falta configurar Supabase".
 
@@ -37,6 +39,7 @@ Sin variables la web buildea igual y las páginas muestran "Falta configurar Sup
 
 ## Código
 
+- `npm test` — tests de `lib/simulador.ts` con `node --test` (sin dependencias). Los corre `npm run check` en la raíz.
 - `lib/supabase.ts` — cliente browser (o `null` si faltan variables).
 - `lib/tipos.ts` — tipos del contrato (ver `CLAUDE.md` en la raíz) y labels de modalidades.
 - `components/VerifyForm.tsx`, `ResumenCard.tsx` — consulta y resultado.
