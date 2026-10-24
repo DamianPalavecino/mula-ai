@@ -60,6 +60,19 @@ export interface Alerta {
   enviada_a: string[] | null;
   entidad_ids: number[] | null;
   created_at: string;
+  protegido_id?: number | null;
+}
+
+// Fila de public.protegidos (solo service role; la web filtra por owner = Clerk userId).
+export interface Protegido {
+  id: number;
+  owner: string;
+  nombre: string | null;
+  telefono: string | null;
+  contactos_confianza: string[] | null;
+  familiares: string[] | null;
+  provincia: string | null;
+  created_at: string;
 }
 
 export const MODALIDADES: Record<Modalidad, string> = {
@@ -85,7 +98,7 @@ export const TIPOS_ENTIDAD: Record<TipoEntidad, string> = {
   telefono: "Teléfono",
 };
 
-// POST {NEXT_PUBLIC_WORKER_URL}/analizar → respuesta (contrato del worker).
+// POST {WORKER_URL}/analizar (server-side) → respuesta (contrato del worker).
 export interface RespuestaAnalizar {
   es_sospechoso: boolean;
   riesgo: number;

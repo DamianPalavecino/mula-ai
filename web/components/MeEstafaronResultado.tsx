@@ -105,7 +105,7 @@ export default function MeEstafaronResultado({
   async function sumarALaRed() {
     setRegistro({ tipo: "enviando" });
     try {
-      const res = await fetch("/me-estafaron/registrar", {
+      const res = await fetch("/app/api/registrar", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -274,12 +274,9 @@ export default function MeEstafaronResultado({
                     ))}
                 </ul>
                 <div className="flex flex-wrap gap-4 text-sm">
-                  <Link href="/red" className="text-tinta underline underline-offset-2">
-                    Ver la red
-                  </Link>
                   {destino && (
                     <Link
-                      href={`/verificar?valor=${encodeURIComponent(destino)}`}
+                      href={`/app/verificar?valor=${encodeURIComponent(destino)}`}
                       className="text-tinta underline underline-offset-2"
                     >
                       Ver cómo lo ve el próximo que quiera transferirle

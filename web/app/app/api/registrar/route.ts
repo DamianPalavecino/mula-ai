@@ -1,8 +1,9 @@
-import { supabaseServicio } from "@/lib/supabase-server";
+import { sesionApi } from "@/lib/auth";
+import { hayBase, supabaseAdmin } from "@/lib/supabase-admin";
 import { PROVINCIAS, type RespuestaReporte } from "@/lib/extraccion";
 import { crearRateLimiter } from "@/lib/meEstafaron";
 
-// POST /me-estafaron/registrar — suma a la red el caso de una víctima ("Me estafaron") con
+// POST /app/api/registrar (exige sesión) — suma a la red el caso de una víctima ("Me estafaron") con
 // registrar_reporte (fuente = 'victima'). Necesita SUPABASE_SERVICE_ROLE_KEY en el server.
 //
 // Body JSON: { modalidad, provincia, monto, texto, senales[], suplanta_a, entidades: [{tipo, valor}] }
@@ -17,8 +18,10 @@ function texto(v: unknown, max: number): string | null {
 }
 
 export async function POST(request: Request) {
-  const sb = supabaseServicio();
-  if (!sb) {
+  const s = await sesionApi();
+  if (s instanceof Response) return s;
+
+  if (!hayBase) {
     return Response.json(
       { error: "Sumar casos a la red no está habilitado en este servidor." },
       { status: 503 },
@@ -71,7 +74,7 @@ export async function POST(request: Request) {
     entidades,
   };
 
-  const { data, error } = await sb.rpc("registrar_reporte", { payload });
+  const { data, error } = await supabaseAdmin().rpc("registrar_reporte", { payload });
   if (error || !data) {
     console.error("[reportes] registrar_reporte falló:", error?.message);
     return Response.json({ error: "No pudimos sumar el caso a la red." }, { status: 502 });

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import MeEstafaronForm from "@/components/MeEstafaronForm";
+import { requireUser } from "@/lib/auth";
 
 export const metadata: Metadata = {
   title: "Me estafaron",
@@ -7,7 +8,8 @@ export const metadata: Metadata = {
     "Subí las capturas del chat y del comprobante: Mula AI arma la denuncia y el pedido de bloqueo, y cruza las cuentas con la red de reportes.",
 };
 
-export default function MeEstafaronPage() {
+export default async function MeEstafaronPage() {
+  await requireUser();
   return (
     <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-12 sm:px-6 sm:py-16">
       <p className="text-sm font-medium text-suave">Me estafaron</p>

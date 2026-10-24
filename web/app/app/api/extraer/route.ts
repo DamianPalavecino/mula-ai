@@ -6,7 +6,8 @@ import {
   type Extraccion,
   type RespuestaExtraer,
 } from "@/lib/extraccion";
-import { puedeRegistrar, supabaseAnon } from "@/lib/supabase-server";
+import { sesionApi } from "@/lib/auth";
+import { hayBase, supabaseAdmin } from "@/lib/supabase-admin";
 import {
   antecedentesRed,
   crearRateLimiter,
@@ -15,8 +16,8 @@ import {
   MARCA_RED,
 } from "@/lib/meEstafaron";
 
-// POST /api/extraer — "Me estafaron": capturas (y/o relato) → entidades, montos, denuncia y
-// pedido de bloqueo armados, cruzados con la red. No escribe nada (eso es /me-estafaron/registrar).
+// POST /app/api/extraer — "Me estafaron": capturas (y/o relato) → entidades, montos, denuncia y
+// pedido de bloqueo armados, cruzados con la red. No escribe nada (eso es /app/api/registrar). Exige sesión..
 //
 // FormData: imagenes (File, hasta MAX_IMAGENES), relato (texto), provincia (texto).
 
@@ -137,7 +138,7 @@ function error(status: number, mensaje: string) {
 }
 
 async function cruzarConRed(ents: EntidadExtraida[]): Promise<EntidadEnRed[]> {
-  const sb = supabaseAnon();
+  const sb = hayBase ? supabaseAdmin() : null;
   return Promise.all(
     ents.map(async (entidad) => {
       if (!sb) return { entidad, resumen: null };
@@ -151,6 +152,9 @@ async function cruzarConRed(ents: EntidadExtraida[]): Promise<EntidadEnRed[]> {
 }
 
 export async function POST(request: Request) {
+  const s = await sesionApi();
+  if (s instanceof Response) return s;
+
   const apiKey = process.env.OPENROUTER_API_KEY;
   if (!apiKey) {
     return error(503, "Falta configurar OPENROUTER_API_KEY en el servidor.");
@@ -264,5 +268,5 @@ export async function POST(request: Request) {
     pedido_bloqueo: extraccion.pedido_bloqueo.replace(MARCA_RED, "").trim(),
   };
 
-  return Response.json({ extraccion, red, puede_registrar: puedeRegistrar } satisfies RespuestaExtraer);
+  return Response.json({ extraccion, red, puede_registrar: hayBase } satisfies RespuestaExtraer);
 }

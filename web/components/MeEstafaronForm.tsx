@@ -108,7 +108,7 @@ export default function MeEstafaronForm() {
       }
       form.append("relato", relato);
       form.append("provincia", provincia);
-      const res = await fetch("/api/extraer", { method: "POST", body: form });
+      const res = await fetch("/app/api/extraer", { method: "POST", body: form });
       const json = await res.json().catch(() => null);
       if (!res.ok || !json?.extraccion) {
         setEstado({
